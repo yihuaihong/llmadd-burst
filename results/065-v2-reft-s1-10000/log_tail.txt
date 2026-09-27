@@ -1,0 +1,36 @@
+## task 065-v2-reft-s1-10000  job 2332  host b-19-38  2026-09-27T20:26:50Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.04it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.44it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.04it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.66it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.79it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.46it/s]
+base: {'test': 0.007000000216066837, 'train': 0.014666666276752949, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (104s)
+/scratch/yh6210/llmadd_runs/065-v2-reft-s1-10000/code/tools/manifold_train.py:294: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+reft none seed0: {'test': 0.14400000870227814, 'train': 0.30933332443237305, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (161s)
+reft helix seed0: {'test': 0.16300000250339508, 'train': 0.3426666557788849, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (229s)
+reft helix_shuf seed0: {'test': 0.11600000411272049, 'train': 0.2606666684150696, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (296s)
+reft digit seed0: {'test': 0.14400000870227814, 'train': 0.32199999690055847, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (363s)
+reft digit_shuf seed0: {'test': 0.14500001072883606, 'train': 0.30799999833106995, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (430s)
+reft none seed1: {'test': 0.13600000739097595, 'train': 0.29999998211860657, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0} (486s)
+reft helix seed1: {'test': 0.14300000667572021, 'train': 0.28866666555404663, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0} (553s)
+reft helix_shuf seed1: {'test': 0.12600000202655792, 'train': 0.2719999849796295, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (620s)
+reft digit seed1: {'test': 0.1380000114440918, 'train': 0.30399999022483826, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (687s)
+reft digit_shuf seed1: {'test': 0.12700000405311584, 'train': 0.31333333253860474, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (754s)
+reft none seed2: {'test': 0.13500000536441803, 'train': 0.3240000009536743, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.0010000000474974513} (809s)
+reft helix seed2: {'test': 0.14600001275539398, 'train': 0.32066667079925537, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (876s)
+reft helix_shuf seed2: {'test': 0.11400000751018524, 'train': 0.25, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.0010000000474974513} (941s)
+reft digit seed2: {'test': 0.12300000339746475, 'train': 0.2653333246707916, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (1006s)
+reft digit_shuf seed2: {'test': 0.15000000596046448, 'train': 0.3166666626930237, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (1071s)
+# manifold fine-tuning (reft, lam 1.0, lr 0.001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.007 | 0.015 | 0.005 | 0.000 | 0.000 | - |
+| none | 3 | 0.138 ± 0.005 | 0.311 ± 0.012 | 0.000 ± 0.000 | 0.003 ± 0.001 | 0.001 ± 0.001 | 0.53 / 0.57 CKA@L16 helix 0.69 digit 0.44 |
+| helix | 3 | 0.151 ± 0.011 | 0.317 ± 0.027 | 0.001 ± 0.001 | 0.001 ± 0.001 | 0.001 ± 0.001 | 0.45 / 0.49 CKA@L16 helix 0.84 digit 0.56 |
+| helix_shuf | 3 | 0.119 ± 0.006 | 0.261 ± 0.011 | 0.000 ± 0.000 | 0.002 ± 0.002 | 0.001 ± 0.000 | 0.29 / 0.31 CKA@L16 helix 0.23 digit 0.22 |
+| digit | 3 | 0.135 ± 0.011 | 0.297 ± 0.029 | 0.002 ± 0.001 | 0.001 ± 0.001 | 0.001 ± 0.000 | 0.26 / 0.36 CKA@L16 helix 0.70 digit 0.76 |
+| digit_shuf | 3 | 0.141 ± 0.012 | 0.313 ± 0.004 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.001 ± 0.000 | 0.30 / 0.35 CKA@L16 helix 0.58 digit 0.57 |
+
+## rc=0  2026-09-27T20:45:09Z
