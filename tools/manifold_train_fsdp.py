@@ -81,7 +81,7 @@ def main() -> None:
         layers[L].register_forward_hook(lambda _m, _i, o, L=L: store.__setitem__(L, nl._hidden(o)))
 
     def forward(ids):
-        return model(input_ids=ids).logits[:, -1].float()
+        return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float()
 
     # ---------------------------------------------------------------- data (identical to manifold_train.py)
     rng = np.random.default_rng(0)

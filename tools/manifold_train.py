@@ -190,7 +190,7 @@ def main() -> None:
     def forward(ids: torch.Tensor, reft: bool) -> torch.Tensor:
         reft_on["v"] = reft
         with autocast:
-            return model(input_ids=ids).logits[:, -1].float()
+            return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float()
 
     # ---------------------------------------------------------------- data
     rng = np.random.default_rng(0)

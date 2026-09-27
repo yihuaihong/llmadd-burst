@@ -15,6 +15,7 @@
 set -eu
 REV=$1; NAME=$2
 source /scratch/yh6210/miniconda3/etc/profile.d/conda.sh && conda activate open_r1
+export PYTORCH_ALLOC_CONF=expandable_segments:True
 RUN=/scratch/yh6210/llmadd_torch/runs/$NAME; mkdir -p "$RUN"
 [ -d "$RUN/code" ] || { mkdir -p "$RUN/code"; git -C /home/yh6210/Research_Projects/llmadd-burst archive HEAD | tar -x -C "$RUN/code"; }
 nvidia-smi --query-gpu=name,memory.total --format=csv
