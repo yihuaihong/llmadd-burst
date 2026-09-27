@@ -1,0 +1,164 @@
+{
+ "n": 1500,
+ "model_acc": 0.764,
+ "model_says_a_number": 0.9813333333333333,
+ "model_units_acc": 0.967391304347826,
+ "model_tens_acc": 0.8023097826086957,
+ "model_error_hist_top": {
+  "-10": 268,
+  "-2": 23,
+  "-4": 7,
+  "2": 6,
+  "10": 5,
+  "-20": 5,
+  "-6": 3,
+  "1": 2,
+  "-8": 2,
+  "4": 1,
+  "-12": 1,
+  "-1": 1
+ },
+ "wrong_with_units_right": 0.852760736196319,
+ "layers": [
+  {
+   "layer": 18,
+   "probe_acc": 0.06266666666666666,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.015333333333333332,
+   "model_ok_probe_wrong": 0.7166666666666667,
+   "P(probe ok | model wrong)": 0.06497175141242938,
+   "probe_units_acc": 0.114,
+   "probe_tens_acc": 0.49733333333333335
+  },
+  {
+   "layer": 19,
+   "probe_acc": 0.09133333333333334,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.024,
+   "model_ok_probe_wrong": 0.6966666666666667,
+   "P(probe ok | model wrong)": 0.1016949152542373,
+   "probe_units_acc": 0.12,
+   "probe_tens_acc": 0.6013333333333334
+  },
+  {
+   "layer": 20,
+   "probe_acc": 0.2833333333333333,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.07333333333333333,
+   "model_ok_probe_wrong": 0.554,
+   "P(probe ok | model wrong)": 0.3107344632768362,
+   "probe_units_acc": 0.286,
+   "probe_tens_acc": 0.794
+  },
+  {
+   "layer": 21,
+   "probe_acc": 0.6673333333333333,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.15933333333333333,
+   "model_ok_probe_wrong": 0.256,
+   "P(probe ok | model wrong)": 0.6751412429378532,
+   "probe_units_acc": 0.67,
+   "probe_tens_acc": 0.8986666666666666
+  },
+  {
+   "layer": 22,
+   "probe_acc": 0.8446666666666667,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.202,
+   "model_ok_probe_wrong": 0.12133333333333333,
+   "P(probe ok | model wrong)": 0.8559322033898306,
+   "probe_units_acc": 0.846,
+   "probe_tens_acc": 0.9526666666666667
+  },
+  {
+   "layer": 23,
+   "probe_acc": 0.8933333333333333,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.214,
+   "model_ok_probe_wrong": 0.08466666666666667,
+   "P(probe ok | model wrong)": 0.9067796610169492,
+   "probe_units_acc": 0.8946666666666667,
+   "probe_tens_acc": 0.9693333333333334
+  },
+  {
+   "layer": 24,
+   "probe_acc": 0.96,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.22733333333333333,
+   "model_ok_probe_wrong": 0.03133333333333333,
+   "P(probe ok | model wrong)": 0.963276836158192,
+   "probe_units_acc": 0.9613333333333334,
+   "probe_tens_acc": 0.988
+  },
+  {
+   "layer": 25,
+   "probe_acc": 0.9713333333333334,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.22866666666666666,
+   "model_ok_probe_wrong": 0.021333333333333333,
+   "P(probe ok | model wrong)": 0.9689265536723164,
+   "probe_units_acc": 0.9726666666666667,
+   "probe_tens_acc": 0.9926666666666667
+  },
+  {
+   "layer": 26,
+   "probe_acc": 0.9866666666666667,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.23266666666666666,
+   "model_ok_probe_wrong": 0.01,
+   "P(probe ok | model wrong)": 0.9858757062146892,
+   "probe_units_acc": 0.9866666666666667,
+   "probe_tens_acc": 0.9973333333333333
+  },
+  {
+   "layer": 27,
+   "probe_acc": 0.9866666666666667,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.23266666666666666,
+   "model_ok_probe_wrong": 0.01,
+   "P(probe ok | model wrong)": 0.9858757062146892,
+   "probe_units_acc": 0.9873333333333333,
+   "probe_tens_acc": 0.9966666666666667
+  },
+  {
+   "layer": 28,
+   "probe_acc": 0.988,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.232,
+   "model_ok_probe_wrong": 0.008,
+   "P(probe ok | model wrong)": 0.9830508474576272,
+   "probe_units_acc": 0.9893333333333333,
+   "probe_tens_acc": 0.998
+  },
+  {
+   "layer": 29,
+   "probe_acc": 0.9926666666666667,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.23266666666666666,
+   "model_ok_probe_wrong": 0.004,
+   "P(probe ok | model wrong)": 0.9858757062146892,
+   "probe_units_acc": 0.994,
+   "probe_tens_acc": 0.9986666666666667
+  },
+  {
+   "layer": 30,
+   "probe_acc": 0.9893333333333333,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.23066666666666666,
+   "model_ok_probe_wrong": 0.005333333333333333,
+   "P(probe ok | model wrong)": 0.9774011299435028,
+   "probe_units_acc": 0.9913333333333333,
+   "probe_tens_acc": 0.9953333333333333
+  },
+  {
+   "layer": 31,
+   "probe_acc": 0.9906666666666667,
+   "model_acc": 0.764,
+   "probe_ok_model_wrong": 0.23066666666666666,
+   "model_ok_probe_wrong": 0.004,
+   "P(probe ok | model wrong)": 0.9774011299435028,
+   "probe_units_acc": 0.9933333333333333,
+   "probe_tens_acc": 0.9966666666666667
+  }
+ ]
+}
