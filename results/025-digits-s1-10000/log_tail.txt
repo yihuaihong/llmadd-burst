@@ -1,0 +1,40 @@
+## task 025-digits-s1-10000  job 2179  host b-19-57  2026-09-27T06:31:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.26it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.68it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.66it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.43it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.16it/s]
+fits L0 (85s)
+fits L2 (86s)
+fits L4 (87s)
+fits L6 (89s)
+fits L8 (90s)
+fits L10 (92s)
+fits L12 (93s)
+fits L14 (95s)
+fits L16 (96s)
+fits L18 (97s)
+fits L20 (99s)
+A units -3 (108s)
+A units -2 (118s)
+A units -1 (140s)
+A units +1 (174s)
+A units +2 (205s)
+A units +3 (237s)
+A tens -10 (246s)
+A tens +10 (277s)
+A tens +20 (304s)
+A tens +30 (329s)
+B units -3 (350s)
+B units -2 (374s)
+B units -1 (401s)
+B units +1 (432s)
+B units +2 (459s)
+B units +3 (484s)
+B tens -30 (504s)
+B tens -20 (527s)
+B tens -10 (554s)
+B tens +10 (584s)
+B tens +20 (612s)
+B tens +30 (637s)
+total 637s
+## rc=0  2026-09-27T06:42:45Z
