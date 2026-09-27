@@ -1,0 +1,149 @@
+{
+ "n": 400,
+ "first_token_acc": 0.02499999850988388,
+ "first_integer_in_generation_acc": 0.025,
+ "gold_first_token_prob_mean": 0.01899145357310772,
+ "gold_rank_median": 30.0,
+ "gold_in_top5": 0.14499999582767487,
+ "first_token_categories": {
+  "other_number": 266,
+  "non-number:\u0120": 45,
+  "a": 26,
+  "b+c": 21,
+  "a+b": 19,
+  "a+c": 13,
+  "total": 10
+ },
+ "first_integer_categories": {
+  "other": 371,
+  "a+b": 19,
+  "total": 10
+ },
+ "examples": [
+  {
+   "problem": "40+18+25",
+   "total": 83,
+   "generation": "63\n  2."
+  },
+  {
+   "problem": "22+20+18",
+   "total": 60,
+   "generation": "50\n  \u2022 2"
+  },
+  {
+   "problem": "21+19+58",
+   "total": 98,
+   "generation": "79\n  \u2022 2"
+  },
+  {
+   "problem": "18+25+23",
+   "total": 66,
+   "generation": "50\n  \u2022 2"
+  },
+  {
+   "problem": "49+21+27",
+   "total": 97,
+   "generation": "55\n\n    1."
+  },
+  {
+   "problem": "67+15+12",
+   "total": 94,
+   "generation": "70\n  \u2022 67"
+  },
+  {
+   "problem": "17+31+11",
+   "total": 59,
+   "generation": "53\n  \u2022 2"
+  },
+  {
+   "problem": "36+17+35",
+   "total": 88,
+   "generation": "57\n  \u2022 2"
+  },
+  {
+   "problem": "73+11+14",
+   "total": 98,
+   "generation": "46\n  \u2022 1"
+  },
+  {
+   "problem": "13+46+31",
+   "total": 90,
+   "generation": "68\n  \u2022 2"
+  },
+  {
+   "problem": "14+14+36",
+   "total": 64,
+   "generation": "56\n  \u2022 2"
+  },
+  {
+   "problem": "14+21+17",
+   "total": 52,
+   "generation": "41\n  \u2022 2"
+  },
+  {
+   "problem": "15+38+45",
+   "total": 98,
+   "generation": "98\n  \u2022 2"
+  },
+  {
+   "problem": "20+36+13",
+   "total": 69,
+   "generation": "50\n  \u2022 2"
+  },
+  {
+   "problem": "40+12+12",
+   "total": 64,
+   "generation": "64\n  \u2022 2"
+  },
+  {
+   "problem": "10+40+35",
+   "total": 85,
+   "generation": "70\n  \u2022 2"
+  },
+  {
+   "problem": "58+20+11",
+   "total": 89,
+   "generation": "31\n  \u2022 58"
+  },
+  {
+   "problem": "16+22+32",
+   "total": 70,
+   "generation": "58\n  \u2022 2"
+  },
+  {
+   "problem": "18+40+24",
+   "total": 82,
+   "generation": "58\n\n    1."
+  },
+  {
+   "problem": "38+26+21",
+   "total": 85,
+   "generation": "65\n  \u2022 2"
+  },
+  {
+   "problem": "56+19+21",
+   "total": 96,
+   "generation": "50\n  \u2022 56"
+  },
+  {
+   "problem": "10+11+35",
+   "total": 56,
+   "generation": " 2\n  \u2022 "
+  },
+  {
+   "problem": "30+39+30",
+   "total": 99,
+   "generation": "99\n  \u2022 30"
+  },
+  {
+   "problem": "14+38+47",
+   "total": 99,
+   "generation": "104\n  \u2022 2"
+  },
+  {
+   "problem": "22+16+29",
+   "total": 67,
+   "generation": "55\n  \u2022 2"
+  }
+ ]
+}

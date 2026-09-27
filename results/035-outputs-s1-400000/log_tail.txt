@@ -1,0 +1,17 @@
+## task 035-outputs-s1-400000  job 2192  host b-19-57  2026-09-27T07:14:10Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.16it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.83it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.54it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.53it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.17it/s]
+{'n': 400, 'first_token_acc': 0.02499999850988388, 'first_integer_in_generation_acc': 0.025, 'gold_first_token_prob_mean': 0.01899145357310772, 'gold_rank_median': 30.0, 'gold_in_top5': 0.14499999582767487, 'first_token_categories': {'other_number': 266, 'non-number:Ġ': 45, 'a': 26, 'b+c': 21, 'a+b': 19, 'a+c': 13, 'total': 10}, 'first_integer_categories': {'other': 371, 'a+b': 19, 'total': 10}}
+{'problem': '40+18+25', 'total': 83, 'generation': '63\n  2.'}
+{'problem': '22+20+18', 'total': 60, 'generation': '50\n  • 2'}
+{'problem': '21+19+58', 'total': 98, 'generation': '79\n  • 2'}
+{'problem': '18+25+23', 'total': 66, 'generation': '50\n  • 2'}
+{'problem': '49+21+27', 'total': 97, 'generation': '55\n\n    1.'}
+{'problem': '67+15+12', 'total': 94, 'generation': '70\n  • 67'}
+{'problem': '17+31+11', 'total': 59, 'generation': '53\n  • 2'}
+{'problem': '36+17+35', 'total': 88, 'generation': '57\n  • 2'}
+{'problem': '73+11+14', 'total': 98, 'generation': '46\n  • 1'}
+{'problem': '13+46+31', 'total': 90, 'generation': '68\n  • 2'}
+## rc=0  2026-09-27T07:15:56Z
