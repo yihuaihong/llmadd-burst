@@ -86,14 +86,18 @@ def main() -> None:
         rows.append({"layer": L,
                      "bin_eq->bin_eq": acc(fb(B[ei]), ei), "three_op2->three_op2": acc(ft(T[ei]), ei),
                      "bin_eq->three_op2": acc(fb(T[ei]), ei), "three_op2->bin_eq": acc(ft(B[ei]), ei),
+                     # same, with each format re-centred on its own training mean (tests directions, not offsets)
+                     "bin_eq->three_op2_centred": acc(fb(T[ei] - T[ti].mean(0) + B[ti].mean(0)), ei),
+                     "three_op2->bin_eq_centred": acc(ft(B[ei] - B[ti].mean(0) + T[ti].mean(0)), ei),
                      "cos_same_pair": float(cos)})
     nl.save_json({"pairs": int(len(pairs)), "rows": rows}, out / "exp2c.json")
     lines = ["# exp2c: does an a+b readout trained at '=' of a+b= read the second '+' of a+b+c=?\n\n",
-             "| layer | bin '=' -> bin '=' | three op2 -> three op2 | bin '=' -> three op2 | three op2 -> bin '=' | cos(same pair) |\n",
-             "|---|---|---|---|---|---|\n"]
+             "| layer | bin '=' -> bin '=' | three op2 -> three op2 | bin '=' -> three op2 | three op2 -> bin '=' | centred: bin->three | centred: three->bin | cos(same pair) |\n",
+             "|---|---|---|---|---|---|---|---|\n"]
     for r in rows:
         lines.append(f"| {r['layer']} | {r['bin_eq->bin_eq']:.2f} | {r['three_op2->three_op2']:.2f} | "
-                     f"{r['bin_eq->three_op2']:.2f} | {r['three_op2->bin_eq']:.2f} | {r['cos_same_pair']:.2f} |\n")
+                     f"{r['bin_eq->three_op2']:.2f} | {r['three_op2->bin_eq']:.2f} | {r['bin_eq->three_op2_centred']:.2f} | "
+                     f"{r['three_op2->bin_eq_centred']:.2f} | {r['cos_same_pair']:.2f} |\n")
     (out / "summary.md").write_text("".join(lines))
     print("".join(lines))
     print(f"total {time.time() - t0:.0f}s")
