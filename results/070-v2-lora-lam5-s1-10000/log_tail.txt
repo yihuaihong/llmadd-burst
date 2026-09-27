@@ -1,0 +1,32 @@
+## task 070-v2-lora-lam5-s1-10000  job 2346  host b-19-24  2026-09-27T21:08:50Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.69it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.17it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.69it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.60it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.45it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.13it/s]
+base: {'test': 0.007000000216066837, 'train': 0.014666666276752949, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (124s)
+/scratch/yh6210/llmadd_runs/070-v2-lora-lam5-s1-10000/code/tools/manifold_train.py:294: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+lora helix seed0: {'test': 0.1990000158548355, 'train': 0.65666663646698, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.00800000037997961} (280s)
+lora helix_shuf seed0: {'test': 0.12300000339746475, 'train': 0.5299999713897705, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.012000000104308128} (434s)
+lora digit seed0: {'test': 0.1860000044107437, 'train': 0.7606666684150696, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.00800000037997961} (588s)
+lora digit_shuf seed0: {'test': 0.1080000028014183, 'train': 0.5773333311080933, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.00800000037997961} (742s)
+lora helix seed1: {'test': 0.23200000822544098, 'train': 0.7020000219345093, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.007000000216066837} (894s)
+lora helix_shuf seed1: {'test': 0.13700000941753387, 'train': 0.5893333554267883, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.009000000543892384} (1043s)
+lora digit seed1: {'test': 0.1850000023841858, 'train': 0.781333327293396, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.005000000353902578} (1191s)
+lora digit_shuf seed1: {'test': 0.1290000081062317, 'train': 0.6646666526794434, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.00800000037997961} (1338s)
+lora helix seed2: {'test': 0.2070000171661377, 'train': 0.7619999647140503, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.00800000037997961} (1486s)
+lora helix_shuf seed2: {'test': 0.13199999928474426, 'train': 0.6380000114440918, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.007000000216066837} (1635s)
+lora digit seed2: {'test': 0.1990000158548355, 'train': 0.8166666626930237, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.012000000104308128} (1783s)
+lora digit_shuf seed2: {'test': 0.12700000405311584, 'train': 0.6853333115577698, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.009000000543892384} (1931s)
+# manifold fine-tuning (lora, lam 5.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.007 | 0.015 | 0.005 | 0.000 | 0.000 | - |
+| helix | 3 | 0.213 ± 0.017 | 0.707 ± 0.053 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.008 ± 0.001 | 0.47 / 0.48 CKA@L16 helix 0.98 digit 0.68 |
+| helix_shuf | 3 | 0.131 ± 0.007 | 0.586 ± 0.054 | 0.000 ± 0.000 | 0.001 ± 0.001 | 0.009 ± 0.003 | 0.06 / 0.04 CKA@L16 helix 0.21 digit 0.28 |
+| digit | 3 | 0.190 ± 0.008 | 0.786 ± 0.028 | 0.000 ± 0.000 | 0.004 ± 0.001 | 0.008 ± 0.004 | 0.20 / 0.40 CKA@L16 helix 0.63 digit 0.95 |
+| digit_shuf | 3 | 0.121 ± 0.012 | 0.642 ± 0.057 | 0.000 ± 0.000 | 0.002 ± 0.004 | 0.008 ± 0.001 | 0.06 / 0.06 CKA@L16 helix 0.27 digit 0.39 |
+
+## rc=0  2026-09-27T21:41:32Z
