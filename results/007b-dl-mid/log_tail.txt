@@ -1,0 +1,37 @@
+## task 007b-dl-mid  job 2153  host b-10-9  2026-09-27T04:21:37Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Fetching 16 files:  50%|█████     | 8/16 [00:00<00:00,  8.35it/s]Fetching 16 files:  62%|██████▎   | 10/16 [00:20<00:12,  2.00s/it]Fetching 16 files:  69%|██████▉   | 11/16 [01:44<00:47,  9.50s/it]Fetching 16 files: 100%|██████████| 16/16 [01:44<00:00,  6.54s/it]Fetching 16 files: 100%|██████████| 16/16 [01:44<00:00,  6.54s/it]
+stage1-step150000-tokens630B: converted model-00001-of-00006.safetensors
+stage1-step150000-tokens630B: converted model-00002-of-00006.safetensors
+stage1-step150000-tokens630B: converted model-00003-of-00006.safetensors
+stage1-step150000-tokens630B: converted model-00004-of-00006.safetensors
+stage1-step150000-tokens630B: converted model-00005-of-00006.safetensors
+stage1-step150000-tokens630B: converted model-00006-of-00006.safetensors
+stage1-step150000-tokens630B: done, 14.6 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150000-tokens630B
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Fetching 16 files:  50%|█████     | 8/16 [00:01<00:01,  7.80it/s]Fetching 16 files:  62%|██████▎   | 10/16 [00:20<00:12,  2.00s/it]Fetching 16 files:  69%|██████▉   | 11/16 [01:37<00:44,  8.86s/it]Fetching 16 files: 100%|██████████| 16/16 [01:37<00:00,  6.10s/it]Fetching 16 files: 100%|██████████| 16/16 [01:37<00:00,  6.10s/it]
+stage1-step400000-tokens1678B: converted model-00001-of-00006.safetensors
+stage1-step400000-tokens1678B: converted model-00002-of-00006.safetensors
+stage1-step400000-tokens1678B: converted model-00003-of-00006.safetensors
+stage1-step400000-tokens1678B: converted model-00004-of-00006.safetensors
+stage1-step400000-tokens1678B: converted model-00005-of-00006.safetensors
+stage1-step400000-tokens1678B: converted model-00006-of-00006.safetensors
+stage1-step400000-tokens1678B: done, 14.6 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step400000-tokens1678B
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Fetching 16 files:  50%|█████     | 8/16 [00:01<00:01,  7.97it/s]Fetching 16 files:  62%|██████▎   | 10/16 [00:20<00:12,  2.00s/it]Fetching 16 files:  69%|██████▉   | 11/16 [02:00<00:54, 10.97s/it]Fetching 16 files: 100%|██████████| 16/16 [02:00<00:00,  7.55s/it]Fetching 16 files: 100%|██████████| 16/16 [02:00<00:00,  7.55s/it]
+stage1-step928646-tokens3896B: converted model-00001-of-00006.safetensors
+stage1-step928646-tokens3896B: converted model-00002-of-00006.safetensors
+stage1-step928646-tokens3896B: converted model-00003-of-00006.safetensors
+stage1-step928646-tokens3896B: converted model-00004-of-00006.safetensors
+stage1-step928646-tokens3896B: converted model-00005-of-00006.safetensors
+stage1-step928646-tokens3896B: converted model-00006-of-00006.safetensors
+stage1-step928646-tokens3896B: done, 14.6 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step928646-tokens3896B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/main
+5.7G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step10000-tokens42B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150-tokens1B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150000-tokens630B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step400000-tokens1678B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step928646-tokens3896B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient1-step11931-tokens50B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient2-step11931-tokens50B
+10.36.221.2:/hpc_dev_fs/scratch   13T  8.3T  4.3T  66% /scratch
+## rc=0  2026-09-27T04:34:57Z
