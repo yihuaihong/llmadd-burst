@@ -20,4 +20,4 @@ RUN=/scratch/yh6210/llmadd_torch/runs/$NAME; mkdir -p "$RUN"
 nvidia-smi --query-gpu=name,memory.total --format=csv
 cd "$RUN/code/tools"
 python -m torch.distributed.run --nproc_per_node=2 manifold_train_fsdp.py --model "/scratch/yh6210/llmadd_models/OLMo-2-1124-7B/$REV" \
-  --out "$RUN/out" --optim adamw --geoms none,helix,helix_shuf,digit,digit_shuf --seeds 0,1,2
+  --out "$RUN/out" --optim adamw --geoms ${GEOMS:-none,helix,helix_shuf,digit,digit_shuf} --seeds 0,1,2 --lam $LAM
