@@ -195,12 +195,16 @@ ALPHAS = tuple(10.0 ** k for k in range(-2, 7))
 
 
 def probe_accuracy(X, y: np.ndarray, candidates: np.ndarray, folds: int = 5, seed: int = 0,
-                   alphas=ALPHAS, device=None) -> dict:
+                   alphas=ALPHAS, device=None, groups: np.ndarray | None = None) -> dict:
     """Cross-validated exact decoding accuracy of integer target y from states X [n, d].
 
     Kernel ridge onto the helix features f(y); per training fold the ridge strength is picked by the
     closed-form leave-one-out error (one eigendecomposition per fold), the held-out fold is decoded as
-    the nearest candidate in feature space. Runs on the GPU when there is one (float64)."""
+    the nearest candidate in feature space. Runs on the GPU when there is one (float64).
+
+    `groups`: rows sharing a group never straddle train and test. Pass the input that fully determines
+    the state being probed (e.g. the (a, b) pair for positions before c): otherwise a probe can score by
+    memorising repeated states instead of reading a computed quantity."""
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     X = torch.as_tensor(np.asarray(X), dtype=torch.float64, device=device)
     Fy = torch.as_tensor(features(y)[0], dtype=torch.float64, device=device)
@@ -208,11 +212,13 @@ def probe_accuracy(X, y: np.ndarray, candidates: np.ndarray, folds: int = 5, see
     cand = torch.as_tensor(candidates, device=device)
     yt = torch.as_tensor(y, device=device)
     rng = np.random.default_rng(seed)
-    idx = rng.permutation(len(y))
+    g = np.arange(len(y)) if groups is None else np.asarray(groups)
+    keys = rng.permutation(np.unique(g))
     correct = 0
     for k in range(folds):
-        te = torch.as_tensor(idx[k::folds], device=device)
-        tr = torch.as_tensor(np.setdiff1d(idx, idx[k::folds]), device=device)
+        test_mask = np.isin(g, keys[k::folds])
+        te = torch.as_tensor(np.flatnonzero(test_mask), device=device)
+        tr = torch.as_tensor(np.flatnonzero(~test_mask), device=device)
         xm, ym = X[tr].mean(0), Fy[tr].mean(0)
         Xtr, Ytr = X[tr] - xm, Fy[tr] - ym
         K = Xtr @ Xtr.T

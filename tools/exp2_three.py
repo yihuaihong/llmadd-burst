@@ -39,6 +39,7 @@ def main() -> None:
     ap.add_argument("--bs", type=int, default=256)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--debug_all", action="store_true", help="skip the answered-correctly filter (mechanics tests only)")
+    ap.add_argument("--probes_only", action="store_true", help="stop after the probes")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
@@ -73,24 +74,28 @@ def main() -> None:
     probe_rows = []
     # reference: s read linearly from the TRUE helix features of a and b (no model involved)
     Fab = np.concatenate([nl.features(g[:, 0])[0], nl.features(g[:, 1])[0]], 1)
-    ref = nl.probe_accuracy(Fab, targets["s"], cand, alphas=(1e-3, 1e-1, 1e1))
+    # folds are split by the (a, b) pair: states at A..op2 are identical for problems sharing (a, b),
+    # so a random split would let a probe memorise pairs (an untrained step-150 model then "decodes" a+b
+    # at ~50%). With pair-grouped folds every test pair is unseen.
+    pair = g[:, 0] * 100 + g[:, 1]
+    ref = nl.probe_accuracy(Fab, targets["s"], cand, alphas=(1e-3, 1e-1, 1e1), groups=pair)
     for L in layers:
         for j, slot in enumerate(slots):
             X = H[L][:, j]
             for tname, y in targets.items():
-                r = nl.probe_accuracy(X, y, cand)
+                r = nl.probe_accuracy(X, y, cand, groups=pair)
                 probe_rows.append({"layer": L, "slot": slot, "target": tname, "acc": r["acc"]})
             if slot in ("op2", "B", "eq"):
-                r = nl.probe_accuracy(X, rng.permutation(targets["s"]), cand)
+                r = nl.probe_accuracy(X, rng.permutation(targets["s"]), cand, groups=pair)
                 probe_rows.append({"layer": L, "slot": slot, "target": "s_shuffled", "acc": r["acc"]})
         print(f"probes L{L} done ({time.time() - t0:.0f}s)")
     with open(out / "probes.csv", "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(probe_rows[0].keys())); w.writeheader(); w.writerows(probe_rows)
 
     # ---- (b) interchange and (c) steering, on problems the model answers correctly
-    if len(good) < 50:
+    if len(good) < 50 or args.probes_only:
         nl.save_json({"base_acc": base_acc, "n_correct": int(len(good)), "n_probe": int(npb),
-                      "ref_s_from_true_ab_features_linear": ref["acc"], "note": "too few correct problems for (b),(c)",
+                      "ref_s_from_true_ab_features_linear": ref["acc"], "note": "probes only" if args.probes_only else "too few correct problems for (b),(c)",
                       "interchange": [], "steer": []}, out / "exp2.json")
         plot(probe_rows, [], [], ref["acc"], base_acc, out)
         return
