@@ -1,0 +1,9 @@
+{
+ "base_acc": 0.7475,
+ "n_correct": 4485,
+ "n_probe": 1500,
+ "ref_s_from_true_ab_features_linear": 0.05733333333333333,
+ "note": "probes only",
+ "interchange": [],
+ "steer": []
+}
