@@ -1,0 +1,9 @@
+{
+ "base_acc": 0.0005,
+ "n_correct": 3,
+ "n_probe": 1500,
+ "ref_s_from_true_ab_features_linear": 0.07933333333333334,
+ "note": "too few correct problems for (b),(c)",
+ "interchange": [],
+ "steer": []
+}
