@@ -1,1 +1,1 @@
-{"time": "2026-09-27T13:01:00Z", "host": "b-10-2", "sentinel_job": "2224", "sentinel_started": "2026-09-27T12:32:20Z", "enabled": "1", "gpu_hours_used": 6, "in_flight": {}, "submit_errors": {}, "prev_sentinel": "2222 CANCELLED+ 0:0 00:38:51 b-10-1 "}
+{"time": "2026-09-27T13:12:23Z", "host": "b-10-4", "sentinel_job": "2227", "sentinel_started": "2026-09-27T13:12:21Z", "enabled": "1", "gpu_hours_used": 6, "in_flight": {}, "submit_errors": {}, "prev_sentinel": "2224 CANCELLED+ 0:0 00:38:51 b-10-2 "}
