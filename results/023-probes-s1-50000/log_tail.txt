@@ -1,0 +1,39 @@
+## task 023-probes-s1-50000  job 2177  host b-19-56  2026-09-27T06:26:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.24it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.62it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.47it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.53it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.19it/s]
+base accuracy on 6000 three-term problems: 0.022
+probes L0 done (88s)
+probes L1 done (92s)
+probes L2 done (96s)
+probes L3 done (100s)
+probes L4 done (105s)
+probes L5 done (109s)
+probes L6 done (113s)
+probes L7 done (117s)
+probes L8 done (121s)
+probes L9 done (125s)
+probes L10 done (129s)
+probes L11 done (133s)
+probes L12 done (137s)
+probes L13 done (141s)
+probes L14 done (145s)
+probes L15 done (149s)
+probes L16 done (153s)
+probes L17 done (157s)
+probes L18 done (161s)
+probes L19 done (165s)
+probes L20 done (170s)
+probes L21 done (174s)
+probes L22 done (178s)
+probes L23 done (182s)
+probes L24 done (186s)
+probes L25 done (190s)
+probes L26 done (194s)
+probes L27 done (198s)
+probes L28 done (202s)
+probes L29 done (206s)
+probes L30 done (210s)
+probes L31 done (215s)
+## rc=0  2026-09-27T06:30:43Z
