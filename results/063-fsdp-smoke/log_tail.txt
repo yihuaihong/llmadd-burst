@@ -1,0 +1,110 @@
+## task 063-fsdp-smoke  job 2337  host b-20-6  2026-09-27T20:48:52Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+name, memory.total [MiB]
+NVIDIA A100-SXM4-40GB, 40960 MiB
+NVIDIA A100-SXM4-40GB, 40960 MiB
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+`torch_dtype` is deprecated! Use `dtype` instead!
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:27<02:15, 27.12s/it]Loading checkpoint shards:  17%|█▋        | 1/6 [00:27<02:15, 27.12s/it]Loading checkpoint shards:  33%|███▎      | 2/6 [00:54<01:49, 27.30s/it]Loading checkpoint shards:  33%|███▎      | 2/6 [00:54<01:49, 27.30s/it]Loading checkpoint shards:  50%|█████     | 3/6 [01:22<01:23, 27.73s/it]Loading checkpoint shards:  50%|█████     | 3/6 [01:22<01:23, 27.73s/it]Loading checkpoint shards:  67%|██████▋   | 4/6 [01:50<00:55, 27.68s/it]Loading checkpoint shards:  67%|██████▋   | 4/6 [01:50<00:55, 27.68s/it]Loading checkpoint shards:  83%|████████▎ | 5/6 [02:16<00:27, 27.01s/it]Loading checkpoint shards:  83%|████████▎ | 5/6 [02:16<00:27, 27.01s/it]Loading checkpoint shards: 100%|██████████| 6/6 [02:42<00:00, 26.89s/it]Loading checkpoint shards: 100%|██████████| 6/6 [02:42<00:00, 27.15s/it]
+Loading checkpoint shards: 100%|██████████| 6/6 [02:42<00:00, 26.90s/it]Loading checkpoint shards: 100%|██████████| 6/6 [02:42<00:00, 27.15s/it]
+base: {'test': 0.007000000216066837, 'train': 0.014666666276752949, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (182s)
+/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py:209: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py:209: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+[rank1]: Traceback (most recent call last):
+[rank1]:   File "/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py", line 230, in <module>
+[rank1]:     main()
+[rank1]:   File "/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py", line 203, in main
+[rank1]:     Hs = geo_states()
+[rank1]:   File "/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py", line 154, in geo_states
+[rank1]:     forward(num_prefix)
+[rank1]:   File "/scratch/yh6210/llmadd_runs/063-fsdp-smoke/code/tools/manifold_train_fsdp.py", line 84, in forward
+[rank1]:     return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float()
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/fully_sharded_data_parallel.py", line 854, in forward
+[rank1]:     output = self._fsdp_wrapped_module(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/utils/generic.py", line 918, in wrapper
+[rank1]:     output = func(self, *args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/models/olmo2/modeling_olmo2.py", line 441, in forward
+[rank1]:     outputs: BaseModelOutputWithPast = self.model(
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/utils/generic.py", line 1072, in wrapper
+[rank1]:     outputs = func(self, *args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/models/olmo2/modeling_olmo2.py", line 377, in forward
+[rank1]:     hidden_states = decoder_layer(
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1773, in _wrapped_call_impl
+[rank1]:     return self._call_impl(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1784, in _call_impl
+[rank1]:     return forward_call(*args, **kwargs)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/fully_sharded_data_parallel.py", line 840, in forward
+[rank1]:     args, kwargs = _pre_forward(
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/_runtime_utils.py", line 382, in _pre_forward
+[rank1]:     unshard_fn(state, handle)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/_runtime_utils.py", line 417, in _pre_forward_unshard
+[rank1]:     _unshard(state, handle, state._unshard_stream, state._pre_unshard_stream)
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/_runtime_utils.py", line 301, in _unshard
+[rank1]:     handle.unshard()
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/_flat_param.py", line 1345, in unshard
+[rank1]:     unsharded_flat_param = self._alloc_padded_unsharded_flat_param()
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/fsdp/_flat_param.py", line 1372, in _alloc_padded_unsharded_flat_param
+[rank1]:     _alloc_storage(unsharded_flat_param, flat_param._padded_unsharded_size)  # type: ignore[attr-defined]
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/utils.py", line 179, in _alloc_storage
+[rank1]:     tensor._typed_storage()._resize_(size.numel())
+[rank1]:   File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/storage.py", line 1263, in _resize_
+[rank1]:     self._untyped_storage.resize_(size * self._element_size())
+[rank1]: torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 388.00 MiB. GPU 1 has a total capacity of 39.52 GiB of which 359.81 MiB is free. Including non-PyTorch memory, this process has 39.16 GiB memory in use. Of the allocated memory 37.91 GiB is allocated by PyTorch, and 154.99 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+W0927 20:52:52.290529 7360 torch/distributed/elastic/multiprocessing/api.py:900] Sending process 7397 closing signal SIGTERM
+E0927 20:52:52.613183 7360 torch/distributed/elastic/multiprocessing/api.py:874] failed (exitcode: 1) local_rank: 1 (pid: 7398) of binary: /scratch/yh6210/llmadd_env/bin/python
+Traceback (most recent call last):
+  File "/share/apps/pyenv/py3.9/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/share/apps/pyenv/py3.9/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/run.py", line 905, in <module>
+    main()
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 357, in wrapper
+    return f(*args, **kwargs)
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/run.py", line 901, in main
+    run(args)
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/run.py", line 892, in run
+    elastic_launch(
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/launcher/api.py", line 143, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/torch/distributed/launcher/api.py", line 277, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+manifold_train_fsdp.py FAILED
+------------------------------------------------------------
+Failures:
+  <NO_OTHER_FAILURES>
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2026-09-27_20:52:52
+  host      : b-20-6.c.hpc-slurm-9c75.internal
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 7398)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+## rc=1  2026-09-27T20:52:52Z

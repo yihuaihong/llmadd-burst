@@ -1,0 +1,1 @@
+{"task": "063-fsdp-smoke", "job": "2337", "kind": "gpu", "state": "FAILED", "rc": "1", "elapsed_min": 4, "ended": "2026-09-27T20:52:52Z"}
