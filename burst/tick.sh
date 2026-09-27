@@ -19,6 +19,19 @@ hdr() { sed -n "s/^# $2: *//p" "$1" | head -1; }
 in_queue() { squeue -h -j "$1" 2>/dev/null | grep -q .; }
 changed=0
 
+# 0. cancellations requested through git: one task name per line in burst/cancel.list.
+# The job is scancelled once; the task then ends as CANCELLED like any other (re-run = new task file).
+if [ -f burst/cancel.list ]; then
+  while read -r t _; do
+    [ -n "$t" ] && [ "${t#\#}" = "$t" ] || continue
+    if [ -e "$STATE/$t.job" ] && [ ! -e "$STATE/$t.cancel_sent" ]; then
+      read -r jid _ < "$STATE/$t.job"
+      scancel "$jid" 2>/dev/null && log "cancelled $t ($jid) on request"
+      touch "$STATE/$t.cancel_sent"; changed=1
+    fi
+  done < burst/cancel.list
+fi
+
 # 1. ended jobs
 for jf in "$STATE"/*.job; do
   [ -e "$jf" ] || continue
@@ -107,7 +120,7 @@ if [ "${#to_push[@]}" -gt 0 ] || [ "$changed" = 1 ] || [ $(( $(date +%s) - last 
   for jf in "$STATE"/*.job; do
     [ -e "$jf" ] || continue
     read -r jid kind < "$jf"
-    qs=$(squeue -h -j "$jid" -o %T 2>/dev/null | head -1)
+    qs=$(squeue -h -j "$jid" -o "%T %r" 2>/dev/null | head -1 | tr -d '"\\')
     inflight="$inflight\"$(basename "$jf" .job)\": \"$jid $kind ${qs:-?}\", "
   done
   errs=""

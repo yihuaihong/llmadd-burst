@@ -36,5 +36,7 @@ GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519_llmadd -o IdentitiesOnly=yes -o Strict
   git clone -q git@github.com:yihuaihong/llmadd-burst.git /scratch/$USER/llmadd && bash /scratch/$USER/llmadd/burst/boot.sh
 ```
 
+Cancel one task from anywhere: add its name to `burst/cancel.list` and push.
+
 Stop everything: `scancel -n llmadd_sentinel` (running tasks: `scancel -n llmadd_<task>`), or set
 `ENABLED=0` in `burst/config.env` to stop new submissions.
