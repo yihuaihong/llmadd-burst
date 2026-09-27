@@ -1,0 +1,8 @@
+## task 001-env  job 2146  host b-10-4  2026-09-27T04:01:37Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+python 3.9.18
+torch 2.8.0+cu128 cuda build 12.8
+transformers 4.57.6 peft 0.17.1
+numpy 2.0.2 sklearn 1.6.1
+## rc=0  2026-09-27T04:08:59Z
