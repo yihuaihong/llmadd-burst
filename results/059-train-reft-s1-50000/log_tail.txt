@@ -1,0 +1,36 @@
+## task 059-train-reft-s1-50000  job 2328  host b-19-11  2026-09-27T20:02:50Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.80it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.03it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.97it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.91it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.95it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.47it/s]
+base: {'test': 0.4820000231266022, 'train': 0.4973333179950714, 'three_term': 0.029999999329447746, 'three_digit': 0.04999999701976776, 'test_terse': 0.1340000033378601} (101s)
+/scratch/yh6210/llmadd_runs/059-train-reft-s1-50000/code/tools/manifold_train.py:285: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+reft none seed0: {'test': 0.8060000538825989, 'train': 0.9146666526794434, 'three_term': 0.019999999552965164, 'three_digit': 0.05249999836087227, 'test_terse': 0.1290000081062317} (144s)
+reft helix seed0: {'test': 0.8350000381469727, 'train': 0.9426666498184204, 'three_term': 0.03749999776482582, 'three_digit': 0.05249999836087227, 'test_terse': 0.1290000081062317} (187s)
+reft helix_shuf seed0: {'test': 0.8030000329017639, 'train': 0.9193333387374878, 'three_term': 0.02499999850988388, 'three_digit': 0.05249999836087227, 'test_terse': 0.13199999928474426} (230s)
+reft digit seed0: {'test': 0.8240000605583191, 'train': 0.9106666445732117, 'three_term': 0.027499999850988388, 'three_digit': 0.054999999701976776, 'test_terse': 0.1300000101327896} (272s)
+reft digit_shuf seed0: {'test': 0.7670000195503235, 'train': 0.8726666569709778, 'three_term': 0.027499999850988388, 'three_digit': 0.03500000014901161, 'test_terse': 0.1300000101327896} (314s)
+reft none seed1: {'test': 0.8480000495910645, 'train': 0.9313333034515381, 'three_term': 0.029999999329447746, 'three_digit': 0.05999999865889549, 'test_terse': 0.1420000046491623} (356s)
+reft helix seed1: {'test': 0.8660000562667847, 'train': 0.949999988079071, 'three_term': 0.03999999910593033, 'three_digit': 0.05249999836087227, 'test_terse': 0.14000000059604645} (398s)
+reft helix_shuf seed1: {'test': 0.8410000205039978, 'train': 0.940666675567627, 'three_term': 0.032499998807907104, 'three_digit': 0.04749999940395355, 'test_terse': 0.13199999928474426} (440s)
+reft digit seed1: {'test': 0.8460000157356262, 'train': 0.9453333020210266, 'three_term': 0.032499998807907104, 'three_digit': 0.044999998062849045, 'test_terse': 0.1380000114440918} (482s)
+reft digit_shuf seed1: {'test': 0.8250000476837158, 'train': 0.9200000166893005, 'three_term': 0.017500000074505806, 'three_digit': 0.05249999836087227, 'test_terse': 0.1340000033378601} (524s)
+reft none seed2: {'test': 0.8160000443458557, 'train': 0.9039999842643738, 'three_term': 0.019999999552965164, 'three_digit': 0.04999999701976776, 'test_terse': 0.12800000607967377} (565s)
+reft helix seed2: {'test': 0.7700000405311584, 'train': 0.8706666827201843, 'three_term': 0.029999999329447746, 'three_digit': 0.05999999865889549, 'test_terse': 0.13199999928474426} (607s)
+reft helix_shuf seed2: {'test': 0.7470000386238098, 'train': 0.8553333282470703, 'three_term': 0.019999999552965164, 'three_digit': 0.02499999850988388, 'test_terse': 0.13100001215934753} (650s)
+reft digit seed2: {'test': 0.7630000114440918, 'train': 0.8693333268165588, 'three_term': 0.027499999850988388, 'three_digit': 0.03749999776482582, 'test_terse': 0.13700000941753387} (691s)
+reft digit_shuf seed2: {'test': 0.796000063419342, 'train': 0.8786666393280029, 'three_term': 0.022499999031424522, 'three_digit': 0.03999999910593033, 'test_terse': 0.1340000033378601} (733s)
+# manifold fine-tuning (reft, lam 1.0, lr 0.001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.482 | 0.497 | 0.030 | 0.050 | 0.134 | - |
+| none | 3 | 0.823 ± 0.022 | 0.917 ± 0.014 | 0.023 ± 0.006 | 0.054 ± 0.005 | 0.133 ± 0.008 | 0.30 / 0.37 |
+| helix | 3 | 0.824 ± 0.049 | 0.921 ± 0.044 | 0.036 ± 0.005 | 0.055 ± 0.004 | 0.134 ± 0.006 | 0.28 / 0.35 |
+| helix_shuf | 3 | 0.797 ± 0.047 | 0.905 ± 0.044 | 0.026 ± 0.006 | 0.042 ± 0.015 | 0.132 ± 0.001 | 0.29 / 0.36 |
+| digit | 3 | 0.811 ± 0.043 | 0.908 ± 0.038 | 0.029 ± 0.003 | 0.046 ± 0.009 | 0.135 ± 0.004 | 0.29 / 0.36 |
+| digit_shuf | 3 | 0.796 ± 0.029 | 0.890 ± 0.026 | 0.022 ± 0.005 | 0.042 ± 0.009 | 0.133 ± 0.002 | 0.29 / 0.35 |
+
+## rc=0  2026-09-27T20:15:33Z
