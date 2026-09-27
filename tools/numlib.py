@@ -195,7 +195,7 @@ ALPHAS = tuple(10.0 ** k for k in range(-2, 7))
 
 
 def probe_accuracy(X, y: np.ndarray, candidates: np.ndarray, folds: int = 5, seed: int = 0,
-                   alphas=ALPHAS, device=None, groups: np.ndarray | None = None) -> dict:
+                   alphas=ALPHAS, device=None, groups: np.ndarray | None = None, return_pred: bool = False) -> dict:
     """Cross-validated exact decoding accuracy of integer target y from states X [n, d].
 
     Kernel ridge onto the helix features f(y); per training fold the ridge strength is picked by the
@@ -215,6 +215,7 @@ def probe_accuracy(X, y: np.ndarray, candidates: np.ndarray, folds: int = 5, see
     g = np.arange(len(y)) if groups is None else np.asarray(groups)
     keys = rng.permutation(np.unique(g))
     correct = 0
+    decoded = np.zeros(len(y), dtype=np.int64)
     for k in range(folds):
         test_mask = np.isin(g, keys[k::folds])
         te = torch.as_tensor(np.flatnonzero(test_mask), device=device)
@@ -237,7 +238,11 @@ def probe_accuracy(X, y: np.ndarray, candidates: np.ndarray, folds: int = 5, see
         pred = (X[te] - xm) @ (Xtr.T @ A) + ym
         dec = cand[torch.cdist(pred, Fc).argmin(1)]
         correct += int((dec == yt[te]).sum())
-    return {"acc": correct / len(y), "n": int(len(y))}
+        decoded[np.flatnonzero(test_mask)] = dec.cpu().numpy()
+    out = {"acc": correct / len(y), "n": int(len(y))}
+    if return_pred:
+        out["pred"] = decoded
+    return out
 
 
 def save_json(obj, path) -> None:
