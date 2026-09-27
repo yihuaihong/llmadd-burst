@@ -74,6 +74,39 @@ def target_grams(perm: np.ndarray, dev) -> dict:
     return out
 
 
+@torch.no_grad()
+def transplant_number_embeddings(emb_mod, num_all: torch.Tensor, main_path: str, how: str, dev) -> dict:
+    """Overwrite the input-embedding rows of the number tokens 0..999 with main's rows mapped into this
+    checkpoint's embedding space by scaled orthogonal Procrustes fitted on all NON-number tokens.
+    how = main | main_shuf (rows permuted within 10..99 and within 100..999). Returns fit diagnostics."""
+    from safetensors import safe_open
+    index = Path(main_path) / "model.safetensors.index.json"
+    shard = (json.loads(index.read_text())["weight_map"]["model.embed_tokens.weight"] if index.exists() else "model.safetensors")
+    with safe_open(str(Path(main_path) / shard), framework="pt") as f:
+        Em = f.get_tensor("model.embed_tokens.weight").float().to(dev)
+    Ec = emb_mod.weight.detach().float()
+    V = Ec.shape[0]
+    keep = torch.ones(V, dtype=torch.bool, device=dev); keep[num_all] = False
+    rng = np.random.default_rng(0)
+    perm_ids = torch.randperm(int(keep.sum()), generator=torch.Generator().manual_seed(0)).to(dev)
+    others = torch.nonzero(keep).squeeze(1)[perm_ids]
+    fit, held = others[: len(others) * 9 // 10], others[len(others) * 9 // 10:]
+    A, B = Em[fit] - Em[fit].mean(0), Ec[fit] - Ec[fit].mean(0)
+    U, S, Vt = torch.linalg.svd(A.T @ B)
+    R = U @ Vt
+    scale = S.sum() / (A ** 2).sum()
+    mapped = lambda X: (X - Em[fit].mean(0)) @ R * scale + Ec[fit].mean(0)
+    r2 = 1 - ((mapped(Em[held]) - Ec[held]) ** 2).sum() / ((Ec[held] - Ec[held].mean(0)) ** 2).sum()
+    rows = mapped(Em[num_all])
+    if how == "main_shuf":
+        p = np.arange(1000); p[10:100] = 10 + rng.permutation(90); p[100:] = 100 + rng.permutation(900)
+        rows = rows[torch.tensor(p, device=dev)]
+    before = Ec[num_all].clone()
+    emb_mod.weight[num_all] = rows.to(emb_mod.weight.dtype)
+    return {"procrustes_heldout_r2_non_number_tokens": float(r2), "scale": float(scale),
+            "mean_row_change_norm": float((rows - before).norm(dim=1).mean()), "mean_row_norm": float(before.norm(dim=1).mean())}
+
+
 def decoder_layers(model) -> list:
     return [m for m in model.modules() if type(m).__name__ == "Olmo2DecoderLayer"]
 
@@ -111,9 +144,17 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=None)
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--eval_bs", type=int, default=256)
+    ap.add_argument("--geo_site", choices=("layers", "emb"), default="layers",
+                    help="layers: CKA on the A-slot states at --layers; emb: CKA on the input-embedding rows of 10..99 (needs --emb_delta unless mode=full)")
+    ap.add_argument("--emb_delta", action="store_true", help="make the input-embedding rows of the number tokens 0..999 trainable (additive delta)")
+    ap.add_argument("--emb_init", choices=("orig", "main", "main_shuf"), default="orig",
+                    help="replace the number-token rows 0..999 of the input embedding before training: main = Procrustes-aligned rows of --main_model, main_shuf = same rows shuffled among the numbers")
+    ap.add_argument("--main_model", default=None)
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     lr = args.lr or {"lora": 1e-4, "reft": 1e-3, "full": 1e-5}[args.mode]
+    assert not (args.geo_site == "emb" and args.mode != "full" and not args.emb_delta), "--geo_site emb needs trainable embeddings (--emb_delta)"
+    assert args.emb_init == "orig" or args.main_model, "--emb_init main* needs --main_model"
     geoms = args.geoms.split(","); seeds = [int(s) for s in args.seeds.split(",")]
     man_layers = [int(v) for v in args.layers.split(",")]
     t0 = time.time()
@@ -147,15 +188,17 @@ def main() -> None:
             p.requires_grad_(False)
         reft_mods = torch.nn.ModuleDict({str(L): Reft(d, args.rank) for L in man_layers}).to(dev)
     else:
-        init_state = {k: v.detach().to("cpu", torch.bfloat16).clone() for k, v in model.state_dict().items()}
+        init_state = None   # taken after the optional embedding transplant (below)
 
     def trainable():
-        if args.mode == "reft":
-            return list(reft_mods.parameters())
-        return [p for p in model.parameters() if p.requires_grad]
+        ps = list(reft_mods.parameters()) if args.mode == "reft" else [p for p in model.parameters() if p.requires_grad]
+        return ps + ([emb_delta] if emb_delta is not None else [])
 
     def reset(seed: int) -> None:
         torch.manual_seed(seed)
+        if emb_delta is not None:
+            with torch.no_grad():
+                emb_delta.zero_()
         if args.mode == "lora":
             from peft.tuners.lora import LoraLayer
             for m in model.modules():
@@ -186,6 +229,36 @@ def main() -> None:
 
     for L in man_layers:
         layers[L].register_forward_hook(make_hook(L))
+
+    # ---------------------------------------------------------------- number-token embeddings
+    emb_mod = model.get_input_embeddings()
+    num_all = num_ids[:1000]
+    emb_info = {}
+    if args.emb_init != "orig":
+        emb_info = transplant_number_embeddings(emb_mod, num_all, args.main_model, args.emb_init, dev)
+        print(f"embedding init {args.emb_init}: {emb_info}")
+    emb_delta = None
+    if args.emb_delta:
+        emb_delta = torch.nn.Parameter(torch.zeros(1000, d, device=dev))
+        row_of = torch.full((emb_mod.weight.shape[0],), -1, dtype=torch.long, device=dev)
+        row_of[num_all] = torch.arange(1000, device=dev)
+
+        def add_delta(_m, inp, out):
+            r = row_of[inp[0]]
+            m = r >= 0
+            if not m.any():
+                return out
+            out = out.clone()
+            out[m] = out[m] + emb_delta[r[m]].to(out.dtype)
+            return out
+        emb_mod.register_forward_hook(add_delta)
+
+    if args.mode == "full":
+        init_state = {k: v.detach().to("cpu", torch.bfloat16).clone() for k, v in model.state_dict().items()}
+
+    def number_embedding_rows() -> torch.Tensor:
+        E = emb_mod.weight[num_all[10:100]].float()
+        return E + emb_delta[10:100] if emb_delta is not None else E
 
     def forward(ids: torch.Tensor, reft: bool) -> torch.Tensor:
         reft_on["v"] = reft
@@ -244,15 +317,21 @@ def main() -> None:
     assert num_prefix.shape[1] == slot_pos["A"] + 1
 
     def geo_cka(reft: bool) -> dict:
-        """{L: H [90, d]} for the 90 numbers (with grad)."""
+        """{L: H [90, d]} for the 90 numbers (with grad); with --geo_site emb the single entry "emb" holds the
+        input-embedding rows instead (no forward needed)."""
+        if args.geo_site == "emb":
+            return {"emb": number_embedding_rows()}
         forward(num_prefix, reft)
         return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+    geo_keys = ["emb"] if args.geo_site == "emb" else man_layers
 
     @torch.no_grad()
     def geometry_report(reft: bool) -> dict:
         model.eval()
-        Hs = geo_cka(reft)
-        return {f"L{L}": {"cka_" + G: float(cka(Hs[L], grams[G])) for G in grams} for L in man_layers}
+        forward(num_prefix, reft)
+        Hs = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        Hs["emb"] = number_embedding_rows()
+        return {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
 
     base_eval = evaluate(reft=False)
     base_means = number_means(reft=False)
@@ -287,11 +366,11 @@ def main() -> None:
                         if G == "none":
                             with torch.no_grad():
                                 Hs = geo_cka(reft=True)
-                                ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
+                                ml = sum(1 - cka(Hs[L], grams["helix"]) for L in geo_keys) / len(geo_keys)
                             loss = ce
                         else:
                             Hs = geo_cka(reft=True)
-                            ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
+                            ml = sum(1 - cka(Hs[L], grams[G]) for L in geo_keys) / len(geo_keys)
                             loss = ce + args.lam * ml
                     loss.backward()
                     opt.step()
@@ -301,7 +380,8 @@ def main() -> None:
             del opt
             ev = evaluate(reft=True)
             diag = diagnostics(number_means(reft=True), None, slot_pos)
-            path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
+            path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geo_site": args.geo_site, "emb_delta": args.emb_delta,
+                                        "emb_init": args.emb_init, "emb_init_info": emb_info, "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
                                         "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag,
                                         "geometry": geometry_report(reft=True)}, indent=1))
             print(f"{args.mode} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
@@ -341,9 +421,12 @@ def summarize(out: Path) -> None:
         r2 = np.mean([[r["manifold"][first]["r2_helix"], r["manifold"][first]["r2_digit"]] for r in rs], 0)
         ck = ""
         if "geometry" in rs[0]:
-            gl = list(rs[0]["geometry"])[-1]
+            gl = [k for k in rs[0]["geometry"] if k.startswith("L")][-1]
             c = np.mean([[r["geometry"][gl]["cka_helix"], r["geometry"][gl]["cka_digit"]] for r in rs], 0)
             ck = f" CKA@{gl} helix {c[0]:.2f} digit {c[1]:.2f}"
+            if "emb" in rs[0]["geometry"]:
+                e = np.mean([[r["geometry"]["emb"]["cka_helix"], r["geometry"]["emb"]["cka_digit"]] for r in rs], 0)
+                ck += f"; emb helix {e[0]:.2f} digit {e[1]:.2f}"
         lines.append(f"| {G} | {len(rs)} | " + " | ".join(cells) + f" | {r2[0]:.2f} / {r2[1]:.2f}{ck} |\n")
     (out / "summary.md").write_text("".join(lines))
     print("".join(lines))
