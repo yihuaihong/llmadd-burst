@@ -1,0 +1,66 @@
+## task 076-emb-manifold  job 2354  host b-10-2  2026-09-27T22:10:23Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+stage1-step150-tokens1B {'cka_helix': 0.238, 'cka_digit': 0.384, 'cka_helix_shuf': 0.244, 'r2_helix': -0.132, 'r2_digit': -0.31, 'cka_3digit': 0.093, 'cka_3digit_shuf': 0.092, 'nn_adjacent': 0.016, 'nn_same_tens': 0.084, 'norm_mean_0_99': 1.261, 'norm_mean_100_999': 1.263}
+stage1-step1000-tokens5B {'cka_helix': 0.252, 'cka_digit': 0.397, 'cka_helix_shuf': 0.244, 'r2_helix': -0.127, 'r2_digit': -0.301, 'cka_3digit': 0.102, 'cka_3digit_shuf': 0.093, 'nn_adjacent': 0.053, 'nn_same_tens': 0.162, 'norm_mean_0_99': 1.268, 'norm_mean_100_999': 1.275}
+stage1-step2000-tokens9B {'cka_helix': 0.303, 'cka_digit': 0.439, 'cka_helix_shuf': 0.244, 'r2_helix': -0.108, 'r2_digit': -0.269, 'cka_3digit': 0.163, 'cka_3digit_shuf': 0.096, 'nn_adjacent': 0.151, 'nn_same_tens': 0.378, 'norm_mean_0_99': 1.338, 'norm_mean_100_999': 1.347}
+stage1-step5000-tokens21B {'cka_helix': 0.496, 'cka_digit': 0.597, 'cka_helix_shuf': 0.238, 'r2_helix': -0.03, 'r2_digit': -0.13, 'cka_3digit': 0.392, 'cka_3digit_shuf': 0.09, 'nn_adjacent': 0.347, 'nn_same_tens': 0.622, 'norm_mean_0_99': 1.641, 'norm_mean_100_999': 1.633}
+stage1-step10000-tokens42B {'cka_helix': 0.6, 'cka_digit': 0.68, 'cka_helix_shuf': 0.217, 'r2_helix': 0.031, 'r2_digit': -0.017, 'cka_3digit': 0.541, 'cka_3digit_shuf': 0.076, 'nn_adjacent': 0.382, 'nn_same_tens': 0.658, 'norm_mean_0_99': 2.065, 'norm_mean_100_999': 1.998}
+stage1-step20000-tokens84B {'cka_helix': 0.646, 'cka_digit': 0.713, 'cka_helix_shuf': 0.204, 'r2_helix': 0.068, 'r2_digit': 0.052, 'cka_3digit': 0.614, 'cka_3digit_shuf': 0.066, 'nn_adjacent': 0.396, 'nn_same_tens': 0.72, 'norm_mean_0_99': 2.691, 'norm_mean_100_999': 2.542}
+stage1-step50000-tokens210B {'cka_helix': 0.653, 'cka_digit': 0.721, 'cka_helix_shuf': 0.205, 'r2_helix': 0.07, 'r2_digit': 0.053, 'cka_3digit': 0.654, 'cka_3digit_shuf': 0.069, 'nn_adjacent': 0.393, 'nn_same_tens': 0.742, 'norm_mean_0_99': 3.87, 'norm_mean_100_999': 3.729}
+stage1-step101000-tokens424B {'cka_helix': 0.691, 'cka_digit': 0.7, 'cka_helix_shuf': 0.182, 'r2_helix': 0.117, 'r2_digit': 0.112, 'cka_3digit': 0.681, 'cka_3digit_shuf': 0.085, 'nn_adjacent': 0.371, 'nn_same_tens': 0.831, 'norm_mean_0_99': 4.406, 'norm_mean_100_999': 6.947}
+stage1-step150000-tokens630B {'cka_helix': 0.699, 'cka_digit': 0.713, 'cka_helix_shuf': 0.18, 'r2_helix': 0.122, 'r2_digit': 0.125, 'cka_3digit': 0.686, 'cka_3digit_shuf': 0.081, 'nn_adjacent': 0.376, 'nn_same_tens': 0.796, 'norm_mean_0_99': 4.142, 'norm_mean_100_999': 5.631}
+stage1-step250000-tokens1049B {'cka_helix': 0.696, 'cka_digit': 0.703, 'cka_helix_shuf': 0.18, 'r2_helix': 0.121, 'r2_digit': 0.118, 'cka_3digit': 0.686, 'cka_3digit_shuf': 0.083, 'nn_adjacent': 0.371, 'nn_same_tens': 0.818, 'norm_mean_0_99': 4.33, 'norm_mean_100_999': 6.596}
+stage1-step400000-tokens1678B {'cka_helix': 0.687, 'cka_digit': 0.696, 'cka_helix_shuf': 0.182, 'r2_helix': 0.115, 'r2_digit': 0.107, 'cka_3digit': 0.672, 'cka_3digit_shuf': 0.087, 'nn_adjacent': 0.378, 'nn_same_tens': 0.831, 'norm_mean_0_99': 4.539, 'norm_mean_100_999': 7.47}
+stage1-step500000-tokens2098B {'cka_helix': 0.684, 'cka_digit': 0.694, 'cka_helix_shuf': 0.182, 'r2_helix': 0.113, 'r2_digit': 0.105, 'cka_3digit': 0.666, 'cka_3digit_shuf': 0.088, 'nn_adjacent': 0.378, 'nn_same_tens': 0.831, 'norm_mean_0_99': 4.588, 'norm_mean_100_999': 7.797}
+stage1-step700000-tokens2937B {'cka_helix': 0.682, 'cka_digit': 0.694, 'cka_helix_shuf': 0.181, 'r2_helix': 0.113, 'r2_digit': 0.109, 'cka_3digit': 0.656, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.373, 'nn_same_tens': 0.84, 'norm_mean_0_99': 4.594, 'norm_mean_100_999': 8.106}
+stage1-step850000-tokens3566B {'cka_helix': 0.68, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.114, 'r2_digit': 0.111, 'cka_3digit': 0.654, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.376, 'nn_same_tens': 0.847, 'norm_mean_0_99': 4.553, 'norm_mean_100_999': 8.17}
+stage1-step928646-tokens3896B {'cka_helix': 0.681, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.116, 'r2_digit': 0.113, 'cka_3digit': 0.653, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.376, 'nn_same_tens': 0.842, 'norm_mean_0_99': 4.523, 'norm_mean_100_999': 8.177}
+stage2-ingredient1-step11931-tokens50B {'cka_helix': 0.682, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.117, 'r2_digit': 0.115, 'cka_3digit': 0.653, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.371, 'nn_same_tens': 0.838, 'norm_mean_0_99': 4.513, 'norm_mean_100_999': 8.173}
+stage2-ingredient2-step11931-tokens50B {'cka_helix': 0.682, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.117, 'r2_digit': 0.114, 'cka_3digit': 0.653, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.371, 'nn_same_tens': 0.836, 'norm_mean_0_99': 4.513, 'norm_mean_100_999': 8.173}
+stage2-ingredient3-step11931-tokens50B {'cka_helix': 0.682, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.117, 'r2_digit': 0.114, 'cka_3digit': 0.653, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.371, 'nn_same_tens': 0.836, 'norm_mean_0_99': 4.512, 'norm_mean_100_999': 8.173}
+main {'cka_helix': 0.682, 'cka_digit': 0.694, 'cka_helix_shuf': 0.18, 'r2_helix': 0.117, 'r2_digit': 0.115, 'cka_3digit': 0.653, 'cka_3digit_shuf': 0.089, 'nn_adjacent': 0.373, 'nn_same_tens': 0.838, 'norm_mean_0_99': 4.512, 'norm_mean_100_999': 8.173}
+# number manifold in the embedding matrices
+
+| revision | matrix | cka_helix | cka_digit | cka_helix_shuf | r2_helix | r2_digit | cka_3digit | cka_3digit_shuf | nn_adjacent | nn_same_tens |
+|---|---|---|---|---|---|---|---|---|---|---|
+| stage1-step150-tokens1B | input | 0.24 | 0.38 | 0.24 | -0.13 | -0.31 | 0.09 | 0.09 | 0.02 | 0.08 |
+| stage1-step150-tokens1B | output | 0.24 | 0.39 | 0.24 | -0.13 | -0.31 | 0.09 | 0.09 | 0.04 | 0.09 |
+| stage1-step1000-tokens5B | input | 0.25 | 0.40 | 0.24 | -0.13 | -0.30 | 0.10 | 0.09 | 0.05 | 0.16 |
+| stage1-step1000-tokens5B | output | 0.32 | 0.45 | 0.24 | -0.10 | -0.26 | 0.13 | 0.09 | 0.26 | 0.52 |
+| stage1-step2000-tokens9B | input | 0.30 | 0.44 | 0.24 | -0.11 | -0.27 | 0.16 | 0.10 | 0.15 | 0.38 |
+| stage1-step2000-tokens9B | output | 0.45 | 0.54 | 0.23 | -0.05 | -0.18 | 0.23 | 0.10 | 0.33 | 0.72 |
+| stage1-step5000-tokens21B | input | 0.50 | 0.60 | 0.24 | -0.03 | -0.13 | 0.39 | 0.09 | 0.35 | 0.62 |
+| stage1-step5000-tokens21B | output | 0.64 | 0.66 | 0.20 | 0.06 | 0.00 | 0.44 | 0.10 | 0.36 | 0.79 |
+| stage1-step10000-tokens42B | input | 0.60 | 0.68 | 0.22 | 0.03 | -0.02 | 0.54 | 0.08 | 0.38 | 0.66 |
+| stage1-step10000-tokens42B | output | 0.68 | 0.69 | 0.18 | 0.10 | 0.09 | 0.56 | 0.10 | 0.38 | 0.82 |
+| stage1-step20000-tokens84B | input | 0.65 | 0.71 | 0.20 | 0.07 | 0.05 | 0.61 | 0.07 | 0.40 | 0.72 |
+| stage1-step20000-tokens84B | output | 0.70 | 0.68 | 0.18 | 0.12 | 0.12 | 0.61 | 0.10 | 0.38 | 0.82 |
+| stage1-step50000-tokens210B | input | 0.65 | 0.72 | 0.21 | 0.07 | 0.05 | 0.65 | 0.07 | 0.39 | 0.74 |
+| stage1-step50000-tokens210B | output | 0.70 | 0.68 | 0.18 | 0.12 | 0.10 | 0.62 | 0.10 | 0.37 | 0.80 |
+| stage1-step101000-tokens424B | input | 0.69 | 0.70 | 0.18 | 0.12 | 0.11 | 0.68 | 0.08 | 0.37 | 0.83 |
+| stage1-step101000-tokens424B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.07 | 0.59 | 0.11 | 0.37 | 0.81 |
+| stage1-step150000-tokens630B | input | 0.70 | 0.71 | 0.18 | 0.12 | 0.13 | 0.69 | 0.08 | 0.38 | 0.80 |
+| stage1-step150000-tokens630B | output | 0.69 | 0.67 | 0.18 | 0.11 | 0.08 | 0.60 | 0.11 | 0.38 | 0.80 |
+| stage1-step250000-tokens1049B | input | 0.70 | 0.70 | 0.18 | 0.12 | 0.12 | 0.69 | 0.08 | 0.37 | 0.82 |
+| stage1-step250000-tokens1049B | output | 0.69 | 0.67 | 0.19 | 0.10 | 0.07 | 0.59 | 0.11 | 0.37 | 0.82 |
+| stage1-step400000-tokens1678B | input | 0.69 | 0.70 | 0.18 | 0.11 | 0.11 | 0.67 | 0.09 | 0.38 | 0.83 |
+| stage1-step400000-tokens1678B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.07 | 0.58 | 0.11 | 0.37 | 0.82 |
+| stage1-step500000-tokens2098B | input | 0.68 | 0.69 | 0.18 | 0.11 | 0.10 | 0.67 | 0.09 | 0.38 | 0.83 |
+| stage1-step500000-tokens2098B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.07 | 0.58 | 0.12 | 0.37 | 0.82 |
+| stage1-step700000-tokens2937B | input | 0.68 | 0.69 | 0.18 | 0.11 | 0.11 | 0.66 | 0.09 | 0.37 | 0.84 |
+| stage1-step700000-tokens2937B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.07 | 0.57 | 0.12 | 0.36 | 0.80 |
+| stage1-step850000-tokens3566B | input | 0.68 | 0.69 | 0.18 | 0.11 | 0.11 | 0.65 | 0.09 | 0.38 | 0.85 |
+| stage1-step850000-tokens3566B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.07 | 0.56 | 0.12 | 0.36 | 0.79 |
+| stage1-step928646-tokens3896B | input | 0.68 | 0.69 | 0.18 | 0.12 | 0.11 | 0.65 | 0.09 | 0.38 | 0.84 |
+| stage1-step928646-tokens3896B | output | 0.68 | 0.67 | 0.19 | 0.10 | 0.06 | 0.55 | 0.12 | 0.35 | 0.79 |
+| stage2-ingredient1-step11931-tokens50B | input | 0.68 | 0.69 | 0.18 | 0.12 | 0.11 | 0.65 | 0.09 | 0.37 | 0.84 |
+| stage2-ingredient1-step11931-tokens50B | output | 0.68 | 0.67 | 0.19 | 0.09 | 0.06 | 0.55 | 0.12 | 0.36 | 0.79 |
+| stage2-ingredient2-step11931-tokens50B | input | 0.68 | 0.69 | 0.18 | 0.12 | 0.11 | 0.65 | 0.09 | 0.37 | 0.84 |
+| stage2-ingredient2-step11931-tokens50B | output | 0.68 | 0.67 | 0.19 | 0.09 | 0.06 | 0.55 | 0.12 | 0.36 | 0.79 |
+| stage2-ingredient3-step11931-tokens50B | input | 0.68 | 0.69 | 0.18 | 0.12 | 0.11 | 0.65 | 0.09 | 0.37 | 0.84 |
+| stage2-ingredient3-step11931-tokens50B | output | 0.68 | 0.67 | 0.19 | 0.09 | 0.06 | 0.55 | 0.12 | 0.36 | 0.79 |
+| main | input | 0.68 | 0.69 | 0.18 | 0.12 | 0.11 | 0.65 | 0.09 | 0.37 | 0.84 |
+| main | output | 0.68 | 0.67 | 0.19 | 0.09 | 0.06 | 0.55 | 0.12 | 0.36 | 0.79 |
+
+## rc=0  2026-09-27T22:24:23Z
