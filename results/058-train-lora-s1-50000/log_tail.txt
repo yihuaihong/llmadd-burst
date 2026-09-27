@@ -1,0 +1,19 @@
+## task 058-train-lora-s1-50000  job 2327  host b-19-31  2026-09-27T19:59:21Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.85it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.36it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.70it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.80it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.54it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.12it/s]
+base: {'test': 0.4820000231266022, 'train': 0.4973333179950714, 'three_term': 0.029999999329447746, 'three_digit': 0.04999999701976776, 'test_terse': 0.1340000033378601} (106s)
+/scratch/yh6210/llmadd_runs/058-train-lora-s1-50000/code/tools/manifold_train.py:285: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:835.)
+  ce_s += float(ce); man_s += float(ml); nb += 1
+lora none seed0: {'test': 0.9770000576972961, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.07000000029802322, 'test_terse': 0.24000000953674316} (196s)
+lora helix seed0: {'test': 0.968000054359436, 'train': 1.0, 'three_term': 0.009999999776482582, 'three_digit': 0.0625, 'test_terse': 0.22500000894069672} (285s)
+lora helix_shuf seed0: {'test': 0.9510000348091125, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.0625, 'test_terse': 0.25300002098083496} (374s)
+lora digit seed0: {'test': 0.968000054359436, 'train': 1.0, 'three_term': 0.009999999776482582, 'three_digit': 0.05999999865889549, 'test_terse': 0.22600001096725464} (462s)
+lora digit_shuf seed0: {'test': 0.9620000720024109, 'train': 0.9993333220481873, 'three_term': 0.009999999776482582, 'three_digit': 0.05999999865889549, 'test_terse': 0.23600001633167267} (551s)
+lora none seed1: {'test': 0.9730000495910645, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.06749999523162842, 'test_terse': 0.2510000169277191} (639s)
+lora helix seed1: {'test': 0.9750000238418579, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.07249999791383743, 'test_terse': 0.2200000137090683} (727s)
+lora helix_shuf seed1: {'test': 0.968000054359436, 'train': 1.0, 'three_term': 0.009999999776482582, 'three_digit': 0.057499997317790985, 'test_terse': 0.25} (816s)
+lora digit seed1: {'test': 0.9800000190734863, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.07249999791383743, 'test_terse': 0.22200001776218414} (902s)
+[2026-09-27T20:15:42.835] error: *** JOB 2327 ON b-19-31 CANCELLED AT 2026-09-27T20:15:42 DUE to SIGNAL Terminated ***
