@@ -192,6 +192,7 @@ def main() -> None:
                 for i in range(0, len(order), args.bs):
                     bi = order[i:i + args.bs][rank::world]
                     chunk = train[bi]
+                    opt.zero_grad(set_to_none=True)
                     logits = forward(train_ids[torch.tensor(bi, device=dev)])
                     ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
                     if G == "none":
@@ -203,10 +204,10 @@ def main() -> None:
                         Hs = geo_states()
                         ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
                         loss = ce + args.lam * ml
-                    opt.zero_grad(set_to_none=True)
                     loss.backward()
                     opt.step()
-                    ce_s += float(ce); man_s += float(ml); nb += 1
+                    ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
+                    del logits, loss, Hs
                 stats = torch.tensor([ce_s / nb, man_s / nb], device=dev); dist.all_reduce(stats); stats /= world
                 log.append({"epoch": ep, "ce": float(stats[0]), "geo_loss": float(stats[1])})
             del opt

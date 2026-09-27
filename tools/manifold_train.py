@@ -277,21 +277,26 @@ def main() -> None:
                 for i in range(0, len(order), args.bs):
                     bi = order[i:i + args.bs]
                     chunk = train[bi]
-                    logits = forward(train_ids[torch.tensor(bi, device=dev)], reft=True)
-                    ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
-                    if G == "none":
-                        with torch.no_grad():
-                            Hs = geo_cka(reft=True)
-                            ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
-                        loss = ce
-                    else:
-                        Hs = geo_cka(reft=True)
-                        ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
-                        loss = ce + args.lam * ml
+                    # free the previous gradients before the forwards, and run both forwards inside ONE autocast
+                    # region so they share a single bf16 copy of the weights (full FT: two copies + stale grads
+                    # overflowed 140 GB)
                     opt.zero_grad(set_to_none=True)
+                    with autocast:
+                        logits = forward(train_ids[torch.tensor(bi, device=dev)], reft=True)
+                        ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
+                        if G == "none":
+                            with torch.no_grad():
+                                Hs = geo_cka(reft=True)
+                                ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
+                            loss = ce
+                        else:
+                            Hs = geo_cka(reft=True)
+                            ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
+                            loss = ce + args.lam * ml
                     loss.backward()
                     opt.step()
-                    ce_s += float(ce); man_s += float(ml); nb += 1
+                    ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
+                    del logits, loss, Hs
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
             del opt
             ev = evaluate(reft=True)
