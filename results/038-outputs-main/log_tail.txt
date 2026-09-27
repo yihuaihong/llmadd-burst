@@ -1,0 +1,17 @@
+## task 038-outputs-main  job 2195  host b-19-60  2026-09-27T07:18:40Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.94it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  9.79it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  9.40it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  9.39it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00, 10.11it/s]
+{'n': 400, 'first_token_acc': 0.7824999690055847, 'first_integer_in_generation_acc': 0.7825, 'gold_first_token_prob_mean': 0.4242378771305084, 'gold_rank_median': 1.0, 'gold_in_top5': 0.9824999570846558, 'first_token_categories': {'total': 313, 'other_number': 73, 'a+b': 7, 'non-number:?Ċ': 5, 'b+c': 2}, 'first_integer_categories': {'total': 313, 'other': 80, 'a+b': 7}}
+{'problem': '40+18+25', 'total': 83, 'generation': '83\nOutput ONLY a number'}
+{'problem': '22+20+18', 'total': 60, 'generation': '60\nOutput ONLY a number'}
+{'problem': '21+19+58', 'total': 98, 'generation': '98\nOutput ONLY a number'}
+{'problem': '18+25+23', 'total': 66, 'generation': '56\nOutput ONLY a number'}
+{'problem': '49+21+27', 'total': 97, 'generation': '97\nOutput ONLY a number'}
+{'problem': '67+15+12', 'total': 94, 'generation': '94\n  2.'}
+{'problem': '17+31+11', 'total': 59, 'generation': '49\nOutput ONLY a number'}
+{'problem': '36+17+35', 'total': 88, 'generation': '88\nOutput ONLY a number'}
+{'problem': '73+11+14', 'total': 98, 'generation': '100\nOutput ONLY a number'}
+{'problem': '13+46+31', 'total': 90, 'generation': '90\nOutput ONLY a number'}
+## rc=0  2026-09-27T07:20:20Z

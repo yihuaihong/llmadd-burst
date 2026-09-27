@@ -1,0 +1,146 @@
+{
+ "n": 400,
+ "first_token_acc": 0.7774999737739563,
+ "first_integer_in_generation_acc": 0.7775,
+ "gold_first_token_prob_mean": 0.48428863286972046,
+ "gold_rank_median": 1.0,
+ "gold_in_top5": 0.9824999570846558,
+ "first_token_categories": {
+  "total": 311,
+  "other_number": 81,
+  "a+b": 6,
+  "b+c": 2
+ },
+ "first_integer_categories": {
+  "total": 311,
+  "other": 83,
+  "a+b": 6
+ },
+ "examples": [
+  {
+   "problem": "40+18+25",
+   "total": 83,
+   "generation": "83\n  2."
+  },
+  {
+   "problem": "22+20+18",
+   "total": 60,
+   "generation": "50\nOutput ONLY a number"
+  },
+  {
+   "problem": "21+19+58",
+   "total": 98,
+   "generation": "98\nOutput ONLY a number"
+  },
+  {
+   "problem": "18+25+23",
+   "total": 66,
+   "generation": "56\nOutput ONLY a number"
+  },
+  {
+   "problem": "49+21+27",
+   "total": 97,
+   "generation": "97\n  2."
+  },
+  {
+   "problem": "67+15+12",
+   "total": 94,
+   "generation": "94\n  2."
+  },
+  {
+   "problem": "17+31+11",
+   "total": 59,
+   "generation": "49\n  2."
+  },
+  {
+   "problem": "36+17+35",
+   "total": 88,
+   "generation": "88\nOutput ONLY a number"
+  },
+  {
+   "problem": "73+11+14",
+   "total": 98,
+   "generation": "98\n  2."
+  },
+  {
+   "problem": "13+46+31",
+   "total": 90,
+   "generation": "90\n  2."
+  },
+  {
+   "problem": "14+14+36",
+   "total": 64,
+   "generation": "64\nOutput ONLY a number"
+  },
+  {
+   "problem": "14+21+17",
+   "total": 52,
+   "generation": "52\nOutput ONLY a number"
+  },
+  {
+   "problem": "15+38+45",
+   "total": 98,
+   "generation": "98\n  2."
+  },
+  {
+   "problem": "20+36+13",
+   "total": 69,
+   "generation": "59\n  2."
+  },
+  {
+   "problem": "40+12+12",
+   "total": 64,
+   "generation": "64\nOutput ONLY a number"
+  },
+  {
+   "problem": "10+40+35",
+   "total": 85,
+   "generation": "85\nOutput ONLY a number"
+  },
+  {
+   "problem": "58+20+11",
+   "total": 89,
+   "generation": "89\nOutput ONLY a number"
+  },
+  {
+   "problem": "16+22+32",
+   "total": 70,
+   "generation": "70\n  2."
+  },
+  {
+   "problem": "18+40+24",
+   "total": 82,
+   "generation": "82\nOutput ONLY a number"
+  },
+  {
+   "problem": "38+26+21",
+   "total": 85,
+   "generation": "85\nOutput ONLY a number"
+  },
+  {
+   "problem": "56+19+21",
+   "total": 96,
+   "generation": "96\n  2."
+  },
+  {
+   "problem": "10+11+35",
+   "total": 56,
+   "generation": "56\nOutput ONLY a number"
+  },
+  {
+   "problem": "30+39+30",
+   "total": 99,
+   "generation": "99\n  2."
+  },
+  {
+   "problem": "14+38+47",
+   "total": 99,
+   "generation": "99\nOutput ONLY a number"
+  },
+  {
+   "problem": "22+16+29",
+   "total": 67,
+   "generation": "57\nOutput ONLY a number"
+  }
+ ]
+}
