@@ -1,0 +1,30 @@
+## task 049-robust-s1-150000  job 2207  host b-19-28  2026-09-27T07:50:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00, 10.27it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  9.12it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.97it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.77it/s]
+terse {'prompt_example': 'Output ONLY a number.40+18+25=', 'acc': 0.07266666666666666, 'says_number': 0.8906666666666667, 'error_hist_top': {-10: 166, -12: 87, -8: 85, -4: 64, -6: 62, -2: 58, -18: 53, -14: 51}, 'probe_best_layer': 26, 'probe_acc': 0.42733333333333334, 'P(probe right | model wrong)': 0.41912293314162474}
+spaced {'prompt_example': 'Q: 40 + 18 + 25 = ', 'acc': 0.118, 'says_number': 1.0, 'error_hist_top': {-4: 135, -10: 125, -2: 121, -6: 115, 2: 104, -8: 96, 4: 89, 6: 61}, 'probe_best_layer': 29, 'probe_acc': 0.41133333333333333, 'P(probe right | model wrong)': 0.4051398337112623}
+two_shot {'prompt_example': '12+31+20=63\n25+14+33=72\n40+18+25=', 'acc': 0.06266666666666665, 'says_number': 1.0, 'error_hist_top': {-10: 221, -12: 146, -14: 98, -8: 87, -20: 74, -6: 71, -4: 67, -18: 61}, 'probe_best_layer': 27, 'probe_acc': 0.654, 'P(probe right | model wrong)': 0.6458036984352774}
+terse two-term acc 0.7703703703703704
+spaced two-term acc 0.9527777777777777
+# exp3: robustness of the three-term tens readout error
+
+| format | acc | P(probe right \| model wrong) | probe acc (L) | wrong by tens of total (3x..9x) |
+|---|---|---|---|---|
+| terse | 0.07 | 0.42 | 0.43 (L26) | 3x:0.40 4x:0.79 5x:0.98 6x:0.92 7x:0.76 8x:0.97 9x:0.97 |
+| spaced | 0.12 | 0.41 | 0.41 (L29) | 3x:0.20 4x:0.50 5x:0.89 6x:0.87 7x:0.76 8x:0.92 9x:0.94 |
+| two_shot | 0.06 | 0.65 | 0.65 (L27) | 3x:0.80 4x:0.88 5x:0.94 6x:0.86 7x:0.85 8x:0.98 9x:0.98 |
+
+## two-term: wrong by tens of the sum
+
+- terse (acc 0.770): 2x:0.11 3x:0.15 4x:0.07 5x:0.17 6x:0.25 7x:0.19 8x:0.24 9x:0.35
+- spaced (acc 0.953): 2x:0.00 3x:0.02 4x:0.01 5x:0.02 6x:0.03 7x:0.04 8x:0.07 9x:0.08
+
+## unembedding: cos(readout(n), readout(n-10)) by tens of n
+
+1x:0.50 2x:0.59 3x:0.56 4x:0.57 5x:0.57 6x:0.53 7x:0.56 8x:0.56 9x:0.55
+
+cos(n, n-1) mean 0.65
+
+## rc=0  2026-09-27T07:52:41Z
