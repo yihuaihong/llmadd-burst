@@ -13,7 +13,7 @@
 #   sbatch --job-name=fullft_s1-10000 torch/full_ft.sbatch <revision> <run-name>
 # Restartable: finished (geometry, seed) runs are skipped, so a requeue continues where it stopped.
 set -eu
-REV=$1; NAME=$2
+REV=$1; NAME=$2; LAM=${3:-1.0}
 source /scratch/yh6210/miniconda3/etc/profile.d/conda.sh && conda activate open_r1
 export PYTORCH_ALLOC_CONF=expandable_segments:True
 RUN=/scratch/yh6210/llmadd_torch/runs/$NAME; mkdir -p "$RUN"
@@ -21,4 +21,4 @@ RUN=/scratch/yh6210/llmadd_torch/runs/$NAME; mkdir -p "$RUN"
 nvidia-smi --query-gpu=name,memory.total --format=csv
 cd "$RUN/code/tools"
 python manifold_train.py --model "/scratch/yh6210/llmadd_models/OLMo-2-1124-7B/$REV" --out "$RUN/out" --mode full \
-  --geoms none,helix,helix_shuf,digit,digit_shuf --seeds 0,1,2
+  --geoms ${GEOMS:-none,helix,helix_shuf,digit,digit_shuf} --seeds 0,1,2 --lam $LAM

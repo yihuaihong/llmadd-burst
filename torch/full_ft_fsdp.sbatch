@@ -12,7 +12,7 @@
 # Torch side: full fine-tuning on 2 x 80 GB (A100 or H100) with FSDP + standard AdamW (fp32 master sharded).
 #   sbatch --job-name=fsdp_s1-150000 torch/full_ft_fsdp.sbatch <revision> <run-name>
 set -eu
-REV=$1; NAME=$2
+REV=$1; NAME=$2; LAM=${3:-1.0}
 source /scratch/yh6210/miniconda3/etc/profile.d/conda.sh && conda activate open_r1
 export PYTORCH_ALLOC_CONF=expandable_segments:True
 RUN=/scratch/yh6210/llmadd_torch/runs/$NAME; mkdir -p "$RUN"
