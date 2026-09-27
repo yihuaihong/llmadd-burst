@@ -1,0 +1,74 @@
+## task 009-sweep-s1-150  job 2161  host b-19-14  2026-09-27T04:55:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.03it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.77it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.51it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.81it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.04it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.46it/s]
+base accuracy on 5050 problems a+b<=99: 0.000
+L 0 R2 A helix=-0.115 wrong=-0.118 lin=-0.009 shuf=-0.111
+L 1 R2 A helix=-0.115 wrong=-0.119 lin=-0.009 shuf=-0.113
+L 2 R2 A helix=-0.116 wrong=-0.120 lin=-0.010 shuf=-0.109
+L 3 R2 A helix=-0.117 wrong=-0.120 lin=-0.010 shuf=-0.109
+L 4 R2 A helix=-0.117 wrong=-0.122 lin=-0.011 shuf=-0.113
+L 5 R2 A helix=-0.117 wrong=-0.123 lin=-0.011 shuf=-0.110
+L 6 R2 A helix=-0.116 wrong=-0.123 lin=-0.010 shuf=-0.109
+L 7 R2 A helix=-0.117 wrong=-0.122 lin=-0.010 shuf=-0.114
+L 8 R2 A helix=-0.116 wrong=-0.122 lin=-0.010 shuf=-0.112
+L 9 R2 A helix=-0.116 wrong=-0.122 lin=-0.010 shuf=-0.108
+L10 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.116
+L11 R2 A helix=-0.116 wrong=-0.121 lin=-0.010 shuf=-0.114
+L12 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.108
+L13 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.114
+L14 R2 A helix=-0.115 wrong=-0.121 lin=-0.010 shuf=-0.112
+L15 R2 A helix=-0.115 wrong=-0.121 lin=-0.010 shuf=-0.117
+L16 R2 A helix=-0.115 wrong=-0.121 lin=-0.010 shuf=-0.109
+L17 R2 A helix=-0.115 wrong=-0.121 lin=-0.010 shuf=-0.117
+L18 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.116
+L19 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.114
+L20 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.109
+L21 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.107
+L22 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.113
+L23 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.114
+L24 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.107
+L25 R2 A helix=-0.115 wrong=-0.122 lin=-0.010 shuf=-0.114
+L26 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.112
+L27 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.110
+L28 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.115
+L29 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.112
+L30 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.118
+L31 R2 A helix=-0.115 wrong=-0.123 lin=-0.010 shuf=-0.116
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00, 107.27it/s]
+base accuracy on 6000 three-term problems: 0.000
+probes L0 done (20s)
+probes L1 done (25s)
+probes L2 done (29s)
+probes L3 done (33s)
+probes L4 done (37s)
+probes L5 done (41s)
+probes L6 done (45s)
+probes L7 done (49s)
+probes L8 done (53s)
+probes L9 done (57s)
+probes L10 done (61s)
+probes L11 done (65s)
+probes L12 done (70s)
+probes L13 done (74s)
+probes L14 done (78s)
+probes L15 done (82s)
+probes L16 done (86s)
+probes L17 done (90s)
+probes L18 done (94s)
+probes L19 done (98s)
+probes L20 done (102s)
+probes L21 done (106s)
+probes L22 done (110s)
+probes L23 done (114s)
+probes L24 done (118s)
+probes L25 done (122s)
+probes L26 done (127s)
+probes L27 done (131s)
+probes L28 done (135s)
+probes L29 done (139s)
+probes L30 done (143s)
+probes L31 done (147s)
+## rc=0  2026-09-27T05:00:26Z
