@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=llmadd_dl
-#SBATCH --account=torch_pr_520_tandon_priority
-#SBATCH --partition=cpu_prem
-#SBATCH --qos=normal
+#SBATCH --account=torch_pr_625_general
+#SBATCH --partition=cl,cs
+#SBATCH --qos=cpu168
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --time=12:00:00
