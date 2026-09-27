@@ -1,0 +1,17 @@
+## task 002b-models-main  job 2151  host b-10-8  2026-09-27T04:18:09Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Fetching 16 files:  50%|█████     | 8/16 [00:01<00:01,  6.75it/s]Fetching 16 files:  62%|██████▎   | 10/16 [00:20<00:12,  2.00s/it]Fetching 16 files:  69%|██████▉   | 11/16 [01:41<00:45,  9.19s/it]Fetching 16 files: 100%|██████████| 16/16 [01:41<00:00,  6.32s/it]
+main: converted model-00001-of-00006.safetensors
+main: converted model-00002-of-00006.safetensors
+main: converted model-00003-of-00006.safetensors
+main: converted model-00004-of-00006.safetensors
+main: converted model-00005-of-00006.safetensors
+main: converted model-00006-of-00006.safetensors
+main: done, 14.6 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-7B/main
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/main
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150-tokens1B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150000-tokens630B
+14G	/scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient1-step11931-tokens50B
+10.36.221.2:/hpc_dev_fs/scratch   13T  8.3T  4.3T  66% /scratch
+## rc=0  2026-09-27T04:23:33Z
