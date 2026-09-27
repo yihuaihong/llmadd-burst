@@ -1,0 +1,41 @@
+host: b-10-3  date: 2026-09-27T03:59:38Z
+scratch: 10.36.221.2:/hpc_dev_fs/scratch   13T  8.2T  4.4T  65% /scratch
+python3: Python 3.9.18  bash: 5.1.8(1)-release
+cpus: 24
+               total        used        free      shared  buff/cache   available
+Mem:              23           1          21           0           0          21
+huggingface.co: HTTP 200
+partitions:
+  a100-4-std gpu:a100:4 infinite
+  c12m85-a100-1 gpu:a100:1 infinite
+  c24m170-a100-2 gpu:a100:2 infinite
+  c3d-highcpu-360 (null) infinite
+  c4-highcpu-192 (null) infinite
+  c4-highcpu-96 (null) infinite
+  c4d-highcpu-192 (null) infinite
+  g2-standard-12 gpu:l4:1 infinite
+  g2-standard-24 gpu:l4:2 infinite
+  g2-standard-48 gpu:l4:4 infinite
+  g2-standard-96 gpu:l4:8 infinite
+  g2-standard-96 gpu:l4:8(S:0-1) infinite
+  g4-standard-48 gpu:rtx6000:1 infinite
+  interactive (null) infinite
+  m1-ultramem-160 (null) infinite
+  m1-ultramem-40 (null) infinite
+  m2-ultramem-208 (null) infinite
+  n1c10m64-v100-1 gpu:v100:1 infinite
+  n1c12m76-v100-1 gpu:v100:1 infinite
+  n1c16m96-v100-2 gpu:v100:2 infinite
+  n1c24m128-v100-4 gpu:v100:4 infinite
+  n1s16-t4-2 gpu:t4:2 infinite
+  n1s16-v100-2 gpu:v100:2 infinite
+  n1s16g2p gpu:v100:2 infinite
+  n1s4-v100-1 gpu:v100:1 infinite
+  n1s8-t4-1 gpu:t4:1 infinite
+  n1s8-v100-1 gpu:v100:1 infinite
+  n2c48m24 (null) infinite
+  n2c80m80 (null) infinite
+  n2d32p (null) infinite
+  n2dc112m224 (null) infinite
+  n2dc64m48 (null) infinite
+  test-n1c10m64-v100-1 gpu:v100:1 infinite
