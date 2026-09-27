@@ -21,6 +21,7 @@ Task header (comment lines at the top of the script):
 # time: HH:MM:SS         (Slurm limit)
 # cpus: N
 # after: 001-env 002-x   (space separated; waits until those completed)
+# after_ended: 006-x     (waits until those ended, in any state)
 ```
 
 Tasks see `$OUT` (write results here), `$PY` (the env's python), `$MODELS`, `$HF_HOME`. A task runs once;

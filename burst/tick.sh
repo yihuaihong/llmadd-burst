@@ -71,6 +71,9 @@ if [ "${ENABLED:-0}" = 1 ]; then
     for a in $(hdr "$s" after); do
       grep -q '"state": "COMPLETED"' "status/$a.json" 2>/dev/null || ready=0
     done
+    for a in $(hdr "$s" after_ended); do   # ended in any state (e.g. wait for a failed twin to clear)
+      [ -e "status/$a.json" ] || ready=0
+    done
     [ "$ready" = 1 ] || continue
     kind=$(hdr "$s" kind); kind=${kind:-cpu}
     tl=$(hdr "$s" time); tl=${tl:-04:00:00}

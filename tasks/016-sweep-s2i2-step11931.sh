@@ -1,7 +1,7 @@
 # kind: gpu
 # time: 04:00:00
 # cpus: 8
-# after: 008-dl-stage2 004-exp1-main 005-exp2-main
+# after: 008b-dl-stage2 004-exp1-main 005-exp2-main
 # Developmental sweep: exp1 + exp2 on stage2-ingredient2-step11931-tokens50B (same code and settings as on main).
 set -eu
 M="$MODELS/OLMo-2-1124-7B/stage2-ingredient2-step11931-tokens50B"

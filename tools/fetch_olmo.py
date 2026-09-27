@@ -7,6 +7,7 @@ bf16 shard. The fp32 download is deleted afterwards. A `.complete` marker makes 
 """
 
 import argparse
+import gc
 import json
 import shutil
 from pathlib import Path
@@ -30,6 +31,7 @@ def main() -> None:
         print(f"{args.revision}: already present at {dest}")
         return
     tmp = dest.parent / f".{dest.name}.fp32"
+    shutil.rmtree(tmp, ignore_errors=True)   # leftovers of an interrupted run
     snapshot_download(REPO_ID, revision=args.revision, local_dir=tmp, max_workers=8)
     dest.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +45,8 @@ def main() -> None:
                 total += tensors[name].numel() * tensors[name].element_size()
         save_file(tensors, dest / shard.name, metadata={"format": "pt"})
         print(f"{args.revision}: converted {shard.name}")
-        del tensors
+        del tensors, t
+        gc.collect()
 
     for path in tmp.iterdir():
         if path.suffix == ".safetensors" or path.is_dir():
@@ -59,8 +62,10 @@ def main() -> None:
     cfg["torch_dtype"] = "bfloat16"
     config.write_text(json.dumps(cfg, indent=2))
 
-    shutil.rmtree(tmp)
     (dest / ".complete").write_text(args.revision + "\n")
+    # Best effort: on NFS, files still mapped by this process linger as .nfsXXXX until it exits, so the
+    # directory may not be removable yet; the next run clears it.
+    shutil.rmtree(tmp, ignore_errors=True)
     print(f"{args.revision}: done, {total / 1e9:.1f} GB bf16 at {dest}")
 
 
