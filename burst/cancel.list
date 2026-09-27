@@ -1,2 +1,6 @@
 013-sweep-s1-400000   # JobHeldAdmin since 05:05, re-queued as 013b
 040-gap-s1-928646   # held (user env retrieval failed), re-queued as 040b
+058-train-lora-s1-50000   # v1 readout loss is not a geometry constraint; re-run with v2 (CKA)
+059-train-reft-s1-50000
+060-train-lora-s1-150000
+061-train-reft-s1-150000
