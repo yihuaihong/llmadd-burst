@@ -1,0 +1,21 @@
+## task 008-dl-stage2  job 2150  host b-10-7  2026-09-27T04:14:38Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 16 files:   0%|          | 0/16 [00:00<?, ?it/s]Fetching 16 files:  50%|█████     | 8/16 [00:01<00:01,  7.61it/s]Fetching 16 files:  62%|██████▎   | 10/16 [00:20<00:12,  2.00s/it]Fetching 16 files:  69%|██████▉   | 11/16 [02:23<01:05, 13.09s/it]Fetching 16 files:  75%|███████▌  | 12/16 [02:23<00:47, 11.99s/it]Fetching 16 files: 100%|██████████| 16/16 [02:24<00:00,  9.00s/it]
+stage2-ingredient1-step11931-tokens50B: converted model-00001-of-00006.safetensors
+stage2-ingredient1-step11931-tokens50B: converted model-00002-of-00006.safetensors
+stage2-ingredient1-step11931-tokens50B: converted model-00003-of-00006.safetensors
+stage2-ingredient1-step11931-tokens50B: converted model-00004-of-00006.safetensors
+stage2-ingredient1-step11931-tokens50B: converted model-00005-of-00006.safetensors
+stage2-ingredient1-step11931-tokens50B: converted model-00006-of-00006.safetensors
+Traceback (most recent call last):
+  File "/scratch/yh6210/llmadd_runs/008-dl-stage2/code/tools/fetch_olmo.py", line 68, in <module>
+    main()
+  File "/scratch/yh6210/llmadd_runs/008-dl-stage2/code/tools/fetch_olmo.py", line 62, in main
+    shutil.rmtree(tmp)
+  File "/share/apps/pyenv/py3.9/lib/python3.9/shutil.py", line 740, in rmtree
+    onerror(os.rmdir, path, sys.exc_info())
+  File "/share/apps/pyenv/py3.9/lib/python3.9/shutil.py", line 738, in rmtree
+    os.rmdir(path)
+OSError: [Errno 39] Directory not empty: '/scratch/yh6210/models/OLMo-2-1124-7B/.stage2-ingredient1-step11931-tokens50B.fp32'
+## rc=1  2026-09-27T04:19:28Z
