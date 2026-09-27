@@ -1,0 +1,100 @@
+## task 012-sweep-s1-150000  job 2164  host b-19-19  2026-09-27T05:07:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  8.87it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.82it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  9.01it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.98it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.46it/s]
+base accuracy on 5050 problems a+b<=99: 0.823
+L 0 R2 A helix=0.134 wrong=-0.044 lin=0.066 shuf=-0.106
+L 1 R2 A helix=0.147 wrong=-0.036 lin=0.074 shuf=-0.106
+L 2 R2 A helix=0.162 wrong=-0.027 lin=0.083 shuf=-0.119
+L 3 R2 A helix=0.188 wrong=-0.021 lin=0.090 shuf=-0.108
+L 4 R2 A helix=0.204 wrong=-0.009 lin=0.101 shuf=-0.111
+L 5 R2 A helix=0.214 wrong=-0.005 lin=0.105 shuf=-0.118
+L 6 R2 A helix=0.226 wrong=0.002 lin=0.111 shuf=-0.118
+L 7 R2 A helix=0.230 wrong=0.005 lin=0.113 shuf=-0.121
+L 8 R2 A helix=0.233 wrong=0.005 lin=0.114 shuf=-0.125
+L 9 R2 A helix=0.234 wrong=0.007 lin=0.114 shuf=-0.108
+L10 R2 A helix=0.239 wrong=0.008 lin=0.115 shuf=-0.108
+L11 R2 A helix=0.244 wrong=-0.001 lin=0.109 shuf=-0.113
+L12 R2 A helix=0.248 wrong=-0.010 lin=0.102 shuf=-0.093
+L13 R2 A helix=0.250 wrong=-0.007 lin=0.104 shuf=-0.113
+L14 R2 A helix=0.249 wrong=-0.009 lin=0.103 shuf=-0.114
+L15 R2 A helix=0.268 wrong=-0.005 lin=0.108 shuf=-0.115
+L16 R2 A helix=0.284 wrong=0.016 lin=0.126 shuf=-0.111
+L17 R2 A helix=0.289 wrong=0.024 lin=0.132 shuf=-0.118
+L18 R2 A helix=0.289 wrong=0.025 lin=0.132 shuf=-0.114
+L19 R2 A helix=0.296 wrong=0.031 lin=0.137 shuf=-0.122
+L20 R2 A helix=0.302 wrong=0.038 lin=0.144 shuf=-0.104
+L21 R2 A helix=0.304 wrong=0.042 lin=0.147 shuf=-0.104
+L22 R2 A helix=0.305 wrong=0.043 lin=0.148 shuf=-0.107
+L23 R2 A helix=0.304 wrong=0.045 lin=0.150 shuf=-0.111
+L24 R2 A helix=0.305 wrong=0.046 lin=0.151 shuf=-0.115
+L25 R2 A helix=0.306 wrong=0.051 lin=0.155 shuf=-0.118
+L26 R2 A helix=0.304 wrong=0.052 lin=0.155 shuf=-0.127
+L27 R2 A helix=0.304 wrong=0.053 lin=0.156 shuf=-0.122
+L28 R2 A helix=0.300 wrong=0.051 lin=0.154 shuf=-0.132
+L29 R2 A helix=0.293 wrong=0.042 lin=0.147 shuf=-0.105
+L30 R2 A helix=0.286 wrong=0.033 lin=0.139 shuf=-0.092
+L31 R2 A helix=0.290 wrong=0.036 lin=0.144 shuf=-0.127
+slot A delta -20: done (155s)
+slot A delta -10: done (209s)
+slot A delta -5: done (264s)
+slot A delta -2: done (319s)
+slot A delta -1: done (373s)
+slot A delta +1: done (428s)
+slot A delta +2: done (483s)
+slot A delta +5: done (537s)
+slot A delta +10: done (592s)
+slot A delta +20: done (647s)
+slot B delta -20: done (701s)
+slot B delta -10: done (756s)
+slot B delta -5: done (811s)
+slot B delta -2: done (865s)
+slot B delta -1: done (920s)
+slot B delta +1: done (975s)
+slot B delta +2: done (1029s)
+slot B delta +5: done (1084s)
+slot B delta +10: done (1139s)
+slot B delta +20: done (1193s)
+total 1195s
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00, 109.48it/s]
+base accuracy on 6000 three-term problems: 0.071
+probes L0 done (21s)
+probes L1 done (25s)
+probes L2 done (29s)
+probes L3 done (33s)
+probes L4 done (37s)
+probes L5 done (41s)
+probes L6 done (45s)
+probes L7 done (49s)
+probes L8 done (53s)
+probes L9 done (57s)
+probes L10 done (61s)
+probes L11 done (66s)
+probes L12 done (70s)
+probes L13 done (74s)
+probes L14 done (78s)
+probes L15 done (82s)
+probes L16 done (86s)
+probes L17 done (90s)
+probes L18 done (94s)
+probes L19 done (98s)
+probes L20 done (102s)
+probes L21 done (106s)
+probes L22 done (110s)
+probes L23 done (115s)
+probes L24 done (119s)
+probes L25 done (123s)
+probes L26 done (127s)
+probes L27 done (131s)
+probes L28 done (135s)
+probes L29 done (139s)
+probes L30 done (143s)
+probes L31 done (147s)
+interchange diff_sum done (179s)
+interchange same_sum done (211s)
+steer B done (290s)
+steer op2 done (372s)
+total 374s
+## rc=0  2026-09-27T05:34:34Z
