@@ -1,0 +1,8 @@
+## task 040b-gap-s1-928646  job 2200  host b-19-21  2026-09-27T07:35:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.00it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.47it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.43it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.41it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  8.96it/s]
+{'n': 1500, 'model_acc': 0.10866666666666666, 'model_says_a_number': 0.9633333333333334, 'model_units_acc': 0.48304498269896196, 'model_tens_acc': 0.24498269896193772, 'model_error_hist_top': {-10: 364, -20: 122, -6: 106, -12: 93, -8: 76, -2: 56, -16: 50, -4: 47, -18: 37, -22: 35, -14: 31, -30: 21}, 'wrong_with_units_right': 0.4173166926677067}
+best probe layer: {'layer': 27, 'probe_acc': 0.7493333333333333, 'model_acc': 0.10866666666666666, 'probe_ok_model_wrong': 0.6606666666666666, 'model_ok_probe_wrong': 0.02, 'P(probe ok | model wrong)': 0.7412116679132386, 'probe_units_acc': 0.7646666666666667, 'probe_tens_acc': 0.9153333333333333}
+## rc=0  2026-09-27T07:37:24Z
