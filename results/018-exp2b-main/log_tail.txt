@@ -1,0 +1,11 @@
+## task 018-exp2b-main  job 2160  host b-19-13  2026-09-27T04:47:40Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.29it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.44it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.35it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  7.63it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.11it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.69it/s]
+base acc 0.768; n=300 (79s)
+single-slot done (110s)
+multi-slot done (131s)
+knockout done (133s)
+total 134s
+## rc=0  2026-09-27T04:50:22Z
