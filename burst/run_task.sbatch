@@ -16,8 +16,12 @@ rm -f "$RUN/rc"
 date +%s > "$RUN/start"
 echo "## task $TASK  job ${SLURM_JOB_ID:-none}  host $(hostname)  $(date -u +%FT%TZ)"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv 2>/dev/null || true
+# keep the pipeline ticking while this task runs (lock-protected; a no-op if the sentinel holds the lock)
+( while true; do bash "$ROOT/llmadd/burst/tick_locked.sh" >/dev/null 2>&1; sleep 90; done ) &
+TICKER=$!
 bash "tasks/$TASK.sh"
 rc=$?
+kill "$TICKER" 2>/dev/null
 date +%s > "$RUN/end"
 echo "$rc" > "$RUN/rc"
 echo "## rc=$rc  $(date -u +%FT%TZ)"

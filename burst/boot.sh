@@ -20,7 +20,8 @@ if out=$(git push --dry-run origin HEAD:main 2>&1); then echo "   ok"; else
   echo "   FAILED: $(echo "$out" | tail -1)"; echo "## the key needs write access to the repo; tell Claude."; exit 1; fi
 echo "## scratch: $(df -h "$ROOT" | tail -1)"
 if squeue --me -h -n llmadd_sentinel 2>/dev/null | grep -q .; then
-  echo "## a sentinel is already queued/running:"; squeue --me -n llmadd_sentinel; exit 0
+  if [ "${RESTART:-0}" = 1 ]; then scancel -n llmadd_sentinel && echo "## cancelled the old sentinel chain (RESTART=1)"; sleep 3
+  else echo "## a sentinel is already queued/running (RESTART=1 bash burst/boot.sh replaces it):"; squeue --me -n llmadd_sentinel; exit 0; fi
 fi
 jid=$(sbatch --parsable --account="$ACCOUNT" --partition="$CPU_PARTITION" --cpus-per-task=1 --time=2-00:00:00 \
       --requeue --job-name=llmadd_sentinel --output="$REPO/logs/sentinel_%j.out" "$REPO/burst/sentinel.sbatch" 2>&1)

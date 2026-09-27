@@ -39,8 +39,6 @@ fi
 log "sentinel $ME on $(hostname) started"
 
 while true; do
-  git fetch -q origin 2>/dev/null && git reset -q --hard origin/main 2>/dev/null
-  # run a copy: the tick itself pulls, and must not rewrite the file bash is reading
-  cp burst/tick.sh "$STATE/tick_run.sh" && bash "$STATE/tick_run.sh"
+  bash "$REPO/burst/tick_locked.sh"
   sleep "${TICK_SECONDS:-60}"
 done
