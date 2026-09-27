@@ -1,0 +1,60 @@
+## task 004-exp1-main  job 2157  host b-19-19  2026-09-27T04:30:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:01,  3.96it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:01,  3.33it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:01<00:01,  2.65it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:01<00:00,  2.73it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  2.76it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  3.22it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  3.05it/s]
+base accuracy on 5050 problems a+b<=99: 0.940
+L 0 R2 A helix=0.144 wrong=-0.031 lin=0.078 shuf=-0.107
+L 1 R2 A helix=0.162 wrong=-0.022 lin=0.087 shuf=-0.106
+L 2 R2 A helix=0.179 wrong=-0.015 lin=0.094 shuf=-0.121
+L 3 R2 A helix=0.205 wrong=-0.008 lin=0.101 shuf=-0.108
+L 4 R2 A helix=0.215 wrong=0.001 lin=0.110 shuf=-0.110
+L 5 R2 A helix=0.228 wrong=0.013 lin=0.120 shuf=-0.116
+L 6 R2 A helix=0.245 wrong=0.018 lin=0.125 shuf=-0.120
+L 7 R2 A helix=0.256 wrong=0.019 lin=0.127 shuf=-0.119
+L 8 R2 A helix=0.255 wrong=0.015 lin=0.122 shuf=-0.122
+L 9 R2 A helix=0.248 wrong=0.011 lin=0.115 shuf=-0.114
+L10 R2 A helix=0.250 wrong=0.017 lin=0.117 shuf=-0.113
+L11 R2 A helix=0.251 wrong=0.012 lin=0.112 shuf=-0.116
+L12 R2 A helix=0.254 wrong=0.005 lin=0.105 shuf=-0.084
+L13 R2 A helix=0.261 wrong=0.015 lin=0.114 shuf=-0.113
+L14 R2 A helix=0.263 wrong=0.025 lin=0.120 shuf=-0.097
+L15 R2 A helix=0.281 wrong=0.038 lin=0.131 shuf=-0.122
+L16 R2 A helix=0.291 wrong=0.045 lin=0.142 shuf=-0.110
+L17 R2 A helix=0.301 wrong=0.052 lin=0.147 shuf=-0.125
+L18 R2 A helix=0.295 wrong=0.052 lin=0.144 shuf=-0.111
+L19 R2 A helix=0.304 wrong=0.055 lin=0.145 shuf=-0.117
+L20 R2 A helix=0.318 wrong=0.071 lin=0.160 shuf=-0.103
+L21 R2 A helix=0.322 wrong=0.075 lin=0.163 shuf=-0.111
+L22 R2 A helix=0.325 wrong=0.080 lin=0.166 shuf=-0.100
+L23 R2 A helix=0.325 wrong=0.081 lin=0.167 shuf=-0.108
+L24 R2 A helix=0.321 wrong=0.082 lin=0.167 shuf=-0.117
+L25 R2 A helix=0.320 wrong=0.086 lin=0.169 shuf=-0.113
+L26 R2 A helix=0.318 wrong=0.087 lin=0.170 shuf=-0.121
+L27 R2 A helix=0.320 wrong=0.092 lin=0.173 shuf=-0.119
+L28 R2 A helix=0.317 wrong=0.094 lin=0.173 shuf=-0.126
+L29 R2 A helix=0.317 wrong=0.100 lin=0.177 shuf=-0.113
+L30 R2 A helix=0.309 wrong=0.103 lin=0.176 shuf=-0.099
+L31 R2 A helix=0.303 wrong=0.104 lin=0.175 shuf=-0.128
+slot A delta -20: done (280s)
+slot A delta -10: done (335s)
+slot A delta -5: done (389s)
+slot A delta -2: done (444s)
+slot A delta -1: done (498s)
+slot A delta +1: done (553s)
+slot A delta +2: done (608s)
+slot A delta +5: done (662s)
+slot A delta +10: done (717s)
+slot A delta +20: done (772s)
+slot B delta -20: done (826s)
+slot B delta -10: done (881s)
+slot B delta -5: done (935s)
+slot B delta -2: done (990s)
+slot B delta -1: done (1045s)
+slot B delta +1: done (1099s)
+slot B delta +2: done (1154s)
+slot B delta +5: done (1209s)
+slot B delta +10: done (1263s)
+slot B delta +20: done (1318s)
+total 1320s
+## rc=0  2026-09-27T04:53:44Z
