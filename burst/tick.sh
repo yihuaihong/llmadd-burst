@@ -94,7 +94,9 @@ if [ "${ENABLED:-0}" = 1 ]; then
     if [ "$kind" = gpu ]; then
       [ "$ngpu" -lt "$MAX_GPU_JOBS" ] || continue
       [ "$gpu_h" -lt "$GPU_HOURS_BUDGET" ] || { log "GPU budget reached (${gpu_h}h); $t waits"; continue; }
-      part=$GPU_PARTITION; extra=(--gres=gpu:1)
+      ng=$(hdr "$s" gpus); ng=${ng:-1}
+      if [ "$ng" -gt 1 ]; then part=${GPU2_PARTITION:-c24m170-a100-2}; else part=$GPU_PARTITION; fi
+      extra=(--gres=gpu:$ng)
     else
       part=$CPU_PARTITION; extra=()
     fi

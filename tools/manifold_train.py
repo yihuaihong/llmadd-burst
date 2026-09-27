@@ -3,12 +3,14 @@
 Question: if fine-tuning also pulls the operand representations onto an ideal number manifold, does the
 model generalise better (held-out pairs, three-term, three-digit) than with the task loss alone?
 
-Loss:  CE(answer token) + lam * L_man
-L_man: at layers `--layers` and operand slots A, B of "Q: a + b = ", the mean squared error between a
-       FIXED linear readout of the state and the ideal coordinates of the operand:
-           L_man = mean_{L, slot} || (h - mu) R_{L,slot} - F_G(x) ||^2 / k
-       R is fitted once, on the base checkpoint's own per-number mean states (ridge, LOO-selected), so the
-       loss only constrains the readout coordinates and leaves every other direction free.
+Loss:  CE(answer token) + lam * L_geo
+L_geo: the GEOMETRY of the operand representation, not a readout of it. Every step the 90 prefixes "Q: x"
+       (x = 10..99) are run through the model; at each layer in `--layers` the states of x form H [90, d],
+       and L_geo = mean_L (1 - CKA(H, F_G)), with F_G [90, k] the ideal coordinates of 10..99 and linear
+       CKA on centred Gram matrices. CKA is invariant only to rotations and isotropic scaling, so it is
+       satisfied only if the representation itself has the shape of the ideal manifold.
+       (v1 used ||(h - mu) R - F||^2 with a readout R fitted in 4096-d; 90 points can be mapped linearly
+       onto ANY target there - shuffled included - so v1 constrained nothing. Found on s1-10k, 2026-09-27.)
 Geometries G: none (task only) | helix | helix_shuf | digit | digit_shuf. "_shuf" uses the same basis on a
        fixed permutation of 10..99: same dimensionality and strength, wrong numbers.
 Methods (--mode): lora (r=8, all linear layers) | reft (low-rank edit of the operand states at the
@@ -51,6 +53,25 @@ def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
     if G == "digit":
         return np.concatenate([np.eye(10)[x // 10], np.eye(10)[x % 10]], 1)
     raise ValueError(G)
+
+
+def cka(H: torch.Tensor, K_F: torch.Tensor) -> torch.Tensor:
+    """Linear CKA between states H [n, d] and a centred target Gram K_F [n, n] (differentiable in H)."""
+    H = H.float() - H.float().mean(0, keepdim=True)
+    K_H = H @ H.T
+    return (K_H * K_F).sum() / (K_H.norm() * K_F.norm() + 1e-12)
+
+
+def target_grams(perm: np.ndarray, dev) -> dict:
+    """Centred Gram matrices of the ideal coordinates of 10..99 for every geometry."""
+    out = {}
+    for G in ("helix", "helix_shuf", "digit", "digit_shuf"):
+        F = geom_features(G, np.arange(10, 100), perm)
+        F = F[:, F.std(0) > 1e-9]
+        F = (F - F.mean(0)) / F.std(0)
+        Ft = torch.tensor(F, dtype=torch.float32, device=dev)
+        out[G] = Ft @ Ft.T
+    return out
 
 
 def decoder_layers(model) -> list:
@@ -156,7 +177,8 @@ def main() -> None:
             if reft_mods is not None and reft_on["v"]:
                 h0, h = h, h.clone()          # read from h0, write into the copy (autograd-safe)
                 for p in slot_pos.values():
-                    h[:, p, :] = reft_mods[str(L)](h0[:, p, :])
+                    if p < h.shape[1]:
+                        h[:, p, :] = reft_mods[str(L)](h0[:, p, :])
                 o = nl._with_hidden(o, h)
             store[L] = h
             return o
@@ -217,46 +239,26 @@ def main() -> None:
                 cnt[s].index_add_(0, idx, torch.ones(len(idx), device=dev))
         return {k: (v / cnt[k[1]][:, None]).cpu().numpy() for k, v in sums.items()}
 
-    def fit_readout(X: np.ndarray, F: np.ndarray):
-        """Ridge X [90, d] -> F [90, k] (dual form, alpha by LOO). Returns mu [d], R [d, k] (float32 tensors)."""
-        Xt = torch.tensor(X, dtype=torch.float64, device=dev); Ft = torch.tensor(F, dtype=torch.float64, device=dev)
-        xm, fm = Xt.mean(0), Ft.mean(0)
-        Xc, Fc = Xt - xm, Ft - fm
-        lam_, U = torch.linalg.eigh(Xc @ Xc.T); lam_ = lam_.clamp_min(0)
-        UF = U.T @ Fc
-        best, best_err = None, None
-        for a in nl.ALPHAS:
-            h = lam_ / (lam_ + a)
-            err = (((Fc - U @ (h[:, None] * UF)) / (1 - (U ** 2) @ h).clamp_min(1e-6)[:, None]) ** 2).mean()
-            if best_err is None or err < best_err:
-                best, best_err = a, err
-        R = Xc.T @ (U @ (UF / (lam_ + best)[:, None]))
-        return xm.float(), R.float(), fm.float()
+    grams = target_grams(perm, dev)
+    num_prefix = enc([f"Q: {x}" for x in range(10, 100)])            # A-slot state of x depends only on this prefix
+    assert num_prefix.shape[1] == slot_pos["A"] + 1
 
-    # geometry targets, standardised per feature over 10..99
-    targets = {}
-    for G in ("helix", "helix_shuf", "digit", "digit_shuf"):
-        F = geom_features(G, np.arange(10, 100), perm)
-        keep = F.std(0) > 1e-9
-        F = F[:, keep]
-        targets[G] = (F - F.mean(0)) / F.std(0)
+    def geo_cka(reft: bool) -> dict:
+        """{L: H [90, d]} for the 90 numbers (with grad)."""
+        forward(num_prefix, reft)
+        return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
 
-    base_means = number_means(reft=False)
-    readouts = {G: {k: fit_readout(X, targets[G]) for k, X in base_means.items()} for G in targets}
+    @torch.no_grad()
+    def geometry_report(reft: bool) -> dict:
+        model.eval()
+        Hs = geo_cka(reft)
+        return {f"L{L}": {"cka_" + G: float(cka(Hs[L], grams[G])) for G in grams} for L in man_layers}
+
     base_eval = evaluate(reft=False)
-    base_diag = diagnostics(base_means, targets, slot_pos)
-    (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": base_diag}, indent=1))
+    base_means = number_means(reft=False)
+    (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, None, slot_pos),
+                                               "geometry": geometry_report(reft=False)}, indent=1))
     print(f"base: {base_eval} ({time.time() - t0:.0f}s)")
-
-    def man_loss(G: str, chunk: np.ndarray) -> torch.Tensor:
-        tot = 0.0
-        for L in man_layers:
-            for j, s in enumerate(slot_pos):
-                mu, R, fm = readouts[G][(L, s)]
-                y = torch.tensor(targets[G][chunk[:, j] - 10], dtype=torch.float32, device=dev) - fm
-                pred = (store[L][:, slot_pos[s], :].float() - mu) @ R
-                tot = tot + ((pred - y) ** 2).mean()
-        return tot / (len(man_layers) * len(slot_pos))
 
     for seed in seeds:
         for G in geoms:
@@ -277,18 +279,26 @@ def main() -> None:
                     chunk = train[bi]
                     logits = forward(train_ids[torch.tensor(bi, device=dev)], reft=True)
                     ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
-                    ml = man_loss(G if G != "none" else "helix", chunk)
-                    loss = ce + (args.lam * ml if G != "none" else 0.0)
+                    if G == "none":
+                        with torch.no_grad():
+                            Hs = geo_cka(reft=True)
+                            ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
+                        loss = ce
+                    else:
+                        Hs = geo_cka(reft=True)
+                        ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
+                        loss = ce + args.lam * ml
                     opt.zero_grad(set_to_none=True)
                     loss.backward()
                     opt.step()
                     ce_s += float(ce); man_s += float(ml); nb += 1
-                log.append({"epoch": ep, "ce": ce_s / nb, "man_loss": man_s / nb})
+                log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
             del opt
             ev = evaluate(reft=True)
-            diag = diagnostics(number_means(reft=True), targets, slot_pos)
-            path.write_text(json.dumps({"mode": args.mode, "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
-                                        "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag}, indent=1))
+            diag = diagnostics(number_means(reft=True), None, slot_pos)
+            path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
+                                        "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag,
+                                        "geometry": geometry_report(reft=True)}, indent=1))
             print(f"{args.mode} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
     summarize(out)
 
@@ -324,7 +334,12 @@ def summarize(out: Path) -> None:
             cells.append(f"{v.mean():.3f} ± {v.std(ddof=1) if len(v) > 1 else 0:.3f}")
         first = next(iter(rs[0]["manifold"]))
         r2 = np.mean([[r["manifold"][first]["r2_helix"], r["manifold"][first]["r2_digit"]] for r in rs], 0)
-        lines.append(f"| {G} | {len(rs)} | " + " | ".join(cells) + f" | {r2[0]:.2f} / {r2[1]:.2f} |\n")
+        ck = ""
+        if "geometry" in rs[0]:
+            gl = list(rs[0]["geometry"])[-1]
+            c = np.mean([[r["geometry"][gl]["cka_helix"], r["geometry"][gl]["cka_digit"]] for r in rs], 0)
+            ck = f" CKA@{gl} helix {c[0]:.2f} digit {c[1]:.2f}"
+        lines.append(f"| {G} | {len(rs)} | " + " | ".join(cells) + f" | {r2[0]:.2f} / {r2[1]:.2f}{ck} |\n")
     (out / "summary.md").write_text("".join(lines))
     print("".join(lines))
 

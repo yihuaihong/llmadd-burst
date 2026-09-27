@@ -1,4 +1,4 @@
-"""Full fine-tuning with the manifold loss on several GPUs (FSDP), same protocol as manifold_train.py --mode full.
+"""Full fine-tuning with the geometry (CKA) loss on several GPUs (FSDP), same protocol as manifold_train.py --mode full.
 
 fp32 master weights sharded across ranks, bf16 compute. --optim adamw (standard; 2 x 80 GB) or adamw8bit
 (bitsandbytes; needed on 2 x 40 GB). Data, geometries, readouts, evaluation and output files are the ones
@@ -24,7 +24,7 @@ from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, MixedPrecis
 from torch.distributed.fsdp.wrap import transformer_auto_wrap_policy
 
 import numlib as nl
-from manifold_train import GEOMS, decoder_layers, diagnostics, geom_features, summarize, terse_prompt, three_prompt, two_prompt
+from manifold_train import GEOMS, cka, decoder_layers, diagnostics, geom_features, summarize, target_grams, terse_prompt, three_prompt, two_prompt
 
 
 def main() -> None:
@@ -146,44 +146,27 @@ def main() -> None:
             dist.all_reduce(t)
         return {k: (v / cnt[k[1]][:, None]).cpu().numpy() for k, v in sums.items()}
 
-    def fit_readout(X, F):
-        Xt = torch.tensor(X, dtype=torch.float64, device=dev); Ft = torch.tensor(F, dtype=torch.float64, device=dev)
-        xm, fm = Xt.mean(0), Ft.mean(0)
-        Xc, Fc = Xt - xm, Ft - fm
-        lam_, U = torch.linalg.eigh(Xc @ Xc.T); lam_ = lam_.clamp_min(0)
-        UF = U.T @ Fc
-        best, best_err = None, None
-        for a in nl.ALPHAS:
-            h = lam_ / (lam_ + a)
-            err = (((Fc - U @ (h[:, None] * UF)) / (1 - (U ** 2) @ h).clamp_min(1e-6)[:, None]) ** 2).mean()
-            if best_err is None or err < best_err:
-                best, best_err = a, err
-        R = (Xc.T @ (U @ (UF / (lam_ + best)[:, None]))).float()
-        xm, fm = xm.float(), fm.float()
-        for t in (xm, R, fm):          # identical readouts on every rank
-            dist.broadcast(t, 0)
-        return xm, R, fm
+    grams = target_grams(perm, dev)
+    num_prefix = enc([f"Q: {x}" for x in range(10, 100)])   # every rank computes the full 90-number geometry
+    assert num_prefix.shape[1] == slot_pos["A"] + 1
 
-    targets = {}
-    for G in ("helix", "helix_shuf", "digit", "digit_shuf"):
-        F = geom_features(G, np.arange(10, 100), perm)
-        F = F[:, F.std(0) > 1e-9]
-        targets[G] = (F - F.mean(0)) / F.std(0)
+    def geo_states():
+        forward(num_prefix)
+        return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+
+    @torch.no_grad()
+    def geometry_report() -> dict:
+        model.eval()
+        Hs = geo_states()
+        return {f"L{L}": {"cka_" + G: float(cka(Hs[L], grams[G])) for G in grams} for L in man_layers}
+
     base_means = number_means()
-    readouts = {G: {k: fit_readout(X, targets[G]) for k, X in base_means.items()} for G in targets}
     base_eval = evaluate()
+    base_geo = geometry_report()
     if rank == 0:
-        (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, targets, slot_pos)}, indent=1))
+        (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, None, slot_pos),
+                                                   "geometry": base_geo}, indent=1))
     say(f"base: {base_eval} ({time.time() - t0:.0f}s)")
-
-    def man_loss(G, chunk):
-        tot = 0.0
-        for L in man_layers:
-            for j, s in enumerate(slot_pos):
-                mu, R, fm = readouts[G][(L, s)]
-                y = torch.tensor(targets[G][chunk[:, j] - 10], dtype=torch.float32, device=dev) - fm
-                tot = tot + (((store[L][:, slot_pos[s], :].float() - mu) @ R - y) ** 2).mean()
-        return tot / (len(man_layers) * len(slot_pos))
 
     for seed in seeds:
         for G in geoms:
@@ -211,22 +194,32 @@ def main() -> None:
                     chunk = train[bi]
                     logits = forward(train_ids[torch.tensor(bi, device=dev)])
                     ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
-                    ml = man_loss(G if G != "none" else "helix", chunk)
-                    loss = ce + (args.lam * ml if G != "none" else 0.0)
+                    if G == "none":
+                        with torch.no_grad():
+                            Hs = geo_states()
+                            ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
+                        loss = ce
+                    else:
+                        Hs = geo_states()
+                        ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
+                        loss = ce + args.lam * ml
                     opt.zero_grad(set_to_none=True)
                     loss.backward()
                     opt.step()
                     ce_s += float(ce); man_s += float(ml); nb += 1
                 stats = torch.tensor([ce_s / nb, man_s / nb], device=dev); dist.all_reduce(stats); stats /= world
-                log.append({"epoch": ep, "ce": float(stats[0]), "man_loss": float(stats[1])})
+                log.append({"epoch": ep, "ce": float(stats[0]), "geo_loss": float(stats[1])})
             del opt
             ev = evaluate()
             means = number_means()
+            geo = geometry_report()
             if rank == 0:
-                path.write_text(json.dumps({"mode": f"full_fsdp_{args.optim}", "geom": G, "seed": seed, "lam": args.lam, "lr": args.lr,
-                                            "layers": man_layers, "world": world, "train_log": log, "eval": ev,
-                                            "manifold": diagnostics(means, targets, slot_pos)}, indent=1))
-            say(f"fsdp {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
+                path.write_text(json.dumps({"mode": f"full_fsdp_{args.optim}", "loss": "v2_cka", "geom": G, "seed": seed, "lam": args.lam,
+                                            "lr": args.lr, "layers": man_layers, "world": world, "train_log": log, "eval": ev,
+                                            "manifold": diagnostics(means, None, slot_pos), "geometry": geo}, indent=1))
+            mem = torch.tensor([torch.cuda.max_memory_allocated() / 1e9 if cuda else 0.0], device=dev)
+            dist.all_reduce(mem, op=dist.ReduceOp.MAX)
+            say(f"fsdp {G} seed{seed}: {ev} ({time.time() - t0:.0f}s, peak GPU mem {float(mem):.1f} GB/rank)")
             dist.barrier()
     if rank == 0:
         summarize(out)

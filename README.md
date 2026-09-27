@@ -20,6 +20,7 @@ Task header (comment lines at the top of the script):
 # kind: cpu | gpu        (gpu = 1 x A100 40GB on GPU_PARTITION)
 # time: HH:MM:SS         (Slurm limit)
 # cpus: N
+# gpus: 2                (optional; 2 x A100 on GPU2_PARTITION)
 # after: 001-env 002-x   (space separated; waits until those completed)
 # after_ended: 006-x     (waits until those ended, in any state)
 ```
