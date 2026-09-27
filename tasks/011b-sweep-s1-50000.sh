@@ -1,0 +1,11 @@
+# kind: gpu
+# time: 04:00:00
+# cpus: 8
+# after: 006b-dl-early 004-exp1-main 005-exp2-main
+# after_ended: 011-sweep-s1-50000
+# Developmental sweep: exp1 + exp2 on stage1-step50000-tokens210B (same code and settings as on main).
+set -eu
+M="$MODELS/OLMo-2-1124-7B/stage1-step50000-tokens210B"
+cd tools
+"$PY" exp1_steer.py --model "$M" --out "$OUT/exp1"
+"$PY" exp2_three.py --model "$M" --out "$OUT/exp2"

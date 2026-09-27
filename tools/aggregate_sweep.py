@@ -17,11 +17,11 @@ import numpy as np
 def discover(root: Path) -> list:
     ck = {}
     for d in sorted(root.iterdir()):
-        m = re.match(r"\d+-sweep-(.+)$", d.name)
-        if m:
+        m = re.match(r"\d+[a-z]?-sweep-(.+)$", d.name)
+        if m and (d / "exp1").exists():          # a cancelled run leaves only log_tail.txt
             ck.setdefault(m.group(1), {})
             ck[m.group(1)]["exp1"] = d / "exp1"; ck[m.group(1)]["exp2"] = d / "exp2"
-        m = re.match(r"\d+-probes-(.+)$", d.name)
+        m = re.match(r"\d+[a-z]?-probes-(.+)$", d.name)
         if m:
             ck.setdefault(m.group(1), {})["probes"] = d
     ck.setdefault("main", {})
