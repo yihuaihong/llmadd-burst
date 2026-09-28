@@ -25,4 +25,6 @@ kill "$TICKER" 2>/dev/null
 date +%s > "$RUN/end"
 echo "$rc" > "$RUN/rc"
 echo "## rc=$rc  $(date -u +%FT%TZ)"
+# final tick: publish this task's results and submit whatever it unblocked (no sentinel needed)
+TICK_WAIT=300 bash "$ROOT/llmadd/burst/tick_locked.sh" >/dev/null 2>&1
 exit "$rc"

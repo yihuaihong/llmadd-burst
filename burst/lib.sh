@@ -12,7 +12,7 @@ sbatch_first() {
   IFS=',' read -ra list <<< "$parts"
   for p in "${list[@]}"; do
     [ -n "$p" ] || continue
-    if out=$(sbatch --partition="$p" "$@" 2>&1) && [[ "$out" =~ ^[0-9]+ ]]; then
+    if out=$(sbatch --partition="$p" "$@" 2>&1 9>&-) && [[ "$out" =~ ^[0-9]+ ]]; then
       echo "$out"; return 0
     fi
   done

@@ -28,6 +28,14 @@ Task header (comment lines at the top of the script):
 Tasks see `$OUT` (write results here), `$PY` (the env's python), `$MODELS`, `$HF_HOME`. A task runs once;
 to re-run, add a new task file. `burst/config.env` holds ENABLED, partitions, the account, the GPU budget.
 
+## Scheduling without a resident sentinel
+
+Burst's root cancels low-utilisation jobs about 38 minutes after they start (checks at :11/:31/:51), and
+n2c48m24 is exclusive, so a 1-CPU sentinel holds a whole 48-core node. With `SENTINEL=off` in
+`burst/config.env`, every running task ticks every 90 s and once more when it ends (publishing its own
+results and submitting what it unblocked). If nothing is running and new tasks are pushed, one kick on any
+Burst terminal starts them: `bash /scratch/$USER/llmadd/burst/tick_locked.sh`.
+
 ## One-time setup on Burst (the only manual step)
 
 ```bash
