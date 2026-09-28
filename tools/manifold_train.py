@@ -37,6 +37,12 @@ import torch.nn.functional as Fn
 import numlib as nl
 
 GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf")
+# three-digit geometries over 10..999 (sampled per step, see --geo_sample)
+GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
+
+
+def geom_range(G: str) -> np.ndarray:
+    return np.arange(10, 1000) if G.startswith(("helix3", "digit3")) else np.arange(10, 100)
 
 
 def two_prompt(a, b): return f"Q: {a} + {b} = "
@@ -52,6 +58,10 @@ def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
         return nl.features(x)[0]
     if G == "digit":
         return np.concatenate([np.eye(10)[x // 10], np.eye(10)[x % 10]], 1)
+    if G == "helix3":
+        return np.concatenate([nl.features(x, periods=(2, 5, 10, 100, 1000), linear=False)[0], (x / 1000.0)[:, None]], 1)
+    if G == "digit3":
+        return np.concatenate([np.eye(10)[x // 100], np.eye(10)[(x // 10) % 10], np.eye(10)[x % 10]], 1)
     raise ValueError(G)
 
 
@@ -63,7 +73,7 @@ def cka(H: torch.Tensor, K_F: torch.Tensor) -> torch.Tensor:
 
 
 def target_grams(perm: np.ndarray, dev) -> dict:
-    """Centred Gram matrices of the ideal coordinates of 10..99 for every geometry."""
+    """Centred Gram matrices of the ideal coordinates of 10..99 for every two-digit geometry."""
     out = {}
     for G in ("helix", "helix_shuf", "digit", "digit_shuf"):
         F = geom_features(G, np.arange(10, 100), perm)
@@ -74,20 +84,54 @@ def target_grams(perm: np.ndarray, dev) -> dict:
     return out
 
 
+def target_features(G: str, perm: np.ndarray, dev) -> torch.Tensor:
+    """Standardised ideal coordinates, row x for x in 0..999 (rows outside geom_range(G) are unused)."""
+    xs = geom_range(G)
+    F = geom_features(G, xs, perm)
+    F = F[:, F.std(0) > 1e-9]
+    F = (F - F.mean(0)) / F.std(0)
+    out = torch.zeros(1000, F.shape[1], device=dev)
+    out[torch.tensor(xs, device=dev)] = torch.tensor(F, dtype=torch.float32, device=dev)
+    return out
+
+
+def gram_of(F_rows: torch.Tensor) -> torch.Tensor:
+    Fc = F_rows - F_rows.mean(0, keepdim=True)
+    return Fc @ Fc.T
+
+
 @torch.no_grad()
 def transplant_number_embeddings(emb_mod, num_all: torch.Tensor, main_path: str, how: str, dev) -> dict:
     """Overwrite the input-embedding rows of the number tokens 0..999 with main's rows mapped into this
     checkpoint's embedding space by scaled orthogonal Procrustes fitted on all NON-number tokens.
-    how = main | main_shuf (rows permuted within 10..99 and within 100..999). Returns fit diagnostics."""
+    how = main | main_shuf (rows permuted within 10..99 and within 100..999). Returns fit diagnostics.
+    how = main_shape | main_shape_shuf: fit the Procrustes map on the NUMBER rows themselves, i.e. keep this
+    checkpoint's location/scale of the number cloud and adopt main's relative geometry (the shuffled variant
+    permutes main's rows before the fit: same procedure, wrong correspondence)."""
     from safetensors import safe_open
     index = Path(main_path) / "model.safetensors.index.json"
     shard = (json.loads(index.read_text())["weight_map"]["model.embed_tokens.weight"] if index.exists() else "model.safetensors")
     with safe_open(str(Path(main_path) / shard), framework="pt") as f:
         Em = f.get_tensor("model.embed_tokens.weight").float().to(dev)
     Ec = emb_mod.weight.detach().float()
+    rng = np.random.default_rng(0)
+    if how.startswith("main_shape"):
+        Mn = Em[num_all]
+        if how == "main_shape_shuf":
+            p = np.arange(1000); p[10:100] = 10 + rng.permutation(90); p[100:] = 100 + rng.permutation(900)
+            Mn = Mn[torch.tensor(p, device=dev)]
+        Cn = Ec[num_all]
+        A, B = Mn - Mn.mean(0), Cn - Cn.mean(0)
+        U, S, Vt = torch.linalg.svd(A.T @ B, full_matrices=False)
+        R = U @ Vt
+        scale = S.sum() / (A ** 2).sum()
+        rows = A @ R * scale + Cn.mean(0)
+        r2 = 1 - ((rows - Cn) ** 2).sum() / (B ** 2).sum()
+        emb_mod.weight[num_all] = rows.to(emb_mod.weight.dtype)
+        return {"shape_fit_r2_number_rows": float(r2), "scale": float(scale),
+                "mean_row_change_norm": float((rows - Cn).norm(dim=1).mean()), "mean_row_norm": float(Cn.norm(dim=1).mean())}
     V = Ec.shape[0]
     keep = torch.ones(V, dtype=torch.bool, device=dev); keep[num_all] = False
-    rng = np.random.default_rng(0)
     perm_ids = torch.randperm(int(keep.sum()), generator=torch.Generator().manual_seed(0)).to(dev)
     others = torch.nonzero(keep).squeeze(1)[perm_ids]
     fit, held = others[: len(others) * 9 // 10], others[len(others) * 9 // 10:]
@@ -147,15 +191,17 @@ def main() -> None:
     ap.add_argument("--geo_site", choices=("layers", "emb"), default="layers",
                     help="layers: CKA on the A-slot states at --layers; emb: CKA on the input-embedding rows of 10..99 (needs --emb_delta unless mode=full)")
     ap.add_argument("--emb_delta", action="store_true", help="make the input-embedding rows of the number tokens 0..999 trainable (additive delta)")
-    ap.add_argument("--emb_init", choices=("orig", "main", "main_shuf"), default="orig",
+    ap.add_argument("--emb_init", choices=("orig", "main", "main_shuf", "main_shape", "main_shape_shuf"), default="orig",
                     help="replace the number-token rows 0..999 of the input embedding before training: main = Procrustes-aligned rows of --main_model, main_shuf = same rows shuffled among the numbers")
     ap.add_argument("--main_model", default=None)
+    ap.add_argument("--geo_sample", type=int, default=180, help="numbers per step for the 10..999 geometries (helix3/digit3)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     lr = args.lr or {"lora": 1e-4, "reft": 1e-3, "full": 1e-5}[args.mode]
     assert not (args.geo_site == "emb" and args.mode != "full" and not args.emb_delta), "--geo_site emb needs trainable embeddings (--emb_delta)"
     assert args.emb_init == "orig" or args.main_model, "--emb_init main* needs --main_model"
     geoms = args.geoms.split(","); seeds = [int(s) for s in args.seeds.split(",")]
+    assert all(G in GEOMS + GEOMS3 for G in geoms), geoms
     man_layers = [int(v) for v in args.layers.split(",")]
     t0 = time.time()
 
@@ -256,9 +302,10 @@ def main() -> None:
     if args.mode == "full":
         init_state = {k: v.detach().to("cpu", torch.bfloat16).clone() for k, v in model.state_dict().items()}
 
-    def number_embedding_rows() -> torch.Tensor:
-        E = emb_mod.weight[num_all[10:100]].float()
-        return E + emb_delta[10:100] if emb_delta is not None else E
+    def number_embedding_rows(xs=None) -> torch.Tensor:
+        xs = torch.arange(10, 100, device=dev) if xs is None else xs
+        E = emb_mod.weight[num_all[xs]].float()
+        return E + emb_delta[xs] if emb_delta is not None else E
 
     def forward(ids: torch.Tensor, reft: bool) -> torch.Tensor:
         reft_on["v"] = reft
@@ -313,16 +360,32 @@ def main() -> None:
         return {k: (v / cnt[k[1]][:, None]).cpu().numpy() for k, v in sums.items()}
 
     grams = target_grams(perm, dev)
-    num_prefix = enc([f"Q: {x}" for x in range(10, 100)])            # A-slot state of x depends only on this prefix
-    assert num_prefix.shape[1] == slot_pos["A"] + 1
+    perm3 = np.arange(1000); perm3[10:] = 10 + np.random.default_rng(321).permutation(990)
+    feats3 = {G: target_features(G, perm3, dev) for G in GEOMS3}
+    prefix_all = torch.zeros(1000, slot_pos["A"] + 1, dtype=torch.long, device=dev)
+    prefix_all[10:] = enc([f"Q: {x}" for x in range(10, 1000)])      # A-slot state of x depends only on this prefix
+    num_prefix = prefix_all[10:100]
+    geo_rng = np.random.default_rng(99)
+    report_xs3 = torch.tensor(np.sort(np.random.default_rng(5).choice(np.arange(10, 1000), 300, replace=False)), device=dev)
+
+    def geo_states(reft: bool, xs=None) -> dict:
+        """{L: H [n, d]} A-slot states of the numbers xs (default 10..99), with grad; with --geo_site emb the
+        single entry "emb" holds the input-embedding rows instead (no forward needed)."""
+        if args.geo_site == "emb":
+            return {"emb": number_embedding_rows(xs)}
+        forward(num_prefix if xs is None else prefix_all[xs], reft)
+        return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+
+    def geo_loss(G: str, reft: bool) -> torch.Tensor:
+        if G in GEOMS3:
+            xs = torch.tensor(np.sort(geo_rng.choice(np.arange(10, 1000), args.geo_sample, replace=False)), device=dev)
+            Hs, K = geo_states(reft, xs), gram_of(feats3[G][xs])
+        else:
+            Hs, K = geo_states(reft), grams[G]
+        return sum(1 - cka(Hs[L], K) for L in Hs) / len(Hs)
 
     def geo_cka(reft: bool) -> dict:
-        """{L: H [90, d]} for the 90 numbers (with grad); with --geo_site emb the single entry "emb" holds the
-        input-embedding rows instead (no forward needed)."""
-        if args.geo_site == "emb":
-            return {"emb": number_embedding_rows()}
-        forward(num_prefix, reft)
-        return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        return geo_states(reft)
     geo_keys = ["emb"] if args.geo_site == "emb" else man_layers
 
     @torch.no_grad()
@@ -331,7 +394,14 @@ def main() -> None:
         forward(num_prefix, reft)
         Hs = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
         Hs["emb"] = number_embedding_rows()
-        return {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
+        rep = {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
+        forward(prefix_all[report_xs3], reft)
+        H3 = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        H3["emb"] = number_embedding_rows(report_xs3)
+        for L, H in H3.items():
+            key = f"L{L}" if L != "emb" else "emb"
+            rep[key].update({"cka_" + G: float(cka(H, gram_of(feats3[G][report_xs3]))) for G in GEOMS3})
+        return rep
 
     base_eval = evaluate(reft=False)
     base_means = number_means(reft=False)
@@ -365,23 +435,22 @@ def main() -> None:
                         ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
                         if G == "none":
                             with torch.no_grad():
-                                Hs = geo_cka(reft=True)
-                                ml = sum(1 - cka(Hs[L], grams["helix"]) for L in geo_keys) / len(geo_keys)
+                                ml = geo_loss("helix", reft=True)
                             loss = ce
                         else:
-                            Hs = geo_cka(reft=True)
-                            ml = sum(1 - cka(Hs[L], grams[G]) for L in geo_keys) / len(geo_keys)
+                            ml = geo_loss(G, reft=True)
                             loss = ce + args.lam * ml
                     loss.backward()
                     opt.step()
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
-                    del logits, loss, Hs
+                    del logits, loss
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
             del opt
             ev = evaluate(reft=True)
             diag = diagnostics(number_means(reft=True), None, slot_pos)
             path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geo_site": args.geo_site, "emb_delta": args.emb_delta,
                                         "emb_init": args.emb_init, "emb_init_info": emb_info, "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
+                                        "geo_sample": args.geo_sample if G in GEOMS3 else None,
                                         "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag,
                                         "geometry": geometry_report(reft=True)}, indent=1))
             print(f"{args.mode} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
@@ -409,7 +478,7 @@ def summarize(out: Path) -> None:
     lines = [f"# manifold fine-tuning ({runs[0]['mode']}, lam {runs[0]['lam']}, lr {runs[0]['lr']}, layers {runs[0]['layers']})\n\n",
              "| geom | n seeds | " + " | ".join(keys) + " | r2 helix / digit (first layer) |\n", "|---|---|" + "---|" * (len(keys) + 1) + "\n",
              "| base | - | " + " | ".join(f"{base['eval'][k]:.3f}" for k in keys) + " | - |\n"]
-    for G in GEOMS:
+    for G in GEOMS + GEOMS3:
         rs = [r for r in runs if r["geom"] == G]
         if not rs:
             continue
