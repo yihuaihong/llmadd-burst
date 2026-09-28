@@ -1,0 +1,29 @@
+## task 121-split-carry-s1-50000  job 2497  host b-19-19  2026-09-28T21:23:04Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.57it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.88it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.23it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.27it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.38it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.92it/s]
+base: {'test': 0.484000027179718, 'train': 0.5053333044052124, 'three_term': 0.029999999329447746, 'three_digit': 0.04999999701976776, 'test_terse': 0.08900000154972076} (147s)
+lora none seed0: {'test': 0.6580000519752502, 'train': 1.0, 'three_term': 0.0024999999441206455, 'three_digit': 0.057499997317790985, 'test_terse': 0.13500000536441803} (288s)
+lora helix seed0: {'test': 0.5830000042915344, 'train': 0.9940000176429749, 'three_term': 0.007499999832361937, 'three_digit': 0.07000000029802322, 'test_terse': 0.16100001335144043} (456s)
+lora helix_shuf seed0: {'test': 0.531000018119812, 'train': 0.9893333315849304, 'three_term': 0.022499999031424522, 'three_digit': 0.057499997317790985, 'test_terse': 0.16500000655651093} (625s)
+lora digit seed0: {'test': 0.5440000295639038, 'train': 0.9993333220481873, 'three_term': 0.007499999832361937, 'three_digit': 0.07000000029802322, 'test_terse': 0.1420000046491623} (793s)
+lora none seed1: {'test': 0.6080000400543213, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.06499999761581421, 'test_terse': 0.13199999928474426} (930s)
+lora helix seed1: {'test': 0.6350000500679016, 'train': 0.981333315372467, 'three_term': 0.01249999925494194, 'three_digit': 0.08249999582767487, 'test_terse': 0.1730000078678131} (1092s)
+lora helix_shuf seed1: {'test': 0.3290000259876251, 'train': 0.9793333411216736, 'three_term': 0.017500000074505806, 'three_digit': 0.07249999791383743, 'test_terse': 0.10300000756978989} (1254s)
+lora digit seed1: {'test': 0.5020000338554382, 'train': 0.9986666440963745, 'three_term': 0.007499999832361937, 'three_digit': 0.04999999701976776, 'test_terse': 0.14000000059604645} (1416s)
+lora none seed2: {'test': 0.6650000214576721, 'train': 1.0, 'three_term': 0.009999999776482582, 'three_digit': 0.04999999701976776, 'test_terse': 0.14500001072883606} (1551s)
+lora helix seed2: {'test': 0.5920000076293945, 'train': 0.9959999918937683, 'three_term': 0.0, 'three_digit': 0.05249999836087227, 'test_terse': 0.17800000309944153} (1713s)
+lora helix_shuf seed2: {'test': 0.5330000519752502, 'train': 0.9919999837875366, 'three_term': 0.03999999910593033, 'three_digit': 0.0625, 'test_terse': 0.14800000190734863} (1875s)
+lora digit seed2: {'test': 0.4750000238418579, 'train': 0.9853333234786987, 'three_term': 0.019999999552965164, 'three_digit': 0.05249999836087227, 'test_terse': 0.14000000059604645} (2037s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split carry)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.484 | 0.505 | 0.030 | 0.050 | 0.089 | - |
+| none | 3 | 0.644 ± 0.031 | 1.000 ± 0.000 | 0.007 ± 0.004 | 0.057 ± 0.008 | 0.137 ± 0.007 | 0.28 / 0.34 CKA@L16 helix 0.75 digit 0.59; emb helix 0.65 digit 0.72 |
+| helix | 3 | 0.603 ± 0.028 | 0.990 ± 0.008 | 0.007 ± 0.006 | 0.068 ± 0.015 | 0.171 ± 0.009 | 0.69 / 0.70 CKA@L16 helix 1.00 digit 0.65; emb helix 0.65 digit 0.72 |
+| helix_shuf | 3 | 0.464 ± 0.117 | 0.987 ± 0.007 | 0.027 ± 0.012 | 0.064 ± 0.008 | 0.139 ± 0.032 | -0.03 / -0.11 CKA@L16 helix 0.11 digit 0.17; emb helix 0.65 digit 0.72 |
+| digit | 3 | 0.507 ± 0.035 | 0.994 ± 0.008 | 0.012 ± 0.007 | 0.057 ± 0.011 | 0.141 ± 0.001 | 0.22 / 0.62 CKA@L16 helix 0.62 digit 1.00; emb helix 0.65 digit 0.72 |
+
+## rc=0  2026-09-28T21:57:40Z
