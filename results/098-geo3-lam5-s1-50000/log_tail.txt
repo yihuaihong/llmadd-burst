@@ -1,0 +1,29 @@
+## task 098-geo3-lam5-s1-50000  job 2397  host b-19-36  2026-09-28T08:13:26Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.10it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.23it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.93it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.91it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.82it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.41it/s]
+base: {'test': 0.4820000231266022, 'train': 0.4973333179950714, 'three_term': 0.029999999329447746, 'three_digit': 0.04999999701976776, 'test_terse': 0.1340000033378601} (123s)
+lora helix3 seed0: {'test': 0.9350000619888306, 'train': 0.9926666617393494, 'three_term': 0.004999999888241291, 'three_digit': 0.044999998062849045, 'test_terse': 0.25} (301s)
+lora helix3_shuf seed0: {'test': 0.9590000510215759, 'train': 0.9993333220481873, 'three_term': 0.007499999832361937, 'three_digit': 0.007499999832361937, 'test_terse': 0.2970000207424164} (477s)
+lora digit3 seed0: {'test': 0.9490000605583191, 'train': 0.9959999918937683, 'three_term': 0.017500000074505806, 'three_digit': 0.0625, 'test_terse': 0.3230000138282776} (653s)
+lora digit3_shuf seed0: {'test': 0.9100000262260437, 'train': 0.9926666617393494, 'three_term': 0.009999999776482582, 'three_digit': 0.0, 'test_terse': 0.3330000042915344} (828s)
+lora helix3 seed1: {'test': 0.9240000247955322, 'train': 0.9726666808128357, 'three_term': 0.007499999832361937, 'three_digit': 0.04749999940395355, 'test_terse': 0.27300000190734863} (1001s)
+lora helix3_shuf seed1: {'test': 0.9640000462532043, 'train': 0.9986666440963745, 'three_term': 0.007499999832361937, 'three_digit': 0.0024999999441206455, 'test_terse': 0.3240000009536743} (1172s)
+lora digit3 seed1: {'test': 0.9340000152587891, 'train': 0.9900000095367432, 'three_term': 0.014999999664723873, 'three_digit': 0.07750000059604645, 'test_terse': 0.3410000205039978} (1344s)
+lora digit3_shuf seed1: {'test': 0.9570000171661377, 'train': 0.9993333220481873, 'three_term': 0.01249999925494194, 'three_digit': 0.0, 'test_terse': 0.3370000123977661} (1515s)
+lora helix3 seed2: {'test': 0.9650000333786011, 'train': 1.0, 'three_term': 0.007499999832361937, 'three_digit': 0.04999999701976776, 'test_terse': 0.2930000126361847} (1687s)
+lora helix3_shuf seed2: {'test': 0.9530000686645508, 'train': 0.9973333477973938, 'three_term': 0.007499999832361937, 'three_digit': 0.009999999776482582, 'test_terse': 0.359000027179718} (1858s)
+lora digit3 seed2: {'test': 0.9270000457763672, 'train': 0.9959999918937683, 'three_term': 0.019999999552965164, 'three_digit': 0.057499997317790985, 'test_terse': 0.34700000286102295} (2029s)
+lora digit3_shuf seed2: {'test': 0.9500000476837158, 'train': 0.9979999661445618, 'three_term': 0.007499999832361937, 'three_digit': 0.0, 'test_terse': 0.3450000286102295} (2200s)
+# manifold fine-tuning (lora, lam 5.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.482 | 0.497 | 0.030 | 0.050 | 0.134 | - |
+| helix3 | 3 | 0.941 ± 0.021 | 0.988 ± 0.014 | 0.007 ± 0.001 | 0.047 ± 0.002 | 0.272 ± 0.022 | 0.44 / 0.50 CKA@L16 helix 0.88 digit 0.67; emb helix 0.65 digit 0.72 |
+| helix3_shuf | 3 | 0.959 ± 0.006 | 0.998 ± 0.001 | 0.007 ± 0.000 | 0.007 ± 0.004 | 0.327 ± 0.031 | 0.22 / 0.26 CKA@L16 helix 0.72 digit 0.62; emb helix 0.65 digit 0.72 |
+| digit3 | 3 | 0.937 ± 0.011 | 0.994 ± 0.003 | 0.017 ± 0.002 | 0.066 ± 0.010 | 0.337 ± 0.012 | 0.28 / 0.41 CKA@L16 helix 0.77 digit 0.75; emb helix 0.65 digit 0.72 |
+| digit3_shuf | 3 | 0.939 ± 0.025 | 0.997 ± 0.004 | 0.010 ± 0.002 | 0.000 ± 0.000 | 0.338 ± 0.006 | 0.19 / 0.23 CKA@L16 helix 0.71 digit 0.67; emb helix 0.65 digit 0.72 |
+
+## rc=0  2026-09-28T08:50:36Z
