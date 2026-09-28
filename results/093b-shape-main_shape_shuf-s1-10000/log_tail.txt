@@ -1,0 +1,18 @@
+## task 093b-shape-main_shape_shuf-s1-10000  job 2400  host b-19-21  2026-09-28T08:49:56Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.38it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.24it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.87it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.71it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.75it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.40it/s]
+embedding init main_shape_shuf: {'shape_fit_r2_number_rows': 0.44591009616851807, 'scale': 0.1747593879699707, 'mean_row_change_norm': 1.4079906940460205, 'mean_row_norm': 2.004734516143799}
+base: {'test': 0.007000000216066837, 'train': 0.007333333138376474, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (136s)
+lora none seed0: {'test': 0.07000000029802322, 'train': 0.15066666901111603, 'three_term': 0.007499999832361937, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (266s)
+lora none seed1: {'test': 0.049000002443790436, 'train': 0.1066666692495346, 'three_term': 0.007499999832361937, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (395s)
+lora none seed2: {'test': 0.07600000500679016, 'train': 0.18066667020320892, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (526s)
+# manifold fine-tuning (lora, lam 1.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.007 | 0.007 | 0.005 | 0.000 | 0.000 | - |
+| none | 3 | 0.065 ± 0.014 | 0.146 ± 0.037 | 0.005 ± 0.004 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.12 / 0.03 CKA@L16 helix 0.58 digit 0.34; emb helix 0.19 digit 0.29 |
+
+## rc=0  2026-09-28T08:59:17Z
