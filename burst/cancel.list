@@ -4,3 +4,4 @@
 059-train-reft-s1-50000
 060-train-lora-s1-150000
 061-train-reft-s1-150000
+082-curve-lora-lam20-s1-5000   # held (user env retrieval failed), re-queued as 082b
