@@ -1,0 +1,18 @@
+## task 078-emb-transplant-main-s1-10000  job 2356  host b-19-38  2026-09-27T22:21:53Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.03it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.30it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.84it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.70it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.68it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.27it/s]
+embedding init main: {'procrustes_heldout_r2_non_number_tokens': 0.04264026880264282, 'scale': 0.07151992619037628, 'mean_row_change_norm': 1.972805380821228, 'mean_row_norm': 2.004734516143799}
+base: {'test': 0.0, 'train': 0.0, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (138s)
+lora none seed0: {'test': 0.11700000613927841, 'train': 0.21066667139530182, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (269s)
+lora none seed1: {'test': 0.11500000208616257, 'train': 0.20000000298023224, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (397s)
+lora none seed2: {'test': 0.09700000286102295, 'train': 0.23533332347869873, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (525s)
+# manifold fine-tuning (lora, lam 1.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | - |
+| none | 3 | 0.110 ± 0.011 | 0.215 ± 0.018 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.60 / 0.62 CKA@L16 helix 0.68 digit 0.34; emb helix 0.68 digit 0.69 |
+
+## rc=0  2026-09-27T22:31:12Z
