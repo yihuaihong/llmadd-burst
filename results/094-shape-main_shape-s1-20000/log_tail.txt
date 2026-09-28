@@ -1,0 +1,18 @@
+## task 094-shape-main_shape-s1-20000  job 2392  host b-19-21  2026-09-28T08:00:27Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.60it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.81it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.73it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.21it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.29it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  8.73it/s]
+embedding init main_shape: {'shape_fit_r2_number_rows': 0.6813127398490906, 'scale': 0.274907648563385, 'mean_row_change_norm': 1.3517283201217651, 'mean_row_norm': 2.5567328929901123}
+base: {'test': 0.026000000536441803, 'train': 0.0279999990016222, 'three_term': 0.004999999888241291, 'three_digit': 0.004999999888241291, 'test_terse': 0.009000000543892384} (106s)
+lora none seed0: {'test': 0.46700000762939453, 'train': 0.909333348274231, 'three_term': 0.0024999999441206455, 'three_digit': 0.007499999832361937, 'test_terse': 0.046000003814697266} (238s)
+lora none seed1: {'test': 0.4930000305175781, 'train': 0.921999990940094, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.05700000375509262} (367s)
+lora none seed2: {'test': 0.5110000371932983, 'train': 0.9273332953453064, 'three_term': 0.0, 'three_digit': 0.009999999776482582, 'test_terse': 0.055000003427267075} (496s)
+# manifold fine-tuning (lora, lam 1.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.026 | 0.028 | 0.005 | 0.005 | 0.009 | - |
+| none | 3 | 0.490 ± 0.022 | 0.920 ± 0.009 | 0.001 ± 0.001 | 0.007 ± 0.002 | 0.053 ± 0.006 | 0.51 / 0.62 CKA@L16 helix 0.71 digit 0.45; emb helix 0.68 digit 0.69 |
+
+## rc=0  2026-09-28T08:09:13Z
