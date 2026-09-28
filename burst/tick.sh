@@ -14,6 +14,7 @@ cd "$REPO" || exit 0
 mkdir -p "$STATE" "$RUNS" logs status results
 ENABLED=0; MAX_GPU_JOBS=1; GPU_HOURS_BUDGET=0
 set -a; . burst/config.env; set +a
+. "$REPO/burst/lib.sh"
 log() { echo "[$(date -u +%FT%TZ)] $*" >> logs/tick.log; }
 hdr() { sed -n "s/^# $2: *//p" "$1" | head -1; }
 in_queue() { squeue -h -j "$1" 2>/dev/null | grep -q .; }
@@ -102,7 +103,7 @@ if [ "${ENABLED:-0}" = 1 ]; then
     fi
     rm -rf "${RUNS:?}/$t"; mkdir -p "$RUNS/$t/code" "$RUNS/$t/out"
     git archive HEAD | tar -x -C "$RUNS/$t/code"
-    out=$(sbatch --parsable --account="$ACCOUNT" --partition="$part" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
+    out=$(sbatch_first "$part" --parsable --account="$ACCOUNT" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
             --time="$tl" --requeue --job-name="llmadd_$t" --output="$RUNS/$t/slurm.out" \
             --export=ALL,TASK="$t",LLMADD_ROOT="$ROOT" "$RUNS/$t/code/burst/run_task.sbatch" 2>&1)
     if [[ "$out" =~ ^[0-9]+ ]]; then

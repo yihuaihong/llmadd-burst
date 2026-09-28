@@ -16,6 +16,7 @@ STATE=$ROOT/llmadd_state
 cd "$REPO" || { echo "repo not found at $REPO"; exit 1; }
 mkdir -p logs "$STATE"
 set -a; . burst/config.env; set +a
+. "$REPO/burst/lib.sh"
 log() { echo "[$(date -u +%FT%TZ)] $*"; }
 ME=${SLURM_JOB_ID:-manual}
 
@@ -31,7 +32,7 @@ date +%s > "$STATE/sentinel_start"
 if squeue --me -h -n llmadd_sentinel -t PENDING 2>/dev/null | grep -q .; then
   log "successor already pending"
 else
-  succ=$(sbatch --parsable --account="$ACCOUNT" --partition="$CPU_PARTITION" --cpus-per-task=1 --time=2-00:00:00 \
+  succ=$(sbatch_first "$CPU_PARTITION" --parsable --account="$ACCOUNT" --cpus-per-task=1 --time=2-00:00:00 \
          --requeue --job-name=llmadd_sentinel --output="$REPO/logs/sentinel_%j.out" \
          --dependency=afterany:"$ME" "$REPO/burst/sentinel.sbatch" 2>&1)
   log "successor: $succ"; echo "$succ" > "$STATE/sentinel_successor"
