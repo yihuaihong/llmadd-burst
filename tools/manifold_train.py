@@ -13,6 +13,12 @@ L_geo: the GEOMETRY of the operand representation, not a readout of it. Every st
        onto ANY target there - shuffled included - so v1 constrained nothing. Found on s1-10k, 2026-09-27.)
 Geometries G: none (task only) | helix | helix_shuf | digit | digit_shuf. "_shuf" uses the same basis on a
        fixed permutation of 10..99: same dimensionality and strength, wrong numbers.
+       Learned targets (TEACHER): main | main_shuf | self - the target Gram is a MODEL's own states of the same
+       numbers at the same layer (or its embedding rows with --geo_site emb): --main_model's (a later, more
+       mature checkpoint) or this checkpoint's own before training ("self": an anchor that only resists drift).
+       "3" variants (helix3, digit3, main3, ...) run over 10..999, sampled per step.
+Tasks (--task add|sub) and splits (--split random | holdout_operand: 15 operand values never seen in training |
+       carry: train without a units carry/borrow, test only with one); --save_preds keeps every eval answer.
 Methods (--mode): lora (r=8, all linear layers) | reft (low-rank edit of the operand states at the
        manifold layers, base frozen) | full (all weights, fp32 master + AdamW; needs ~120 GB, e.g. one H200).
 
@@ -39,15 +45,23 @@ import numlib as nl
 GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf")
 # three-digit geometries over 10..999 (sampled per step, see --geo_sample)
 GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
+# learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
+TEACHER = {"main": ("main", False, 2), "main_shuf": ("main", True, 2), "self": ("self", False, 2),
+           "main3": ("main", False, 3), "main3_shuf": ("main", True, 3), "self3": ("self", False, 3)}
+ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER)
 
 
 def geom_range(G: str) -> np.ndarray:
     return np.arange(10, 1000) if G.startswith(("helix3", "digit3")) else np.arange(10, 100)
 
 
-def two_prompt(a, b): return f"Q: {a} + {b} = "
-def three_prompt(a, b, c): return f"Q: {a} + {b} + {c} = "
-def terse_prompt(a, b): return f"{nl.PREFIX}{a}+{b}="
+def is_three(G: str) -> bool:
+    return G in GEOMS3 or (G in TEACHER and TEACHER[G][2] == 3)
+
+
+def two_prompt(a, b, op="+"): return f"Q: {a} {op} {b} = "
+def three_prompt(a, b, c, op="+"): return f"Q: {a} {op} {b} {op} {c} = "
+def terse_prompt(a, b, op="+"): return f"{nl.PREFIX}{a}{op}{b}="
 
 
 def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
@@ -155,6 +169,25 @@ def decoder_layers(model) -> list:
     return [m for m in model.modules() if type(m).__name__ == "Olmo2DecoderLayer"]
 
 
+@torch.no_grad()
+def number_states(model, layers: list, prefix_all: torch.Tensor, pos: int, bs: int) -> dict:
+    """{L: [1000, d] float32}: the state at `pos` after decoder layer L for the prefixes "Q: x" (rows 10..999)."""
+    dls = decoder_layers(model)
+    got: dict = {}
+    hooks = [dls[L].register_forward_hook(lambda _m, _i, o, L=L: got.__setitem__(L, nl._hidden(o)[:, pos, :].float()))
+             for L in layers]
+    out = {L: torch.zeros(1000, model.config.hidden_size, device=prefix_all.device) for L in layers}
+    try:
+        for i in range(10, 1000, bs):
+            model(input_ids=prefix_all[i:i + bs], logits_to_keep=1)
+            for L in layers:
+                out[L][i:i + bs] = got[L]
+    finally:
+        for h in hooks:
+            h.remove()
+    return out
+
+
 class Reft(torch.nn.Module):
     """Low-rank additive edit of selected token states at one layer: h + (h Wd^T + b) Wu^T (Wu starts at 0)."""
 
@@ -195,30 +228,57 @@ def main() -> None:
                     help="replace the number-token rows 0..999 of the input embedding before training: main = Procrustes-aligned rows of --main_model, main_shuf = same rows shuffled among the numbers")
     ap.add_argument("--main_model", default=None)
     ap.add_argument("--geo_sample", type=int, default=180, help="numbers per step for the 10..999 geometries (helix3/digit3)")
+    ap.add_argument("--task", choices=("add", "sub"), default="add", help="sub: a - b with a >= b (answers stay single tokens)")
+    ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
+    ap.add_argument("--geo_numbers", choices=("all", "seen"), default="all",
+                    help="two-digit geometries over all of 10..99, or only over the operand values seen in training")
+    ap.add_argument("--save_preds", action="store_true", help="store every predicted answer of the eval sets (not train)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     lr = args.lr or {"lora": 1e-4, "reft": 1e-3, "full": 1e-5}[args.mode]
     assert not (args.geo_site == "emb" and args.mode != "full" and not args.emb_delta), "--geo_site emb needs trainable embeddings (--emb_delta)"
     assert args.emb_init == "orig" or args.main_model, "--emb_init main* needs --main_model"
     geoms = args.geoms.split(","); seeds = [int(s) for s in args.seeds.split(",")]
-    assert all(G in GEOMS + GEOMS3 for G in geoms), geoms
+    assert all(G in ALL_GEOMS for G in geoms), geoms
+    assert not any(TEACHER.get(G, ("",))[0] == "main" for G in geoms) or args.main_model, "main* targets need --main_model"
+    assert args.geo_numbers == "all" or not any(is_three(G) for G in geoms), "--geo_numbers seen is for the two-digit geometries"
     man_layers = [int(v) for v in args.layers.split(",")]
+    op = {"add": "+", "sub": "-"}[args.task]
     t0 = time.time()
 
-    # ---------------------------------------------------------------- model
+    # ---------------------------------------------------------------- tokenizer, prefixes, teacher states
     from transformers import AutoModelForCausalLM, AutoTokenizer
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(args.model)
+    toks = tok.convert_ids_to_tokens(tok(two_prompt(23, 45, op))["input_ids"])
+    assert toks[-6:] == ["23", "Ġ" + op, "Ġ", "45", "Ġ=", "Ġ"], toks
+    slot_pos = {"A": len(toks) - 6, "B": len(toks) - 3}
+    enc = lambda ps: nl.encode(tok, ps, dev)
+    prefix_all = torch.zeros(1000, slot_pos["A"] + 1, dtype=torch.long, device=dev)
+    prefix_all[10:] = enc([f"Q: {x}" for x in range(10, 1000)])      # A-slot state of x depends only on this prefix
+    num_prefix = prefix_all[10:100]
+    teach: dict = {}    # {"main" | "self": {L | "emb": [1000, d] float32}}, rows 0..9 unused
+    if args.main_model:
+        tm = AutoModelForCausalLM.from_pretrained(args.main_model, torch_dtype=torch.bfloat16).to(dev)
+        tm.config.use_cache = False
+        teach["main"] = number_states(tm, man_layers, prefix_all, slot_pos["A"], args.eval_bs)
+        tn = torch.tensor(nl.number_token_ids(tok, 999), device=dev)
+        teach["main"]["emb"] = tm.get_input_embeddings().weight[tn].detach().float()
+        del tm
+        torch.cuda.empty_cache() if dev == "cuda" else None
+        print(f"teacher states from {args.main_model} ({time.time() - t0:.0f}s)")
+
+    # ---------------------------------------------------------------- model
     base_dtype = torch.float32 if (args.mode == "full" or dev == "cpu") else torch.bfloat16
     model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype).to(dev)
     model.config.use_cache = False
     layers = decoder_layers(model)
     d = model.config.hidden_size
     num_ids = torch.tensor(nl.number_token_ids(tok, 999), device=dev)
-    toks = tok.convert_ids_to_tokens(tok(two_prompt(23, 45))["input_ids"])
-    assert toks[-6:] == ["23", "Ġ+", "Ġ", "45", "Ġ=", "Ġ"], toks
-    slot_pos = {"A": len(toks) - 6, "B": len(toks) - 3}
     autocast = torch.autocast("cuda", dtype=torch.bfloat16) if (args.mode == "full" and dev == "cuda") else torch.autocast("cpu", enabled=False)
+    if any(TEACHER.get(G, ("",))[0] == "self" for G in geoms):
+        teach["self"] = number_states(model, man_layers, prefix_all, slot_pos["A"], args.eval_bs)
+        teach["self"]["emb"] = model.get_input_embeddings().weight[num_ids[:1000]].detach().float()
 
     reft_mods = None
     if args.mode == "lora":
@@ -313,45 +373,71 @@ def main() -> None:
             return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float()
 
     # ---------------------------------------------------------------- data
+    ans_of = (lambda P: P.sum(1)) if args.task == "add" else (lambda P: P[:, 0] - P[:, 1:].sum(1))
     rng = np.random.default_rng(0)
-    pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100)])
+    pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100) if args.task == "add" or a >= b])
     pairs = pairs[rng.permutation(len(pairs))]
-    train, test = pairs[: args.train_pairs], pairs[args.train_pairs: args.train_pairs + args.test_pairs]
-    for j in range(2):   # per-number means are taken per slot, so every value must occur in every slot
-        assert set(np.unique(train[:, j])) >= set(range(10, 100)), f"slot {j}: some operand value never occurs in training"
-    trip = np.array([(a, b, c) for a in range(10, 100) for b in range(10, 100) for c in range(10, 100) if a + b + c <= 199])
+    heldout = np.array([], dtype=int)
+    if args.split == "random":
+        train, test = pairs[: args.train_pairs], pairs[args.train_pairs: args.train_pairs + args.test_pairs]
+    else:
+        if args.split == "holdout_operand":
+            heldout = np.sort(np.random.default_rng(7).choice(np.arange(10, 100), 15, replace=False))
+            in_train = ~np.isin(pairs, heldout).any(1)
+        else:   # units carry (add) / borrow (sub) only in the test set
+            u = pairs % 10
+            in_train = (u[:, 0] + u[:, 1] < 10) if args.task == "add" else (u[:, 0] >= u[:, 1])
+        train, test = pairs[in_train][: args.train_pairs], pairs[~in_train][: args.test_pairs]
+    assert len(train) == args.train_pairs and len(test) == args.test_pairs, (len(train), len(test))
+    # per-number means are taken per slot, so every value must occur in every slot of the probe prompts
+    probe_is_train = args.task == "add" and args.split == "random"
+    probe = train if probe_is_train else pairs
+    for j in range(2):
+        assert set(np.unique(probe[:, j])) >= set(range(10, 100)), f"slot {j}: some operand value never occurs in the probe prompts"
+    seen = np.unique(train)
+    if args.task == "add":
+        trip = np.array([(a, b, c) for a in range(10, 100) for b in range(10, 100) for c in range(10, 100) if a + b + c <= 199])
+        big = np.array([(a, b) for a in range(100, 500) for b in range(100, 500)])
+    else:
+        trip = np.array([(a, b, c) for a in range(10, 100) for b in range(10, 100) for c in range(10, 100) if a - b - c >= 0])
+        big = np.array([(a, b) for a in range(100, 500) for b in range(100, 500) if a >= b])
     three = trip[rng.permutation(len(trip))][:400]
-    big = np.array([(a, b) for a in range(100, 500) for b in range(100, 500)])
     big = big[rng.permutation(len(big))][:400]
     perm = np.arange(100); perm[10:] = 10 + np.random.default_rng(123).permutation(90)
-    enc = lambda ps: nl.encode(tok, ps, dev)
     evalsets = {
-        "test": (enc([two_prompt(*x) for x in test]), test.sum(1)),
-        "train": (enc([two_prompt(*x) for x in train]), train.sum(1)),
-        "three_term": (enc([three_prompt(*x) for x in three]), three.sum(1)),
-        "three_digit": (enc([two_prompt(*x) for x in big]), big.sum(1)),
-        "test_terse": (enc([terse_prompt(*x) for x in test]), test.sum(1)),
+        "test": (enc([two_prompt(*x, op) for x in test]), ans_of(test)),
+        "train": (enc([two_prompt(*x, op) for x in train]), ans_of(train)),
+        "three_term": (enc([three_prompt(*x, op) for x in three]), ans_of(three)),
+        "three_digit": (enc([two_prompt(*x, op) for x in big]), ans_of(big)),
+        "test_terse": (enc([terse_prompt(*x, op) for x in test]), ans_of(test)),
     }
+    items = {"test": test, "three_term": three, "three_digit": big, "test_terse": test}
     train_ids = evalsets["train"][0]
+    probe_ids = train_ids if probe_is_train else enc([two_prompt(*x, op) for x in probe])
+    num_of = torch.full((model.config.vocab_size,), -1, dtype=torch.long, device=dev)
+    num_of[num_ids[:1000]] = torch.arange(1000, device=dev)
 
     @torch.no_grad()
-    def evaluate(reft: bool) -> dict:
+    def evaluate(reft: bool, preds: dict | None = None) -> dict:
+        """Accuracy per eval set; with `preds` also fills {set: predicted number or -1} (not for train)."""
         model.eval()
         res = {}
         for name, (ids, ans) in evalsets.items():
             am = torch.cat([forward(ids[i:i + args.eval_bs], reft).argmax(-1) for i in range(0, len(ids), args.eval_bs)])
             res[name] = float((am == num_ids[torch.tensor(ans, device=dev)]).float().mean())
+            if preds is not None and name in items:
+                preds[name] = num_of[am].tolist()
         return res
 
     @torch.no_grad()
     def number_means(reft: bool) -> dict:
-        """{(L, slot): [90, d]} per-number mean state over the training prompts."""
+        """{(L, slot): [90, d]} per-number mean state over the probe prompts (the training prompts by default)."""
         model.eval()
         sums = {(L, s): torch.zeros(90, d, device=dev) for L in man_layers for s in slot_pos}
         cnt = {s: torch.zeros(90, device=dev) for s in slot_pos}
-        for i in range(0, len(train_ids), args.eval_bs):
-            forward(train_ids[i:i + args.eval_bs], reft)
-            chunk = train[i:i + args.eval_bs]
+        for i in range(0, len(probe_ids), args.eval_bs):
+            forward(probe_ids[i:i + args.eval_bs], reft)
+            chunk = probe[i:i + args.eval_bs]
             for j, s in enumerate(slot_pos):
                 idx = torch.tensor(chunk[:, j] - 10, device=dev)
                 for L in man_layers:
@@ -360,11 +446,11 @@ def main() -> None:
         return {k: (v / cnt[k[1]][:, None]).cpu().numpy() for k, v in sums.items()}
 
     grams = target_grams(perm, dev)
+    feats2 = {G: target_features(G, perm, dev) for G in grams}
     perm3 = np.arange(1000); perm3[10:] = 10 + np.random.default_rng(321).permutation(990)
     feats3 = {G: target_features(G, perm3, dev) for G in GEOMS3}
-    prefix_all = torch.zeros(1000, slot_pos["A"] + 1, dtype=torch.long, device=dev)
-    prefix_all[10:] = enc([f"Q: {x}" for x in range(10, 1000)])      # A-slot state of x depends only on this prefix
-    num_prefix = prefix_all[10:100]
+    perm_t, perm3_t = torch.tensor(perm, device=dev), torch.tensor(perm3, device=dev)
+    geo_xs2 = None if args.geo_numbers == "all" else torch.tensor(seen, device=dev)   # None = all of 10..99
     geo_rng = np.random.default_rng(99)
     report_xs3 = torch.tensor(np.sort(np.random.default_rng(5).choice(np.arange(10, 1000), 300, replace=False)), device=dev)
 
@@ -376,37 +462,53 @@ def main() -> None:
         forward(num_prefix if xs is None else prefix_all[xs], reft)
         return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
 
-    def geo_loss(G: str, reft: bool) -> torch.Tensor:
+    def target_gram(G: str, key, xs) -> torch.Tensor:
+        """Centred target Gram of geometry G for the numbers xs (None = 10..99) at site `key` (a layer or "emb")."""
+        if G in TEACHER:
+            src, shuf, n = TEACHER[G]
+            rows = torch.arange(10, 100, device=dev) if xs is None else xs
+            if shuf:
+                rows = (perm3_t if n == 3 else perm_t)[rows]
+            return gram_of(teach[src][key][rows])
         if G in GEOMS3:
-            xs = torch.tensor(np.sort(geo_rng.choice(np.arange(10, 1000), args.geo_sample, replace=False)), device=dev)
-            Hs, K = geo_states(reft, xs), gram_of(feats3[G][xs])
-        else:
-            Hs, K = geo_states(reft), grams[G]
-        return sum(1 - cka(Hs[L], K) for L in Hs) / len(Hs)
+            return gram_of(feats3[G][xs])
+        return grams[G] if xs is None else gram_of(feats2[G][xs])
 
-    def geo_cka(reft: bool) -> dict:
-        return geo_states(reft)
-    geo_keys = ["emb"] if args.geo_site == "emb" else man_layers
+    def geo_loss(G: str, reft: bool) -> torch.Tensor:
+        if is_three(G):
+            xs = torch.tensor(np.sort(geo_rng.choice(np.arange(10, 1000), args.geo_sample, replace=False)), device=dev)
+        else:
+            xs = geo_xs2
+        Hs = geo_states(reft, xs)
+        return sum(1 - cka(Hs[L], target_gram(G, L, xs)) for L in Hs) / len(Hs)
 
     @torch.no_grad()
     def geometry_report(reft: bool) -> dict:
         model.eval()
+        key = lambda L: f"L{L}" if L != "emb" else "emb"
         forward(num_prefix, reft)
         Hs = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
         Hs["emb"] = number_embedding_rows()
-        rep = {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
+        rep = {key(L): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
+        for src in teach:
+            for L, H in Hs.items():
+                rep[key(L)]["cka_" + src] = float(cka(H, gram_of(teach[src][L][10:100])))
         forward(prefix_all[report_xs3], reft)
         H3 = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
         H3["emb"] = number_embedding_rows(report_xs3)
         for L, H in H3.items():
-            key = f"L{L}" if L != "emb" else "emb"
-            rep[key].update({"cka_" + G: float(cka(H, gram_of(feats3[G][report_xs3]))) for G in GEOMS3})
+            rep[key(L)].update({"cka_" + G: float(cka(H, gram_of(feats3[G][report_xs3]))) for G in GEOMS3})
+            for src in teach:
+                rep[key(L)]["cka_" + src + "3"] = float(cka(H, gram_of(teach[src][L][report_xs3])))
         return rep
 
-    base_eval = evaluate(reft=False)
+    base_preds = {} if args.save_preds else None
+    base_eval = evaluate(reft=False, preds=base_preds)
     base_means = number_means(reft=False)
     (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, None, slot_pos),
-                                               "geometry": geometry_report(reft=False)}, indent=1))
+                                               "geometry": geometry_report(reft=False), "task": args.task, "split": args.split,
+                                               "heldout": heldout.tolist(), "items": {k: v.tolist() for k, v in items.items()},
+                                               "preds": base_preds}, indent=1))
     print(f"base: {base_eval} ({time.time() - t0:.0f}s)")
 
     for seed in seeds:
@@ -432,7 +534,7 @@ def main() -> None:
                     opt.zero_grad(set_to_none=True)
                     with autocast:
                         logits = forward(train_ids[torch.tensor(bi, device=dev)], reft=True)
-                        ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
+                        ce = Fn.cross_entropy(logits, num_ids[torch.tensor(ans_of(chunk), device=dev)])
                         if G == "none":
                             with torch.no_grad():
                                 ml = geo_loss("helix", reft=True)
@@ -446,11 +548,13 @@ def main() -> None:
                     del logits, loss
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
             del opt
-            ev = evaluate(reft=True)
+            preds = {} if args.save_preds else None
+            ev = evaluate(reft=True, preds=preds)
             diag = diagnostics(number_means(reft=True), None, slot_pos)
             path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geo_site": args.geo_site, "emb_delta": args.emb_delta,
+                                        "task": args.task, "split": args.split, "geo_numbers": args.geo_numbers, "preds": preds,
                                         "emb_init": args.emb_init, "emb_init_info": emb_info, "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
-                                        "geo_sample": args.geo_sample if G in GEOMS3 else None,
+                                        "geo_sample": args.geo_sample if is_three(G) else None,
                                         "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag,
                                         "geometry": geometry_report(reft=True)}, indent=1))
             print(f"{args.mode} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
@@ -475,10 +579,11 @@ def summarize(out: Path) -> None:
         return
     base = json.loads((out / "base.json").read_text())
     keys = list(runs[0]["eval"])
-    lines = [f"# manifold fine-tuning ({runs[0]['mode']}, lam {runs[0]['lam']}, lr {runs[0]['lr']}, layers {runs[0]['layers']})\n\n",
+    ts = f", task {runs[0].get('task', 'add')}, split {runs[0].get('split', 'random')}" + (f", geo_numbers {runs[0]['geo_numbers']}" if runs[0].get("geo_numbers", "all") != "all" else "")
+    lines = [f"# manifold fine-tuning ({runs[0]['mode']}, lam {runs[0]['lam']}, lr {runs[0]['lr']}, layers {runs[0]['layers']}{ts})\n\n",
              "| geom | n seeds | " + " | ".join(keys) + " | r2 helix / digit (first layer) |\n", "|---|---|" + "---|" * (len(keys) + 1) + "\n",
              "| base | - | " + " | ".join(f"{base['eval'][k]:.3f}" for k in keys) + " | - |\n"]
-    for G in GEOMS + GEOMS3:
+    for G in ALL_GEOMS:
         rs = [r for r in runs if r["geom"] == G]
         if not rs:
             continue
@@ -493,6 +598,8 @@ def summarize(out: Path) -> None:
             gl = [k for k in rs[0]["geometry"] if k.startswith("L")][-1]
             c = np.mean([[r["geometry"][gl]["cka_helix"], r["geometry"][gl]["cka_digit"]] for r in rs], 0)
             ck = f" CKA@{gl} helix {c[0]:.2f} digit {c[1]:.2f}"
+            if "cka_main" in rs[0]["geometry"][gl]:
+                ck += f" main {np.mean([r['geometry'][gl]['cka_main'] for r in rs]):.2f} main3 {np.mean([r['geometry'][gl]['cka_main3'] for r in rs]):.2f}"
             if "emb" in rs[0]["geometry"]:
                 e = np.mean([[r["geometry"]["emb"]["cka_helix"], r["geometry"]["emb"]["cka_digit"]] for r in rs], 0)
                 ck += f"; emb helix {e[0]:.2f} digit {e[1]:.2f}"
