@@ -1,0 +1,29 @@
+## task 124-sub-s1-20000  job 2500  host b-19-12  2026-09-28T21:27:04Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.01it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.54it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.49it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.64it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.25it/s]
+base: {'test': 0.07000000029802322, 'train': 0.08266666531562805, 'three_term': 0.044999998062849045, 'three_digit': 0.004999999888241291, 'test_terse': 0.007000000216066837} (107s)
+lora none seed0: {'test': 0.484000027179718, 'train': 0.9233333468437195, 'three_term': 0.007499999832361937, 'three_digit': 0.054999999701976776, 'test_terse': 0.0690000057220459} (243s)
+lora helix seed0: {'test': 0.6170000433921814, 'train': 0.8880000114440918, 'three_term': 0.0024999999441206455, 'three_digit': 0.03999999910593033, 'test_terse': 0.07800000160932541} (404s)
+lora helix_shuf seed0: {'test': 0.4020000100135803, 'train': 0.7446666359901428, 'three_term': 0.01249999925494194, 'three_digit': 0.029999999329447746, 'test_terse': 0.04800000041723251} (566s)
+lora digit seed0: {'test': 0.5410000085830688, 'train': 0.8953333497047424, 'three_term': 0.004999999888241291, 'three_digit': 0.04749999940395355, 'test_terse': 0.07000000029802322} (728s)
+lora none seed1: {'test': 0.4960000216960907, 'train': 0.8619999885559082, 'three_term': 0.0024999999441206455, 'three_digit': 0.044999998062849045, 'test_terse': 0.07600000500679016} (861s)
+lora helix seed1: {'test': 0.5760000348091125, 'train': 0.8700000047683716, 'three_term': 0.0, 'three_digit': 0.044999998062849045, 'test_terse': 0.07200000435113907} (1017s)
+lora helix_shuf seed1: {'test': 0.40300002694129944, 'train': 0.7333333492279053, 'three_term': 0.004999999888241291, 'three_digit': 0.03500000014901161, 'test_terse': 0.06000000238418579} (1172s)
+lora digit seed1: {'test': 0.5200000405311584, 'train': 0.8966666460037231, 'three_term': 0.004999999888241291, 'three_digit': 0.044999998062849045, 'test_terse': 0.08300000429153442} (1326s)
+lora none seed2: {'test': 0.5260000228881836, 'train': 0.8773333430290222, 'three_term': 0.004999999888241291, 'three_digit': 0.054999999701976776, 'test_terse': 0.07500000298023224} (1455s)
+lora helix seed2: {'test': 0.5220000147819519, 'train': 0.8240000009536743, 'three_term': 0.0, 'three_digit': 0.04999999701976776, 'test_terse': 0.07700000703334808} (1610s)
+lora helix_shuf seed2: {'test': 0.3330000042915344, 'train': 0.6413333415985107, 'three_term': 0.02499999850988388, 'three_digit': 0.017500000074505806, 'test_terse': 0.05700000375509262} (1765s)
+lora digit seed2: {'test': 0.5240000486373901, 'train': 0.8806666731834412, 'three_term': 0.0, 'three_digit': 0.044999998062849045, 'test_terse': 0.07100000232458115} (1919s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task sub, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.070 | 0.083 | 0.045 | 0.005 | 0.007 | - |
+| none | 3 | 0.502 ± 0.022 | 0.888 ± 0.032 | 0.005 ± 0.002 | 0.052 ± 0.006 | 0.073 ± 0.004 | 0.29 / 0.36 CKA@L16 helix 0.73 digit 0.54; emb helix 0.65 digit 0.71 |
+| helix | 3 | 0.572 ± 0.048 | 0.861 ± 0.033 | 0.001 ± 0.001 | 0.045 ± 0.005 | 0.076 ± 0.003 | 0.62 / 0.64 CKA@L16 helix 0.99 digit 0.65; emb helix 0.65 digit 0.71 |
+| helix_shuf | 3 | 0.379 ± 0.040 | 0.706 ± 0.057 | 0.014 ± 0.010 | 0.027 ± 0.009 | 0.055 ± 0.006 | -0.02 / -0.10 CKA@L16 helix 0.13 digit 0.19; emb helix 0.65 digit 0.71 |
+| digit | 3 | 0.528 ± 0.011 | 0.891 ± 0.009 | 0.003 ± 0.003 | 0.046 ± 0.001 | 0.075 ± 0.007 | 0.21 / 0.57 CKA@L16 helix 0.62 digit 0.99; emb helix 0.65 digit 0.71 |
+
+## rc=0  2026-09-28T21:59:32Z
