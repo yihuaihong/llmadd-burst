@@ -5,3 +5,4 @@
 060-train-lora-s1-150000
 061-train-reft-s1-150000
 082-curve-lora-lam20-s1-5000   # held (user env retrieval failed), re-queued as 082b
+091-shape-main_shape_shuf-s1-2000   # held (user env retrieval failed), re-queued as 091b
