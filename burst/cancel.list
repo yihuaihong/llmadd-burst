@@ -6,3 +6,5 @@
 061-train-reft-s1-150000
 082-curve-lora-lam20-s1-5000   # held (user env retrieval failed), re-queued as 082b
 091-shape-main_shape_shuf-s1-2000   # held (user env retrieval failed), re-queued as 091b
+105-teach-s1-150000   # held (user env retrieval failed), re-queued as 105b-teach-s1-150000
+109-teachemb-s1-2000   # held (user env retrieval failed), re-queued as 109b-teachemb-s1-2000
