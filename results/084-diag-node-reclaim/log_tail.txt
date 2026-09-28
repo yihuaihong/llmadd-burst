@@ -1,0 +1,190 @@
+## task 084-diag-node-reclaim  job 2372  host b-10-3  2026-09-28T04:24:25Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+## now 2026-09-28T04:24:25Z on b-10-3 job 2372 partition n2c48m24
+## my llmadd jobs, last 3 days (full state, reason, times, node)
+     JobID                  JobName        Partition                                    State                         Reason              Submit               Start                 End    Elapsed         NodeList 
+---------- ------------------------ ---------------- ---------------------------------------- ------------------------------ ------------------- ------------------- ------------------- ---------- ---------------- 
+      2143          llmadd_sentinel         n2c48m24                           CANCELLED by 0                           None 2026-09-27T03:56:34 2026-09-27T03:58:05 2026-09-27T04:31:01   00:32:56           b-10-2 
+      2144          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T03:58:08 2026-09-27T04:32:06 2026-09-27T05:11:01   00:38:55           b-10-3 
+      2159          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T04:32:18 2026-09-27T05:12:06 2026-09-27T05:51:02   00:38:56           b-10-1 
+      2166          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T05:12:16 2026-09-27T05:52:07 2026-09-27T06:31:01   00:38:54           b-10-2 
+      2170          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T05:52:17 2026-09-27T06:32:07 2026-09-27T07:11:01   00:38:54           b-10-1 
+      2180          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T06:32:17 2026-09-27T07:12:07 2026-09-27T07:51:01   00:38:54           b-10-2 
+      2190          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T07:12:18 2026-09-27T07:52:07 2026-09-27T08:31:01   00:38:54           b-10-1 
+      2208          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T07:52:16 2026-09-27T08:32:07 2026-09-27T09:11:01   00:38:54           b-10-2 
+      2214          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T08:32:17 2026-09-27T09:12:08 2026-09-27T09:51:02   00:38:54           b-10-1 
+      2217          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T09:12:18 2026-09-27T09:52:08 2026-09-27T10:31:02   00:38:54           b-10-2 
+      2218          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T09:52:17 2026-09-27T10:32:11 2026-09-27T11:11:01   00:38:50           b-10-1 
+      2219          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T10:32:21 2026-09-27T11:12:11 2026-09-27T11:51:01   00:38:50           b-10-2 
+      2222          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T11:12:22 2026-09-27T11:52:11 2026-09-27T12:31:02   00:38:51           b-10-1 
+      2224          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T11:52:22 2026-09-27T12:32:11 2026-09-27T13:11:02   00:38:51           b-10-2 
+      2227          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T12:32:21 2026-09-27T13:12:12 2026-09-27T13:51:02   00:38:50           b-10-4 
+      2229          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T13:12:21 2026-09-27T13:52:12 2026-09-27T14:31:01   00:38:49           b-10-3 
+      2254          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T13:52:22 2026-09-27T14:32:13 2026-09-27T15:11:01   00:38:48           b-10-4 
+      2256          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T14:32:21 2026-09-27T15:12:13 2026-09-27T15:51:01   00:38:48           b-10-3 
+      2261          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T15:12:20 2026-09-27T15:52:15 2026-09-27T16:31:01   00:38:46           b-10-2 
+      2274          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T15:52:20 2026-09-27T16:32:15 2026-09-27T17:11:02   00:38:47           b-10-5 
+      2287          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T16:32:26 2026-09-27T17:12:17 2026-09-27T17:51:01   00:38:44           b-10-2 
+      2301          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T17:12:27 2026-09-27T17:52:17 2026-09-27T18:31:01   00:38:44           b-10-4 
+      2309          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T17:52:28 2026-09-27T18:32:17 2026-09-27T19:11:01   00:38:44           b-10-2 
+      2311          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T18:32:28 2026-09-27T19:12:17 2026-09-27T19:51:02   00:38:45           b-10-1 
+      2316          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T19:12:28 2026-09-27T19:52:18 2026-09-27T20:31:01   00:38:43           b-10-2 
+      2323          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T19:52:29 2026-09-27T20:32:18 2026-09-27T21:11:01   00:38:43           b-10-4 
+      2335          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T20:32:27 2026-09-27T21:12:18 2026-09-27T21:51:01   00:38:43           b-10-2 
+      2348          llmadd_sentinel         n2c48m24                           CANCELLED by 0                     Dependency 2026-09-27T21:12:28 2026-09-27T21:52:20 2026-09-27T22:31:01   00:38:41           b-10-1 
+      2358     llmadd_080-dl-early2         n2c48m24                           CANCELLED by 0                           None 2026-09-27T22:28:21                None 2026-09-27T23:00:01   00:00:00    None assigned 
+      2353          llmadd_sentinel         n2c48m24                           CANCELLED by 0                           None 2026-09-27T22:31:54                None 2026-09-27T23:00:01   00:00:00    None assigned 
+      2367          llmadd_sentinel         n2c48m24                           CANCELLED by 0                           None 2026-09-28T03:58:54                None 2026-09-28T04:00:02   00:00:00    None assigned 
+      2368          llmadd_sentinel         n2c48m24                                  RUNNING                           None 2026-09-28T04:09:40 2026-09-28T04:10:52             Unknown   00:13:38           b-10-1 
+      2370    llmadd_080b-dl-early2         n2c48m24                                  RUNNING                           None 2026-09-28T04:16:20 2026-09-28T04:17:22             Unknown   00:07:08           b-10-2 
+
+## all my jobs, last 2 days, any name
+      2317     llmadd_050-snap-s1-10000    c12m85-a100-1                                COMPLETED   00:04:42          b-19-11 
+      2318     llmadd_051-snap-s1-50000    c12m85-a100-1                                COMPLETED   00:04:27          b-19-18 
+      2320    llmadd_053-snap-s1-400000    c12m85-a100-1                                COMPLETED   00:04:30          b-19-38 
+      2319    llmadd_052-snap-s1-150000    c12m85-a100-1                           CANCELLED by 0   00:00:00    None assigned 
+      2321    llmadd_054-snap-s1-928646    c12m85-a100-1                                COMPLETED   00:04:25          b-19-21 
+      2322         llmadd_055-snap-main    c12m85-a100-1                                COMPLETED   00:04:21          b-19-24 
+      2323              llmadd_sentinel         n2c48m24                           CANCELLED by 0   00:38:43           b-10-4 
+      2325 llmadd_056-train-lora-s1-10+    c12m85-a100-1                                COMPLETED   00:23:42          b-19-20 
+      2326 llmadd_057-train-reft-s1-10+    c12m85-a100-1                                COMPLETED   00:12:54          b-19-23 
+      2327 llmadd_058-train-lora-s1-50+    c12m85-a100-1                     CANCELLED by 4550886   00:16:23          b-19-31 
+      2328 llmadd_059-train-reft-s1-50+    c12m85-a100-1                                COMPLETED   00:12:45          b-19-11 
+      2329   llmadd_052b-snap-s1-150000    c12m85-a100-1                                COMPLETED   00:04:27          b-19-18 
+      2330           llmadd_062-env-bnb         n2c48m24                                COMPLETED   00:00:54           b-10-1 
+      2331  llmadd_064-v2-lora-s1-10000    c12m85-a100-1                                COMPLETED   00:36:54          b-19-21 
+      2332  llmadd_065-v2-reft-s1-10000    c12m85-a100-1                                COMPLETED   00:18:21          b-19-38 
+      2333  llmadd_066-v2-lora-s1-50000    c12m85-a100-1                                COMPLETED   00:36:44          b-19-23 
+      2334  llmadd_067-v2-reft-s1-50000    c12m85-a100-1                                COMPLETED   00:18:06          b-19-24 
+      2335              llmadd_sentinel         n2c48m24                           CANCELLED by 0   00:38:43           b-10-2 
+      2337        llmadd_063-fsdp-smoke   c24m170-a100-2                                   FAILED   00:04:04           b-20-6 
+      2343 llmadd_068-v2-lora-s1-150000    c12m85-a100-1                                COMPLETED   00:39:02          b-19-27 
+      2345 llmadd_069-v2-reft-s1-150000    c12m85-a100-1                                COMPLETED   00:21:32          b-19-28 
+      2346 llmadd_070-v2-lora-lam5-s1-+    c12m85-a100-1                                COMPLETED   00:32:44          b-19-24 
+      2347 llmadd_071-v2-lora-lam20-s1+    c12m85-a100-1                                COMPLETED   00:33:01          b-19-38 
+      2348              llmadd_sentinel         n2c48m24                           CANCELLED by 0   00:38:41           b-10-1 
+      2349 llmadd_072-v2-lora-lam20-s1+    c12m85-a100-1                                COMPLETED   00:33:40          b-19-19 
+      2350 llmadd_073-v2-lora-lam20-s1+    c12m85-a100-1                                COMPLETED   00:33:10          b-19-21 
+      2351 llmadd_074-v2-lora-lam50-s1+    c12m85-a100-1                                COMPLETED   00:32:53          b-19-23 
+      2352 llmadd_075-v2-reft-lam20-s1+    c12m85-a100-1                                COMPLETED   00:18:10          b-19-13 
+      2354      llmadd_076-emb-manifold         n2c48m24                                COMPLETED   00:14:03           b-10-2 
+      2355 llmadd_077-emb-geo-lora-s1-+    c12m85-a100-1                                COMPLETED   00:25:43          b-19-24 
+      2356 llmadd_078-emb-transplant-m+    c12m85-a100-1                                COMPLETED   00:09:22          b-19-38 
+      2357 llmadd_079-emb-transplant-m+    c12m85-a100-1                                COMPLETED   00:09:31          b-19-13 
+      2358         llmadd_080-dl-early2         n2c48m24                           CANCELLED by 0   00:00:00    None assigned 
+      2353              llmadd_sentinel         n2c48m24                           CANCELLED by 0   00:00:00    None assigned 
+      2366                  ood-jupyter    c12m85-a100-1                           CANCELLED by 0   00:26:39          b-19-21 
+      2367              llmadd_sentinel         n2c48m24                           CANCELLED by 0   00:00:00    None assigned 
+      2368              llmadd_sentinel         n2c48m24                     CANCELLED by 4550886   00:13:41           b-10-1 
+      2370        llmadd_080b-dl-early2         n2c48m24                                  RUNNING   00:07:14           b-10-2 
+      2371                  ood-jupyter    c12m85-a100-1                                  RUNNING   00:00:44          b-19-30 
+      2372 llmadd_084-diag-node-reclaim         n2c48m24                                  RUNNING   00:00:14           b-10-3 
+
+## events for the reclaimed jobs (all steps, incl. requeues)
+         JobID                                    State                         Reason               Start                 End    Elapsed       NodeList 
+-------------- ---------------------------------------- ------------------------------ ------------------- ------------------- ---------- -------------- 
+          2335                                COMPLETED                           None 2024-09-23T18:22:20 2024-09-23T18:38:51   00:16:31        b-10-16 
+   2335.extern                                COMPLETED                                2024-09-23T18:22:20 2024-09-23T18:38:52   00:16:32        b-10-16 
+        2335.0                                COMPLETED                                2024-09-23T18:22:22 2024-09-23T18:38:51   00:16:29        b-10-16 
+          2335                           CANCELLED by 0                     Dependency 2026-09-27T21:12:18 2026-09-27T21:51:01   00:38:43         b-10-2 
+    2335.batch                                CANCELLED                                2026-09-27T21:12:18 2026-09-27T21:51:02   00:38:44         b-10-2 
+   2335.extern                                COMPLETED                                2026-09-27T21:12:18 2026-09-27T21:51:02   00:38:44         b-10-2 
+         JobID                                    State                         Reason               Start                 End    Elapsed       NodeList 
+-------------- ---------------------------------------- ------------------------------ ------------------- ------------------- ---------- -------------- 
+          2348                           CANCELLED by 0                           None 2024-09-23T18:57:22 2024-09-23T22:08:23   03:11:01        b-10-98 
+    2348.batch                                CANCELLED                                2024-09-23T18:57:22 2024-09-23T22:08:25   03:11:03        b-10-98 
+   2348.extern                                COMPLETED                                2024-09-23T18:57:22 2024-09-23T22:08:24   03:11:02        b-10-98 
+          2348                           CANCELLED by 0                     Dependency 2026-09-27T21:52:20 2026-09-27T22:31:01   00:38:41         b-10-1 
+    2348.batch                                CANCELLED                                2026-09-27T21:52:20 2026-09-27T22:31:02   00:38:42         b-10-1 
+   2348.extern                                COMPLETED                                2026-09-27T21:52:20 2026-09-27T22:31:03   00:38:43         b-10-1 
+         JobID                                    State                         Reason               Start                 End    Elapsed       NodeList 
+-------------- ---------------------------------------- ------------------------------ ------------------- ------------------- ---------- -------------- 
+          2358                                   FAILED                           None 2024-09-23T19:46:55 2024-09-23T19:52:13   00:05:18        b-10-81 
+   2358.extern                                COMPLETED                                2024-09-23T19:46:55 2024-09-23T19:52:13   00:05:18        b-10-81 
+        2358.0                     CANCELLED by 4193744                                2024-09-23T19:47:03 2024-09-23T19:52:13   00:05:10        b-10-81 
+          2358                                 REQUEUED                           None 2026-09-27T22:28:20 2026-09-27T22:28:20   00:00:00         b-10-3 
+    2358.batch                                CANCELLED                                2026-09-27T22:28:20 2026-09-27T22:28:21   00:00:01         b-10-3 
+   2358.extern                                COMPLETED                                2026-09-27T22:28:20 2026-09-27T22:28:20   00:00:00         b-10-3 
+          2358                           CANCELLED by 0                           None                None 2026-09-27T23:00:01   00:00:00  None assigned 
+
+## node reasons (down/drained)
+REASON                         TIMESTAMP            NODELIST
+
+## the nodes the sentinel used
+NodeName=b-10-1 Arch=x86_64 CoresPerSocket=12 
+   State=IDLE+CLOUD+POWERING_DOWN ThreadsPerCore=1 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=n2c48m24 
+   BootTime=2026-09-28T04:10:04 SlurmdStartTime=2026-09-28T04:10:29
+   LastBusyTime=2026-09-28T04:24:35 ResumeAfterTime=None
+   Reason=2368 finishing [slurm@2026-09-28T04:24:33]
+NodeName=b-10-2 Arch=x86_64 CoresPerSocket=12 
+   State=ALLOCATED+CLOUD ThreadsPerCore=1 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=n2c48m24 
+   BootTime=2026-09-28T04:16:44 SlurmdStartTime=2026-09-28T04:17:08
+   LastBusyTime=2026-09-28T04:17:08 ResumeAfterTime=None
+NodeName=b-19-21 Arch=x86_64 CoresPerSocket=6 
+   State=IDLE+CLOUD+POWERING_DOWN ThreadsPerCore=2 TmpDisk=0 Weight=1 Owner=N/A MCS_label=N/A
+   Partitions=c12m85-a100-1 
+   BootTime=2026-09-28T03:53:27 SlurmdStartTime=2026-09-28T03:53:56
+   LastBusyTime=2026-09-28T04:21:03 ResumeAfterTime=None
+   Reason=2366 finishing [slurm@2026-09-28T04:21:01]
+
+## partition n2c48m24
+PartitionName=n2c48m24
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=YES ExclusiveUser=NO ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
+   Nodes=b-10-[1-200]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=4800 TotalNodes=200 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=4800,mem=4700000M,node=200,billing=4800
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+
+## cluster power-saving / preemption config
+BatchStartTimeout       = 10 sec
+ClusterName             = slurm-cloud
+EioTimeout              = 60
+EpilogMsgTime           = 2000 usec
+EpilogSlurmctld[0]      = /opt/slurm/scripts/epilog_suspend.sh
+JobAcctGatherParams     = NoShared,NoOverMemoryKill
+KillOnBadExit           = 1
+KillWait                = 30 sec
+MessageTimeout          = 10 sec
+PreemptMode             = OFF
+PreemptParameters       = (null)
+PreemptType             = (null)
+PreemptExemptTime       = 00:00:00
+PrologEpilogTimeout     = 600
+PrologSlurmctld[0]      = /opt/slurm/scripts/prolog_resume.sh
+PrologFlags             = Alloc,Contain,X11
+RebootProgram           = /share/apps/admins/slurm/reboot_node.sh
+ResumeFailProgram       = /opt/slurm/scripts/suspend.py
+ResumeProgram           = /bin/true
+ResumeRate              = 0 nodes/min
+ResumeTimeout           = 6000 sec
+ResvEpilog              = (null)
+ResvProlog              = (null)
+SlurmctldTimeout        = 300 sec
+SlurmctldParameters     = idle_on_node_suspend,enable_configless,cloud_dns
+SlurmdTimeout           = 300 sec
+SrunEpilog              = (null)
+SrunProlog              = (null)
+SuspendExcNodes         = (null)
+SuspendExcParts         = (null)
+SuspendExcStates        = (null)
+SuspendProgram          = /opt/slurm/scripts/suspend.py
+SuspendRate             = 0 nodes/min
+SuspendTime             = 300 sec
+SuspendTimeout          = 600 sec
+TaskEpilog              = (null)
+TaskProlog              = (null)
+TCPTimeout              = 2 sec
+UnkillableStepProgram   = (null)
+UnkillableStepTimeout   = 60 sec
+## rc=0  2026-09-28T04:24:52Z
