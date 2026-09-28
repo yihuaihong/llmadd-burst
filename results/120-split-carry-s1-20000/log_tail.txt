@@ -1,0 +1,29 @@
+## task 120-split-carry-s1-20000  job 2496  host b-19-11  2026-09-28T21:03:34Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.29it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  8.63it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.61it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.65it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.35it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.01it/s]
+base: {'test': 0.07300000637769699, 'train': 0.09666666388511658, 'three_term': 0.004999999888241291, 'three_digit': 0.004999999888241291, 'test_terse': 0.018000001087784767} (113s)
+lora none seed0: {'test': 0.017000000923871994, 'train': 0.9940000176429749, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.017000000923871994} (257s)
+lora helix seed0: {'test': 0.01900000125169754, 'train': 0.9166666865348816, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.020000001415610313} (427s)
+lora helix_shuf seed0: {'test': 0.017000000923871994, 'train': 0.9340000152587891, 'three_term': 0.0024999999441206455, 'three_digit': 0.004999999888241291, 'test_terse': 0.01600000075995922} (597s)
+lora digit seed0: {'test': 0.021000001579523087, 'train': 0.9760000109672546, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.021000001579523087} (767s)
+lora none seed1: {'test': 0.01900000125169754, 'train': 0.9906666278839111, 'three_term': 0.0, 'three_digit': 0.009999999776482582, 'test_terse': 0.017000000923871994} (907s)
+lora helix seed1: {'test': 0.029000001028180122, 'train': 0.9306666851043701, 'three_term': 0.0, 'three_digit': 0.009999999776482582, 'test_terse': 0.01900000125169754} (1070s)
+lora helix_shuf seed1: {'test': 0.014000000432133675, 'train': 0.9639999866485596, 'three_term': 0.0, 'three_digit': 0.009999999776482582, 'test_terse': 0.012000000104308128} (1232s)
+lora digit seed1: {'test': 0.024000000208616257, 'train': 0.9900000095367432, 'three_term': 0.0024999999441206455, 'three_digit': 0.004999999888241291, 'test_terse': 0.01900000125169754} (1394s)
+lora none seed2: {'test': 0.01900000125169754, 'train': 0.9959999918937683, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.017000000923871994} (1531s)
+lora helix seed2: {'test': 0.024000000208616257, 'train': 0.9480000138282776, 'three_term': 0.004999999888241291, 'three_digit': 0.009999999776482582, 'test_terse': 0.02200000174343586} (1693s)
+lora helix_shuf seed2: {'test': 0.018000001087784767, 'train': 0.9279999732971191, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.020000001415610313} (1855s)
+lora digit seed2: {'test': 0.021000001579523087, 'train': 0.9860000014305115, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.01600000075995922} (2018s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split carry)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.073 | 0.097 | 0.005 | 0.005 | 0.018 | - |
+| none | 3 | 0.018 ± 0.001 | 0.994 ± 0.003 | 0.000 ± 0.000 | 0.007 ± 0.002 | 0.017 ± 0.000 | 0.28 / 0.35 CKA@L16 helix 0.73 digit 0.53; emb helix 0.65 digit 0.71 |
+| helix | 3 | 0.024 ± 0.005 | 0.932 ± 0.016 | 0.002 ± 0.003 | 0.009 ± 0.001 | 0.020 ± 0.002 | 0.66 / 0.67 CKA@L16 helix 1.00 digit 0.65; emb helix 0.65 digit 0.71 |
+| helix_shuf | 3 | 0.016 ± 0.002 | 0.942 ± 0.019 | 0.001 ± 0.001 | 0.006 ± 0.004 | 0.016 ± 0.004 | -0.05 / -0.14 CKA@L16 helix 0.12 digit 0.18; emb helix 0.65 digit 0.71 |
+| digit | 3 | 0.022 ± 0.002 | 0.984 ± 0.007 | 0.001 ± 0.001 | 0.004 ± 0.001 | 0.019 ± 0.003 | 0.22 / 0.61 CKA@L16 helix 0.62 digit 0.99; emb helix 0.65 digit 0.71 |
+
+## rc=0  2026-09-28T21:37:42Z
