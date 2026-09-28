@@ -1,0 +1,27 @@
+## task 103-teach-s1-10000  job 2477  host b-19-11  2026-09-28T20:17:31Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  6.40it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  5.45it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  5.38it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  5.24it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  5.23it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  6.06it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.70it/s]
+teacher states from /scratch/yh6210/models/OLMo-2-1124-7B/main (124s)
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  6.57it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  5.32it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  5.00it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  4.80it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  4.91it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.56it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.31it/s]
+base: {'test': 0.007000000216066837, 'train': 0.014666666276752949, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (261s)
+lora main seed0: {'test': 0.18700000643730164, 'train': 0.6766666769981384, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.005000000353902578} (420s)
+lora main_shuf seed0: {'test': 0.09300000220537186, 'train': 0.5506666898727417, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.005000000353902578} (578s)
+lora self seed0: {'test': 0.15300001204013824, 'train': 0.6513333320617676, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.006000000052154064} (736s)
+lora main seed1: {'test': 0.17500001192092896, 'train': 0.6606666445732117, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.004000000189989805} (894s)
+lora main_shuf seed1: {'test': 0.11000000685453415, 'train': 0.6146666407585144, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.009000000543892384} (1046s)
+lora self seed1: {'test': 0.15300001204013824, 'train': 0.6266666650772095, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.005000000353902578} (1198s)
+lora main seed2: {'test': 0.16600000858306885, 'train': 0.7306666374206543, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.006000000052154064} (1350s)
+lora main_shuf seed2: {'test': 0.06300000101327896, 'train': 0.4933333396911621, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.00800000037997961} (1502s)
+lora self seed2: {'test': 0.17400000989437103, 'train': 0.7353333234786987, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.005000000353902578} (1653s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.007 | 0.015 | 0.005 | 0.000 | 0.000 | - |
+| main | 3 | 0.176 ± 0.011 | 0.689 ± 0.037 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.005 ± 0.001 | 0.31 / 0.36 CKA@L16 helix 0.76 digit 0.63 main 0.99 main3 0.84; emb helix 0.60 digit 0.68 |
+| main_shuf | 3 | 0.089 ± 0.024 | 0.553 ± 0.061 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.007 ± 0.002 | -0.03 / -0.08 CKA@L16 helix 0.15 digit 0.24 main 0.23 main3 0.69; emb helix 0.60 digit 0.68 |
+| self | 3 | 0.160 ± 0.012 | 0.671 ± 0.057 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.005 ± 0.001 | 0.25 / 0.31 CKA@L16 helix 0.71 digit 0.56 main 0.92 main3 0.82; emb helix 0.60 digit 0.68 |
+
+## rc=0  2026-09-28T20:45:44Z
