@@ -1,0 +1,21 @@
+## task 117-split-holdoutseen-s1-10000  job 2493  host b-19-15  2026-09-28T21:01:04Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.54it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.93it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.94it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.86it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.71it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.29it/s]
+base: {'test': 0.012000000104308128, 'train': 0.012000000104308128, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (138s)
+lora helix seed0: {'test': 0.24000000953674316, 'train': 0.7573333382606506, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.01900000125169754} (309s)
+lora helix_shuf seed0: {'test': 0.11500000208616257, 'train': 0.36266666650772095, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.018000001087784767} (477s)
+lora helix seed1: {'test': 0.23600001633167267, 'train': 0.7540000081062317, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.017000000923871994} (646s)
+lora helix_shuf seed1: {'test': 0.1290000081062317, 'train': 0.44733333587646484, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.01100000087171793} (814s)
+lora helix seed2: {'test': 0.26100000739097595, 'train': 0.7113333344459534, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.020000001415610313} (979s)
+lora helix_shuf seed2: {'test': 0.0860000029206276, 'train': 0.41333332657814026, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.013000000268220901} (1141s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split holdout_operand, geo_numbers seen)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.012 | 0.012 | 0.005 | 0.000 | 0.000 | - |
+| helix | 3 | 0.246 ± 0.013 | 0.741 ± 0.026 | 0.000 ± 0.000 | 0.002 ± 0.000 | 0.019 ± 0.002 | 0.61 / 0.61 CKA@L16 helix 0.98 digit 0.63; emb helix 0.60 digit 0.68 |
+| helix_shuf | 3 | 0.110 ± 0.022 | 0.408 ± 0.043 | 0.001 ± 0.001 | 0.000 ± 0.000 | 0.014 ± 0.004 | -0.03 / -0.08 CKA@L16 helix 0.11 digit 0.20; emb helix 0.60 digit 0.68 |
+
+## rc=0  2026-09-28T21:20:37Z

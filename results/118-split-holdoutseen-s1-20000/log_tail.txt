@@ -1,0 +1,21 @@
+## task 118-split-holdoutseen-s1-20000  job 2494  host b-19-21  2026-09-28T21:01:33Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.10it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.76it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.73it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.58it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.28it/s]
+base: {'test': 0.10500000417232513, 'train': 0.07800000160932541, 'three_term': 0.004999999888241291, 'three_digit': 0.004999999888241291, 'test_terse': 0.02500000037252903} (116s)
+lora helix seed0: {'test': 0.5790000557899475, 'train': 0.9239999651908875, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.12800000607967377} (285s)
+lora helix_shuf seed0: {'test': 0.3930000066757202, 'train': 0.9300000071525574, 'three_term': 0.0024999999441206455, 'three_digit': 0.004999999888241291, 'test_terse': 0.0950000062584877} (452s)
+lora helix seed1: {'test': 0.5740000009536743, 'train': 0.9359999895095825, 'three_term': 0.0, 'three_digit': 0.009999999776482582, 'test_terse': 0.1380000114440918} (618s)
+lora helix_shuf seed1: {'test': 0.406000018119812, 'train': 0.9259999990463257, 'three_term': 0.0024999999441206455, 'three_digit': 0.014999999664723873, 'test_terse': 0.0820000022649765} (785s)
+lora helix seed2: {'test': 0.5600000023841858, 'train': 0.9593333005905151, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.15300001204013824} (948s)
+lora helix_shuf seed2: {'test': 0.3840000033378601, 'train': 0.9340000152587891, 'three_term': 0.0024999999441206455, 'three_digit': 0.009999999776482582, 'test_terse': 0.10700000822544098} (1110s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split holdout_operand, geo_numbers seen)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.105 | 0.078 | 0.005 | 0.005 | 0.025 | - |
+| helix | 3 | 0.571 ± 0.010 | 0.940 ± 0.018 | 0.000 ± 0.000 | 0.008 ± 0.001 | 0.140 ± 0.013 | 0.64 / 0.65 CKA@L16 helix 0.98 digit 0.64; emb helix 0.65 digit 0.71 |
+| helix_shuf | 3 | 0.394 ± 0.011 | 0.930 ± 0.004 | 0.002 ± 0.000 | 0.010 ± 0.005 | 0.095 ± 0.013 | -0.02 / -0.05 CKA@L16 helix 0.14 digit 0.22; emb helix 0.65 digit 0.71 |
+
+## rc=0  2026-09-28T21:20:35Z
