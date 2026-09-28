@@ -1,0 +1,29 @@
+## task 126-sub-s1-150000  job 2502  host b-19-14  2026-09-28T21:34:33Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.20it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.19it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.02it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  5.89it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  5.92it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.70it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.37it/s]
+base: {'test': 0.956000030040741, 'train': 0.9566666483879089, 'three_term': 0.042500000447034836, 'three_digit': 0.7274999618530273, 'test_terse': 0.5230000019073486} (140s)
+lora none seed0: {'test': 1.0, 'train': 1.0, 'three_term': 0.06499999761581421, 'three_digit': 0.8149999976158142, 'test_terse': 0.6950000524520874} (275s)
+lora helix seed0: {'test': 0.999000072479248, 'train': 1.0, 'three_term': 0.054999999701976776, 'three_digit': 0.7874999642372131, 'test_terse': 0.7940000295639038} (435s)
+lora helix_shuf seed0: {'test': 0.9950000643730164, 'train': 0.9946666359901428, 'three_term': 0.0925000011920929, 'three_digit': 0.6875, 'test_terse': 0.690000057220459} (596s)
+lora digit seed0: {'test': 0.9900000691413879, 'train': 0.9993333220481873, 'three_term': 0.10749999433755875, 'three_digit': 0.7024999856948853, 'test_terse': 0.8640000224113464} (756s)
+lora none seed1: {'test': 0.999000072479248, 'train': 1.0, 'three_term': 0.019999999552965164, 'three_digit': 0.8374999761581421, 'test_terse': 0.7730000615119934} (888s)
+lora helix seed1: {'test': 0.9940000176429749, 'train': 1.0, 'three_term': 0.027499999850988388, 'three_digit': 0.6924999952316284, 'test_terse': 0.800000011920929} (1044s)
+lora helix_shuf seed1: {'test': 0.9760000705718994, 'train': 0.9886666536331177, 'three_term': 0.0925000011920929, 'three_digit': 0.73499995470047, 'test_terse': 0.8360000252723694} (1198s)
+lora digit seed1: {'test': 1.0, 'train': 1.0, 'three_term': 0.10499999672174454, 'three_digit': 0.7174999713897705, 'test_terse': 0.8050000667572021} (1351s)
+lora none seed2: {'test': 1.0, 'train': 1.0, 'three_term': 0.0625, 'three_digit': 0.8774999976158142, 'test_terse': 0.7570000290870667} (1480s)
+lora helix seed2: {'test': 0.9940000176429749, 'train': 0.9973333477973938, 'three_term': 0.042500000447034836, 'three_digit': 0.7924999594688416, 'test_terse': 0.859000027179718} (1634s)
+lora helix_shuf seed2: {'test': 0.9980000257492065, 'train': 0.9986666440963745, 'three_term': 0.08999999612569809, 'three_digit': 0.7324999570846558, 'test_terse': 0.7160000205039978} (1788s)
+lora digit seed2: {'test': 0.9940000176429749, 'train': 0.9986666440963745, 'three_term': 0.11749999970197678, 'three_digit': 0.7074999809265137, 'test_terse': 0.8330000638961792} (1942s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task sub, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.956 | 0.957 | 0.043 | 0.727 | 0.523 | - |
+| none | 3 | 1.000 ± 0.001 | 1.000 ± 0.000 | 0.049 ± 0.025 | 0.843 ± 0.032 | 0.742 ± 0.041 | 0.21 / 0.23 CKA@L16 helix 0.76 digit 0.63; emb helix 0.70 digit 0.71 |
+| helix | 3 | 0.996 ± 0.003 | 0.999 ± 0.002 | 0.042 ± 0.014 | 0.757 ± 0.056 | 0.818 ± 0.036 | 0.67 / 0.67 CKA@L16 helix 1.00 digit 0.65; emb helix 0.70 digit 0.71 |
+| helix_shuf | 3 | 0.990 ± 0.012 | 0.994 ± 0.005 | 0.092 ± 0.001 | 0.718 ± 0.027 | 0.747 ± 0.078 | -0.04 / -0.14 CKA@L16 helix 0.12 digit 0.18; emb helix 0.70 digit 0.71 |
+| digit | 3 | 0.995 ± 0.005 | 0.999 ± 0.001 | 0.110 ± 0.007 | 0.709 ± 0.008 | 0.834 ± 0.030 | 0.20 / 0.58 CKA@L16 helix 0.62 digit 1.00; emb helix 0.70 digit 0.71 |
+
+## rc=0  2026-09-28T22:07:27Z

@@ -1,1 +1,1 @@
-{"time": "2026-09-28T22:01:24Z", "host": "b-19-13", "sentinel_job": "2374", "sentinel_started": "2026-09-28T04:27:31Z", "enabled": "1", "gpu_hours_used": 34, "in_flight": {"126-sub-s1-150000": "2502 gpu RUNNING None"}, "submit_errors": {}, "prev_sentinel": "2368 CANCELLED+ 0:0 00:13:41 b-10-1 "}
+{"time": "2026-09-28T22:07:29Z", "host": "b-19-14", "sentinel_job": "2374", "sentinel_started": "2026-09-28T04:27:31Z", "enabled": "1", "gpu_hours_used": 34, "in_flight": {}, "submit_errors": {}, "prev_sentinel": "2368 CANCELLED+ 0:0 00:13:41 b-10-1 "}
