@@ -1,0 +1,18 @@
+## task 092-shape-main_shape-s1-10000  job 2390  host b-19-38  2026-09-28T07:49:27Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.57it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.60it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.20it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.31it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.34it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.86it/s]
+embedding init main_shape: {'shape_fit_r2_number_rows': 0.6460556983947754, 'scale': 0.21035362780094147, 'mean_row_change_norm': 1.1187918186187744, 'mean_row_norm': 2.004734516143799}
+base: {'test': 0.015000000596046448, 'train': 0.014666666276752949, 'three_term': 0.004999999888241291, 'three_digit': 0.0, 'test_terse': 0.0} (133s)
+lora none seed0: {'test': 0.17800000309944153, 'train': 0.5080000162124634, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.007000000216066837} (264s)
+lora none seed1: {'test': 0.1900000125169754, 'train': 0.5320000052452087, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.00800000037997961} (393s)
+lora none seed2: {'test': 0.17900000512599945, 'train': 0.5646666884422302, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.005000000353902578} (521s)
+# manifold fine-tuning (lora, lam 1.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.015 | 0.015 | 0.005 | 0.000 | 0.000 | - |
+| none | 3 | 0.182 ± 0.007 | 0.535 ± 0.028 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.007 ± 0.002 | 0.49 / 0.61 CKA@L16 helix 0.72 digit 0.47; emb helix 0.68 digit 0.69 |
+
+## rc=0  2026-09-28T07:58:38Z
