@@ -149,6 +149,11 @@ def main() -> None:
     grams = target_grams(perm, dev)
     num_prefix = enc([f"Q: {x}" for x in range(10, 100)])   # every rank computes the full 90-number geometry
     assert num_prefix.shape[1] == slot_pos["A"] + 1
+    # Training uses ONE forward per step: the 90 geometry prompts are appended to the task batch. Under FSDP a
+    # second forward before backward lost the geometry gradient (s1-150000, 2026-09-27: the CKA loss did not
+    # move). Full-length prompts "Q: x + 10 = " keep the batch rectangular; the A-slot state depends only on
+    # the tokens before it (causal), so it equals the prefix state.
+    num_full = enc([two_prompt(x, 10) for x in range(10, 100)])
 
     def geo_states():
         forward(num_prefix)
@@ -193,21 +198,17 @@ def main() -> None:
                     bi = order[i:i + args.bs][rank::world]
                     chunk = train[bi]
                     opt.zero_grad(set_to_none=True)
-                    logits = forward(train_ids[torch.tensor(bi, device=dev)])
+                    nb_task = len(bi)
+                    logits_all = forward(torch.cat([train_ids[torch.tensor(bi, device=dev)], num_full]))
+                    logits = logits_all[:nb_task]
+                    Hs = {L: store[L][nb_task:, slot_pos["A"], :] for L in man_layers}
                     ce = Fn.cross_entropy(logits, num_ids[torch.tensor(chunk.sum(1), device=dev)])
-                    if G == "none":
-                        with torch.no_grad():
-                            Hs = geo_states()
-                            ml = sum(1 - cka(Hs[L], grams["helix"]) for L in man_layers) / len(man_layers)
-                        loss = ce
-                    else:
-                        Hs = geo_states()
-                        ml = sum(1 - cka(Hs[L], grams[G]) for L in man_layers) / len(man_layers)
-                        loss = ce + args.lam * ml
+                    ml = sum(1 - cka(Hs[L], grams[G if G != "none" else "helix"]) for L in man_layers) / len(man_layers)
+                    loss = ce if G == "none" else ce + args.lam * ml
                     loss.backward()
                     opt.step()
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
-                    del logits, loss, Hs
+                    del logits, logits_all, loss, Hs
                 stats = torch.tensor([ce_s / nb, man_s / nb], device=dev); dist.all_reduce(stats); stats /= world
                 log.append({"epoch": ep, "ce": float(stats[0]), "geo_loss": float(stats[1])})
             del opt
