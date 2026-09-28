@@ -1,0 +1,29 @@
+## task 099-geo3-lam20-s1-50000  job 2398  host b-19-37  2026-09-28T08:14:56Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.02it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.73it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.34it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  7.28it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.66it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  8.19it/s]
+base: {'test': 0.4820000231266022, 'train': 0.4973333179950714, 'three_term': 0.029999999329447746, 'three_digit': 0.04999999701976776, 'test_terse': 0.1340000033378601} (123s)
+lora helix3 seed0: {'test': 0.9520000219345093, 'train': 0.9993333220481873, 'three_term': 0.007499999832361937, 'three_digit': 0.029999999329447746, 'test_terse': 0.289000004529953} (302s)
+lora helix3_shuf seed0: {'test': 0.921000063419342, 'train': 0.9906666278839111, 'three_term': 0.007499999832361937, 'three_digit': 0.004999999888241291, 'test_terse': 0.3700000047683716} (478s)
+lora digit3 seed0: {'test': 0.9160000681877136, 'train': 0.9959999918937683, 'three_term': 0.014999999664723873, 'three_digit': 0.03749999776482582, 'test_terse': 0.36500000953674316} (655s)
+lora digit3_shuf seed0: {'test': 0.8710000514984131, 'train': 0.9626666307449341, 'three_term': 0.014999999664723873, 'three_digit': 0.0024999999441206455, 'test_terse': 0.36000001430511475} (831s)
+lora helix3 seed1: {'test': 0.9500000476837158, 'train': 0.9959999918937683, 'three_term': 0.007499999832361937, 'three_digit': 0.03749999776482582, 'test_terse': 0.281000018119812} (1005s)
+lora helix3_shuf seed1: {'test': 0.9250000715255737, 'train': 0.9933333396911621, 'three_term': 0.009999999776482582, 'three_digit': 0.009999999776482582, 'test_terse': 0.328000009059906} (1177s)
+lora digit3 seed1: {'test': 0.9490000605583191, 'train': 0.9959999918937683, 'three_term': 0.01249999925494194, 'three_digit': 0.05249999836087227, 'test_terse': 0.36500000953674316} (1349s)
+lora digit3_shuf seed1: {'test': 0.8940000534057617, 'train': 0.9879999756813049, 'three_term': 0.01249999925494194, 'three_digit': 0.0, 'test_terse': 0.33500000834465027} (1522s)
+lora helix3 seed2: {'test': 0.9220000505447388, 'train': 0.9906666278839111, 'three_term': 0.007499999832361937, 'three_digit': 0.027499999850988388, 'test_terse': 0.3230000138282776} (1694s)
+lora helix3_shuf seed2: {'test': 0.9300000667572021, 'train': 0.9879999756813049, 'three_term': 0.01249999925494194, 'three_digit': 0.0024999999441206455, 'test_terse': 0.4000000059604645} (1866s)
+lora digit3 seed2: {'test': 0.9150000214576721, 'train': 0.9919999837875366, 'three_term': 0.004999999888241291, 'three_digit': 0.04749999940395355, 'test_terse': 0.39100003242492676} (2038s)
+lora digit3_shuf seed2: {'test': 0.8870000243186951, 'train': 0.9766666293144226, 'three_term': 0.007499999832361937, 'three_digit': 0.0, 'test_terse': 0.37300002574920654} (2210s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16])
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.482 | 0.497 | 0.030 | 0.050 | 0.134 | - |
+| helix3 | 3 | 0.941 ± 0.017 | 0.995 ± 0.004 | 0.007 ± 0.000 | 0.032 ± 0.005 | 0.298 ± 0.022 | 0.53 / 0.57 CKA@L16 helix 0.95 digit 0.70; emb helix 0.65 digit 0.72 |
+| helix3_shuf | 3 | 0.925 ± 0.005 | 0.991 ± 0.003 | 0.010 ± 0.002 | 0.006 ± 0.004 | 0.366 ± 0.036 | 0.18 / 0.21 CKA@L16 helix 0.36 digit 0.37; emb helix 0.65 digit 0.72 |
+| digit3 | 3 | 0.927 ± 0.019 | 0.995 ± 0.002 | 0.011 ± 0.005 | 0.046 ± 0.008 | 0.374 ± 0.015 | 0.28 / 0.47 CKA@L16 helix 0.71 digit 0.90; emb helix 0.65 digit 0.72 |
+| digit3_shuf | 3 | 0.884 ± 0.012 | 0.976 ± 0.013 | 0.012 ± 0.004 | 0.001 ± 0.001 | 0.356 ± 0.019 | 0.15 / 0.17 CKA@L16 helix 0.57 digit 0.62; emb helix 0.65 digit 0.72 |
+
+## rc=0  2026-09-28T08:52:17Z
