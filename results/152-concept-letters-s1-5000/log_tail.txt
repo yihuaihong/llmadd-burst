@@ -1,0 +1,31 @@
+## task 152-concept-letters-s1-5000  job 2580  host b-19-24  2026-09-29T05:55:39Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.64it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.71it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.53it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.44it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.23it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.84it/s]
+base: {'train': 0.0, 'test': 0.0} geometry L16/emb: {'cka_line': 0.2716403305530548, 'cka_line_shuf': 0.1669304519891739, 'cka_circle': 0.29545485973358154} {'cka_line': 0.21653084456920624, 'cka_line_shuf': 0.16897663474082947, 'cka_circle': 0.27556663751602173} (114s)
+letters none seed0: {'train': 1.0, 'test': 0.0} (230s)
+letters line seed0: {'train': 0.7821428775787354, 'test': 0.01595744676887989} (375s)
+letters line_shuf seed0: {'train': 0.8964285850524902, 'test': 0.0} (519s)
+letters circle seed0: {'train': 0.9392856955528259, 'test': 0.005319148767739534} (663s)
+letters none seed1: {'train': 1.0, 'test': 0.0} (775s)
+letters line seed1: {'train': 0.6857143044471741, 'test': 0.01595744676887989} (915s)
+letters line_shuf seed1: {'train': 0.9535714387893677, 'test': 0.005319148767739534} (1053s)
+letters circle seed1: {'train': 0.9607142806053162, 'test': 0.005319148767739534} (1190s)
+letters none seed2: {'train': 1.0, 'test': 0.005319148767739534} (1297s)
+letters line seed2: {'train': 0.75, 'test': 0.026595743373036385} (1433s)
+letters line_shuf seed2: {'train': 0.9785714149475098, 'test': 0.0} (1568s)
+letters circle seed2: {'train': 0.9607142806053162, 'test': 0.005319148767739534} (1704s)
+# concept shaping: letters (n = {'train': 280, 'test': 188})
+
+base geometry: emb CKA(line) 0.22, L16 CKA(line) 0.27
+
+| geom | seeds | train | test | CKA@L16 line / line_shuf / circle |
+|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.27 / 0.17 / 0.30 |
+| circle | 3 | 0.954 ± 0.012 | 0.005 ± 0.000 | 0.44 / 0.01 / 1.00 |
+| line | 3 | 0.739 ± 0.049 | 0.020 ± 0.006 | 1.00 / 0.01 / 0.47 |
+| line_shuf | 3 | 0.943 ± 0.042 | 0.002 ± 0.003 | 0.01 / 1.00 / 0.02 |
+| none | 3 | 1.000 ± 0.000 | 0.002 ± 0.003 | 0.28 / 0.17 / 0.32 |
+
+## rc=0  2026-09-29T06:24:32Z
