@@ -1,0 +1,97 @@
+{
+ "domain": "numwords",
+ "items": [
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety"
+ ],
+ "n": {
+  "train": 437,
+  "test": 292
+ },
+ "eval": {
+  "train": 0.08009152859449387,
+  "test": 0.07534246146678925
+ },
+ "geometry": {
+  "L4": {
+   "cka_helix": 0.713021993637085,
+   "cka_helix_shuf": 0.2559705972671509,
+   "cka_digit": 0.7594980597496033
+  },
+  "L8": {
+   "cka_helix": 0.6776086688041687,
+   "cka_helix_shuf": 0.24206995964050293,
+   "cka_digit": 0.7219172716140747
+  },
+  "L12": {
+   "cka_helix": 0.6712222099304199,
+   "cka_helix_shuf": 0.23916931450366974,
+   "cka_digit": 0.7230921983718872
+  },
+  "L16": {
+   "cka_helix": 0.7015273571014404,
+   "cka_helix_shuf": 0.2633059620857239,
+   "cka_digit": 0.7543575167655945
+  },
+  "emb": {
+   "cka_helix": 0.6975576281547546,
+   "cka_helix_shuf": 0.28950586915016174,
+   "cka_digit": 0.8035078644752502
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: one + three = ",
+    "4"
+   ],
+   [
+    "Q: seven + twelve = ",
+    "19"
+   ],
+   [
+    "Q: nineteen + fifty = ",
+    "69"
+   ]
+  ],
+  "test": [
+   [
+    "Q: fifteen + seven = ",
+    "22"
+   ],
+   [
+    "Q: seventeen + thirty = ",
+    "47"
+   ],
+   [
+    "Q: seven + twenty = ",
+    "27"
+   ]
+  ]
+ }
+}
