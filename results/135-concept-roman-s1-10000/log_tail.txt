@@ -1,0 +1,31 @@
+## task 135-concept-roman-s1-10000  job 2553  host b-19-17  2026-09-29T02:56:37Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.14it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.22it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.96it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.86it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.71it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.33it/s]
+base: {'train': 0.03267974033951759, 'test': 0.029126213863492012} geometry L16/emb: {'cka_helix': 0.6641596555709839, 'cka_helix_shuf': 0.4597112834453583, 'cka_digit': 0.6608020067214966} {'cka_helix': 0.6588996648788452, 'cka_helix_shuf': 0.551708996295929, 'cka_digit': 0.8174430131912231} (114s)
+roman none seed0: {'train': 1.0, 'test': 0.3106796145439148} (234s)
+roman helix seed0: {'train': 1.0, 'test': 0.3203883469104767} (384s)
+roman helix_shuf seed0: {'train': 1.0, 'test': 0.1650485396385193} (534s)
+roman digit seed0: {'train': 1.0, 'test': 0.3009708821773529} (683s)
+roman none seed1: {'train': 1.0, 'test': 0.33980584144592285} (799s)
+roman helix seed1: {'train': 1.0, 'test': 0.35922330617904663} (942s)
+roman helix_shuf seed1: {'train': 1.0, 'test': 0.2330097109079361} (1082s)
+roman digit seed1: {'train': 1.0, 'test': 0.3009708821773529} (1223s)
+roman none seed2: {'train': 1.0, 'test': 0.3203883469104767} (1334s)
+roman helix seed2: {'train': 1.0, 'test': 0.3786407709121704} (1475s)
+roman helix_shuf seed2: {'train': 1.0, 'test': 0.2233009785413742} (1616s)
+roman digit seed2: {'train': 1.0, 'test': 0.3106796145439148} (1755s)
+# concept shaping: roman (n = {'train': 153, 'test': 103})
+
+base geometry: emb CKA(helix) 0.66, L16 CKA(helix) 0.66
+
+| geom | seeds | train | test | CKA@L16 helix / helix_shuf / digit |
+|---|---|---|---|---|
+| base | - | 0.033 | 0.029 | 0.66 / 0.46 / 0.66 |
+| digit | 3 | 1.000 ± 0.000 | 0.304 ± 0.006 | 0.70 / 0.48 / 1.00 |
+| helix | 3 | 1.000 ± 0.000 | 0.353 ± 0.030 | 1.00 / 0.29 / 0.71 |
+| helix_shuf | 3 | 1.000 ± 0.000 | 0.207 ± 0.037 | 0.29 / 1.00 / 0.49 |
+| none | 3 | 1.000 ± 0.000 | 0.324 ± 0.015 | 0.71 / 0.48 / 0.71 |
+
+## rc=0  2026-09-29T03:26:24Z
