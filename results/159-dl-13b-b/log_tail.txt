@@ -1,0 +1,37 @@
+## task 159-dl-13b-b  job 2593  host b-10-7  2026-09-29T06:19:07Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 22 files:   0%|          | 0/22 [00:00<?, ?it/s]Fetching 22 files:  23%|██▎       | 5/22 [00:10<00:34,  2.00s/it]Fetching 22 files:  27%|██▋       | 6/22 [02:44<07:17, 27.36s/it]Fetching 22 files:  64%|██████▎   | 14/22 [02:44<01:33, 11.74s/it]Fetching 22 files:  82%|████████▏ | 18/22 [03:00<00:40, 10.00s/it]Fetching 22 files:  86%|████████▋ | 19/22 [03:05<00:29,  9.75s/it]Fetching 22 files:  91%|█████████ | 20/22 [03:19<00:19,  9.98s/it]Fetching 22 files:  95%|█████████▌| 21/22 [03:37<00:10, 10.35s/it]Fetching 22 files: 100%|██████████| 22/22 [03:37<00:00,  9.88s/it]
+stage1-step5000-tokens42B: converted model-00001-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00002-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00003-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00004-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00005-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00006-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00007-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00008-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00009-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00010-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00011-of-00012.safetensors
+stage1-step5000-tokens42B: converted model-00012-of-00012.safetensors
+stage1-step5000-tokens42B: done, 27.4 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-13B/stage1-step5000-tokens42B
+Fetching 22 files:   0%|          | 0/22 [00:00<?, ?it/s]Fetching 22 files:  23%|██▎       | 5/22 [00:10<00:34,  2.00s/it]Fetching 22 files:  27%|██▋       | 6/22 [02:22<06:19, 23.73s/it]Fetching 22 files:  64%|██████▎   | 14/22 [02:22<01:21, 10.19s/it]Fetching 22 files:  86%|████████▋ | 19/22 [02:40<00:25,  8.42s/it]Fetching 22 files:  91%|█████████ | 20/22 [02:59<00:17,  9.00s/it]Fetching 22 files:  95%|█████████▌| 21/22 [03:21<00:09,  9.60s/it]Fetching 22 files: 100%|██████████| 22/22 [03:21<00:00,  9.17s/it]
+stage1-step10000-tokens84B: converted model-00001-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00002-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00003-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00004-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00005-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00006-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00007-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00008-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00009-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00010-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00011-of-00012.safetensors
+stage1-step10000-tokens84B: converted model-00012-of-00012.safetensors
+stage1-step10000-tokens84B: done, 27.4 GB bf16 at /scratch/yh6210/models/OLMo-2-1124-13B/stage1-step10000-tokens84B
+26G	/scratch/yh6210/models/OLMo-2-1124-13B/stage1-step1000-tokens9B
+26G	/scratch/yh6210/models/OLMo-2-1124-13B/stage1-step10000-tokens84B
+12G	/scratch/yh6210/models/OLMo-2-1124-13B/stage1-step2000-tokens17B
+26G	/scratch/yh6210/models/OLMo-2-1124-13B/stage1-step5000-tokens42B
+10.36.221.2:/hpc_dev_fs/scratch   13T  9.4T  3.2T  75% /scratch
+## rc=0  2026-09-29T06:33:42Z
