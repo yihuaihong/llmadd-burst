@@ -1,0 +1,29 @@
+## task 227-pythia-6.9b-step16000  job 3522  host b-19-54  2026-09-29T22:46:15Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:15<00:15, 15.04s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:20<00:00,  9.51s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:20<00:00, 10.34s/it]
+base {'test': 0.032999999821186066, 'train': 0.029999999329447746, 'three_term': 0.009999999776482582, 'three_digit': 0.0} layers [4, 8, 12, 16] (43s)
+none seed0: {'test': 0.5720000267028809, 'train': 0.8399999737739563, 'three_term': 0.0, 'three_digit': 0.044999998062849045} (89s)
+helix seed0: {'test': 0.7010000348091125, 'train': 0.8993332982063293, 'three_term': 0.0, 'three_digit': 0.044999998062849045} (170s)
+helix_shuf seed0: {'test': 0.3400000035762787, 'train': 0.6940000057220459, 'three_term': 0.0, 'three_digit': 0.01249999925494194} (250s)
+digit seed0: {'test': 0.5690000057220459, 'train': 0.8606666326522827, 'three_term': 0.0, 'three_digit': 0.027499999850988388} (329s)
+none seed1: {'test': 0.5720000267028809, 'train': 0.8460000157356262, 'three_term': 0.0, 'three_digit': 0.042500000447034836} (374s)
+helix seed1: {'test': 0.7160000205039978, 'train': 0.9046666622161865, 'three_term': 0.0, 'three_digit': 0.044999998062849045} (453s)
+helix_shuf seed1: {'test': 0.3450000286102295, 'train': 0.6420000195503235, 'three_term': 0.0, 'three_digit': 0.022499999031424522} (531s)
+digit seed1: {'test': 0.5540000200271606, 'train': 0.8359999656677246, 'three_term': 0.0, 'three_digit': 0.042500000447034836} (610s)
+none seed2: {'test': 0.6060000061988831, 'train': 0.8759999871253967, 'three_term': 0.0, 'three_digit': 0.054999999701976776} (654s)
+helix seed2: {'test': 0.6420000195503235, 'train': 0.862666666507721, 'three_term': 0.0, 'three_digit': 0.054999999701976776} (731s)
+helix_shuf seed2: {'test': 0.3750000298023224, 'train': 0.6966666579246521, 'three_term': 0.0, 'three_digit': 0.027499999850988388} (807s)
+digit seed2: {'test': 0.5320000052452087, 'train': 0.8653333187103271, 'three_term': 0.0, 'three_digit': 0.03999999910593033} (882s)
+# Pythia manifold shaping (layers [4, 8, 12, 16] of 32; three_digit n=400)
+
+| geom | seeds | test | train | three_term | three_digit | CKA@L16 helix / digit |
+|---|---|---|---|---|---|---|
+| base | - | 0.033 | 0.030 | 0.010 | 0.000 | 0.76 / 0.66 |
+| none | 3 | 0.583 ± 0.020 | 0.854 ± 0.019 | 0.000 ± 0.000 | 0.047 ± 0.007 | 0.80 / 0.72 |
+| helix | 3 | 0.686 ± 0.039 | 0.889 ± 0.023 | 0.000 ± 0.000 | 0.048 ± 0.006 | 1.00 / 0.65 |
+| helix_shuf | 3 | 0.353 ± 0.019 | 0.678 ± 0.031 | 0.000 ± 0.000 | 0.021 ± 0.008 | 0.11 / 0.17 |
+| digit | 3 | 0.552 ± 0.019 | 0.854 ± 0.016 | 0.000 ± 0.000 | 0.037 ± 0.008 | 0.62 / 0.99 |
+
+## rc=0  2026-09-29T23:01:29Z
