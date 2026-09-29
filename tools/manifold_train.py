@@ -233,6 +233,7 @@ def main() -> None:
     ap.add_argument("--geo_numbers", choices=("all", "seen"), default="all",
                     help="two-digit geometries over all of 10..99, or only over the operand values seen in training")
     ap.add_argument("--save_preds", action="store_true", help="store every predicted answer of the eval sets (not train)")
+    ap.add_argument("--device_map", default=None, help="'auto': split the model over all visible GPUs (e.g. 32B on 2 x 40 GB); inputs and losses live on the first GPU")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     lr = args.lr or {"lora": 1e-4, "reft": 1e-3, "full": 1e-5}[args.mode]
@@ -248,7 +249,7 @@ def main() -> None:
 
     # ---------------------------------------------------------------- tokenizer, prefixes, teacher states
     from transformers import AutoModelForCausalLM, AutoTokenizer
-    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    dev = ("cuda:0" if args.device_map else "cuda") if torch.cuda.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(args.model)
     toks = tok.convert_ids_to_tokens(tok(two_prompt(23, 45, op))["input_ids"])
     assert toks[-6:] == ["23", "Ġ" + op, "Ġ", "45", "Ġ=", "Ġ"], toks
@@ -270,7 +271,11 @@ def main() -> None:
 
     # ---------------------------------------------------------------- model
     base_dtype = torch.float32 if (args.mode == "full" or dev == "cpu") else torch.bfloat16
-    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype).to(dev)
+    if args.device_map:
+        mem = {i: "36GiB" for i in range(torch.cuda.device_count())} if torch.cuda.is_available() else None
+        model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype, device_map=args.device_map, max_memory=mem)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype).to(dev)
     model.config.use_cache = False
     layers = decoder_layers(model)
     d = model.config.hidden_size
@@ -370,7 +375,7 @@ def main() -> None:
     def forward(ids: torch.Tensor, reft: bool) -> torch.Tensor:
         reft_on["v"] = reft
         with autocast:
-            return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float()
+            return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float().to(dev)
 
     # ---------------------------------------------------------------- data
     ans_of = (lambda P: P.sum(1)) if args.task == "add" else (lambda P: P[:, 0] - P[:, 1:].sum(1))
@@ -441,7 +446,7 @@ def main() -> None:
             for j, s in enumerate(slot_pos):
                 idx = torch.tensor(chunk[:, j] - 10, device=dev)
                 for L in man_layers:
-                    sums[(L, s)].index_add_(0, idx, store[L][:, slot_pos[s], :].float())
+                    sums[(L, s)].index_add_(0, idx, store[L][:, slot_pos[s], :].float().to(dev))
                 cnt[s].index_add_(0, idx, torch.ones(len(idx), device=dev))
         return {k: (v / cnt[k[1]][:, None]).cpu().numpy() for k, v in sums.items()}
 
@@ -460,7 +465,7 @@ def main() -> None:
         if args.geo_site == "emb":
             return {"emb": number_embedding_rows(xs)}
         forward(num_prefix if xs is None else prefix_all[xs], reft)
-        return {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        return {L: store[L][:, slot_pos["A"], :].to(dev) for L in man_layers}
 
     def target_gram(G: str, key, xs) -> torch.Tensor:
         """Centred target Gram of geometry G for the numbers xs (None = 10..99) at site `key` (a layer or "emb")."""
@@ -487,14 +492,14 @@ def main() -> None:
         model.eval()
         key = lambda L: f"L{L}" if L != "emb" else "emb"
         forward(num_prefix, reft)
-        Hs = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        Hs = {L: store[L][:, slot_pos["A"], :].to(dev) for L in man_layers}
         Hs["emb"] = number_embedding_rows()
         rep = {key(L): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
         for src in teach:
             for L, H in Hs.items():
                 rep[key(L)]["cka_" + src] = float(cka(H, gram_of(teach[src][L][10:100])))
         forward(prefix_all[report_xs3], reft)
-        H3 = {L: store[L][:, slot_pos["A"], :] for L in man_layers}
+        H3 = {L: store[L][:, slot_pos["A"], :].to(dev) for L in man_layers}
         H3["emb"] = number_embedding_rows(report_xs3)
         for L, H in H3.items():
             rep[key(L)].update({"cka_" + G: float(cka(H, gram_of(feats3[G][report_xs3]))) for G in GEOMS3})
