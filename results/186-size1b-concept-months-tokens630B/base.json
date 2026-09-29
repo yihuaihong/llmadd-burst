@@ -1,0 +1,98 @@
+{
+ "domain": "months",
+ "items": [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+ ],
+ "n": {
+  "train": 576,
+  "test": 384,
+  "ood": 300
+ },
+ "eval": {
+  "train": 0.0,
+  "test": 0.0,
+  "ood": 0.0
+ },
+ "geometry": {
+  "L2": {
+   "cka_circle": 0.6311312317848206,
+   "cka_circle_shuf": 0.32998859882354736,
+   "cka_line": 0.448958158493042
+  },
+  "L4": {
+   "cka_circle": 0.6704537272453308,
+   "cka_circle_shuf": 0.31537768244743347,
+   "cka_line": 0.44158220291137695
+  },
+  "L6": {
+   "cka_circle": 0.6573852896690369,
+   "cka_circle_shuf": 0.2971753776073456,
+   "cka_line": 0.4149130880832672
+  },
+  "L8": {
+   "cka_circle": 0.6369832754135132,
+   "cka_circle_shuf": 0.28828898072242737,
+   "cka_line": 0.3617456257343292
+  },
+  "emb": {
+   "cka_circle": 0.6214853525161743,
+   "cka_circle_shuf": 0.3432770073413849,
+   "cka_line": 0.4625660479068756
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: June minus 17 months is",
+    " January"
+   ],
+   [
+    "Q: November plus 17 months is",
+    " April"
+   ],
+   [
+    "Q: May plus 13 months is",
+    " June"
+   ]
+  ],
+  "test": [
+   [
+    "Q: June plus 3 months is",
+    " September"
+   ],
+   [
+    "Q: December plus 16 months is",
+    " April"
+   ],
+   [
+    "Q: January plus 1 months is",
+    " February"
+   ]
+  ],
+  "ood": [
+   [
+    "Q: July plus 46 months is",
+    " May"
+   ],
+   [
+    "Q: April minus 73 months is",
+    " March"
+   ],
+   [
+    "Q: October minus 69 months is",
+    " January"
+   ]
+  ]
+ }
+}

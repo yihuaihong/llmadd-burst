@@ -1,0 +1,31 @@
+## task 186-size1b-concept-months-tokens630B  job 3440  host b-19-26  2026-09-29T21:05:14Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  2.42it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  4.66it/s]
+base: {'train': 0.0, 'test': 0.0, 'ood': 0.0} geometry L16/emb: None {'cka_circle': 0.6214853525161743, 'cka_circle_shuf': 0.3432770073413849, 'cka_line': 0.4625660479068756} (39s)
+months none seed0: {'train': 0.90625, 'test': 0.5729166865348816, 'ood': 0.19333334267139435} (97s)
+months circle seed0: {'train': 0.9114583134651184, 'test': 0.6901041865348816, 'ood': 0.20333333313465118} (172s)
+months circle_shuf seed0: {'train': 0.7274305820465088, 'test': 0.3359375, 'ood': 0.23333333432674408} (244s)
+months line seed0: {'train': 0.8402777910232544, 'test': 0.6067708730697632, 'ood': 0.16333334147930145} (317s)
+months none seed1: {'train': 0.921875, 'test': 0.6328125, 'ood': 0.21666666865348816} (374s)
+months circle seed1: {'train': 0.8993055820465088, 'test': 0.546875, 'ood': 0.18000000715255737} (448s)
+months circle_shuf seed1: {'train': 0.6909722089767456, 'test': 0.3776041865348816, 'ood': 0.20666667819023132} (521s)
+months line seed1: {'train': 0.8472222089767456, 'test': 0.5520833730697632, 'ood': 0.15000000596046448} (594s)
+months none seed2: {'train': 0.9010416865348816, 'test': 0.5520833730697632, 'ood': 0.20666667819023132} (651s)
+months circle seed2: {'train': 0.9739583134651184, 'test': 0.7838541865348816, 'ood': 0.15000000596046448} (724s)
+months circle_shuf seed2: {'train': 0.6909722089767456, 'test': 0.3359375, 'ood': 0.23333333432674408} (796s)
+months line seed2: {'train': 0.9114583134651184, 'test': 0.6458333730697632, 'ood': 0.2133333384990692} (866s)
+# concept shaping: months (n = {'train': 576, 'test': 384, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.62, L8 CKA(circle) 0.64
+
+| geom | seeds | train | test | ood | CKA@L8 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.64 / 0.29 / 0.36 |
+| circle | 3 | 0.928 ± 0.040 | 0.674 ± 0.119 | 0.178 ± 0.027 | 1.00 / 0.14 / 0.45 |
+| circle_shuf | 3 | 0.703 ± 0.021 | 0.350 ± 0.024 | 0.224 ± 0.015 | 0.15 / 1.00 / 0.07 |
+| line | 3 | 0.866 ± 0.039 | 0.602 ± 0.047 | 0.176 ± 0.033 | 0.49 / 0.07 / 1.00 |
+| none | 3 | 0.910 ± 0.011 | 0.586 ± 0.042 | 0.206 ± 0.012 | 0.67 / 0.29 / 0.40 |
+
+## rc=0  2026-09-29T21:20:10Z
