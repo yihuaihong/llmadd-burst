@@ -1,0 +1,31 @@
+## task 137-concept-roman-s1-50000  job 2555  host b-19-11  2026-09-29T02:58:36Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.92it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.43it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.15it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.97it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.07it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.68it/s]
+base: {'train': 0.0, 'test': 0.0} geometry L16/emb: {'cka_helix': 0.7318735122680664, 'cka_helix_shuf': 0.4480365812778473, 'cka_digit': 0.691227912902832} {'cka_helix': 0.6609144806861877, 'cka_helix_shuf': 0.5547674894332886, 'cka_digit': 0.8213329911231995} (117s)
+roman none seed0: {'train': 1.0, 'test': 0.9417476058006287} (235s)
+roman helix seed0: {'train': 1.0, 'test': 0.9320388436317444} (382s)
+roman helix_shuf seed0: {'train': 1.0, 'test': 0.7669903039932251} (529s)
+roman digit seed0: {'train': 1.0, 'test': 0.8252426981925964} (676s)
+roman none seed1: {'train': 1.0, 'test': 0.9611650705337524} (789s)
+roman helix seed1: {'train': 1.0, 'test': 0.9417476058006287} (929s)
+roman helix_shuf seed1: {'train': 1.0, 'test': 0.8155339956283569} (1067s)
+roman digit seed1: {'train': 1.0, 'test': 0.9223300814628601} (1204s)
+roman none seed2: {'train': 1.0, 'test': 0.9417476058006287} (1313s)
+roman helix seed2: {'train': 1.0, 'test': 0.9223300814628601} (1451s)
+roman helix_shuf seed2: {'train': 1.0, 'test': 0.6796116828918457} (1589s)
+roman digit seed2: {'train': 1.0, 'test': 0.9223300814628601} (1728s)
+# concept shaping: roman (n = {'train': 153, 'test': 103})
+
+base geometry: emb CKA(helix) 0.66, L16 CKA(helix) 0.73
+
+| geom | seeds | train | test | CKA@L16 helix / helix_shuf / digit |
+|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.73 / 0.45 / 0.69 |
+| digit | 3 | 1.000 ± 0.000 | 0.890 ± 0.056 | 0.70 / 0.48 / 1.00 |
+| helix | 3 | 1.000 ± 0.000 | 0.932 ± 0.010 | 1.00 / 0.29 / 0.71 |
+| helix_shuf | 3 | 1.000 ± 0.000 | 0.754 ± 0.069 | 0.30 / 1.00 / 0.50 |
+| none | 3 | 1.000 ± 0.000 | 0.948 ± 0.011 | 0.73 / 0.48 / 0.70 |
+
+## rc=0  2026-09-29T03:27:54Z
