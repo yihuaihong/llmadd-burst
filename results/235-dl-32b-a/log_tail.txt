@@ -1,0 +1,71 @@
+## task 235-dl-32b-a  job 3419  host b-10-171  2026-09-29T20:17:11Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 38 files:   0%|          | 0/38 [00:00<?, ?it/s]Fetching 38 files:  11%|█         | 4/38 [00:20<02:50,  5.00s/it]Fetching 38 files:  13%|█▎        | 5/38 [01:52<12:23, 22.54s/it]Fetching 38 files:  34%|███▍      | 13/38 [04:25<08:30, 20.43s/it]Fetching 38 files:  37%|███▋      | 14/38 [04:25<07:35, 18.97s/it]Fetching 38 files:  53%|█████▎    | 20/38 [04:25<03:59, 13.29s/it]Fetching 38 files:  53%|█████▎    | 20/38 [04:40<04:12, 14.00s/it]Fetching 38 files:  55%|█████▌    | 21/38 [05:59<04:51, 17.13s/it]Fetching 38 files:  58%|█████▊    | 22/38 [05:59<04:21, 16.36s/it]Fetching 38 files:  61%|██████    | 23/38 [06:17<04:06, 16.43s/it]Fetching 38 files:  66%|██████▌   | 25/38 [06:17<03:16, 15.12s/it]Fetching 38 files:  71%|███████   | 27/38 [06:18<02:34, 14.01s/it]Fetching 38 files:  76%|███████▋  | 29/38 [06:20<01:58, 13.12s/it]Fetching 38 files:  82%|████████▏ | 31/38 [06:22<01:26, 12.33s/it]Fetching 38 files:  87%|████████▋ | 33/38 [06:31<00:59, 11.86s/it]Fetching 38 files:  87%|████████▋ | 33/38 [06:50<01:02, 12.42s/it]Fetching 38 files:  89%|████████▉ | 34/38 [06:59<00:49, 12.34s/it]Fetching 38 files:  92%|█████████▏| 35/38 [07:37<00:39, 13.06s/it]Fetching 38 files: 100%|██████████| 38/38 [07:37<00:00, 12.03s/it]
+stage1-step1000-tokens9B: converted model-00001-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00002-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00003-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00004-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00005-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00006-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00007-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00008-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00009-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00010-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00011-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00012-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00013-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00014-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00015-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00016-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00017-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00018-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00019-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00020-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00021-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00022-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00023-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00024-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00025-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00026-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00027-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00028-of-00029.safetensors
+stage1-step1000-tokens9B: converted model-00029-of-00029.safetensors
+stage1-step1000-tokens9B: done, 64.5 GB bf16 at /scratch/yh6210/models/OLMo-2-0325-32B/stage1-step1000-tokens9B
+Fetching 38 files:   0%|          | 0/38 [00:00<?, ?it/s]Fetching 38 files:  11%|█         | 4/38 [00:10<01:25,  2.50s/it]Fetching 38 files:  13%|█▎        | 5/38 [02:07<14:03, 25.56s/it]Fetching 38 files:  34%|███▍      | 13/38 [04:14<08:10, 19.61s/it]Fetching 38 files:  53%|█████▎    | 20/38 [04:15<03:49, 12.75s/it]Fetching 38 files:  53%|█████▎    | 20/38 [04:30<04:03, 13.50s/it]Fetching 38 files:  55%|█████▌    | 21/38 [06:24<05:11, 18.30s/it]Fetching 38 files:  74%|███████▎  | 28/38 [06:24<02:17, 13.73s/it]Fetching 38 files:  87%|████████▋ | 33/38 [06:40<01:00, 12.12s/it]Fetching 38 files:  89%|████████▉ | 34/38 [06:40<00:47, 11.79s/it]Fetching 38 files:  92%|█████████▏| 35/38 [07:18<00:37, 12.52s/it]Fetching 38 files:  95%|█████████▍| 36/38 [07:45<00:25, 12.94s/it]Fetching 38 files: 100%|██████████| 38/38 [07:46<00:00, 12.27s/it]Fetching 38 files: 100%|██████████| 38/38 [07:46<00:00, 12.27s/it]
+stage1-step2000-tokens17B: converted model-00001-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00002-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00003-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00004-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00005-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00006-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00007-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00008-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00009-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00010-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00011-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00012-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00013-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00014-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00015-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00016-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00017-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00018-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00019-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00020-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00021-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00022-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00023-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00024-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00025-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00026-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00027-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00028-of-00029.safetensors
+stage1-step2000-tokens17B: converted model-00029-of-00029.safetensors
+stage1-step2000-tokens17B: done, 64.5 GB bf16 at /scratch/yh6210/models/OLMo-2-0325-32B/stage1-step2000-tokens17B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step1000-tokens9B
+39G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step10000-tokens84B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step2000-tokens17B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step5000-tokens42B
+10.36.221.2:/hpc_dev_fs/scratch   13T  9.6T  3.0T  77% /scratch
+## rc=0  2026-09-29T20:53:42Z
