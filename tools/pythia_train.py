@@ -58,8 +58,8 @@ def main() -> None:
     from peft import LoraConfig, get_peft_model
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     tok = AutoTokenizer.from_pretrained(args.model)
-    if tok.pad_token is None:
-        tok.pad_token = tok.eos_token
+    if tok.pad_token is None:   # never used for padding (every eval set has one prompt length), but tokenizers insist
+        tok.pad_token = tok.eos_token or "<|endoftext|>"
     toks = tok.convert_ids_to_tokens(tok("Q: 23 + 45 =")["input_ids"])
     assert toks == ["Q", ":", "Ġ23", "Ġ+", "Ġ45", "Ġ="], toks
     SA, SB = 2, 4
