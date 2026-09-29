@@ -8,3 +8,6 @@
 091-shape-main_shape_shuf-s1-2000   # held (user env retrieval failed), re-queued as 091b
 105-teach-s1-150000   # held (user env retrieval failed), re-queued as 105b-teach-s1-150000
 109-teachemb-s1-2000   # held (user env retrieval failed), re-queued as 109b-teachemb-s1-2000
+237-size32b-lora-lam20-tokens9B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 237b-size32b-lora-lam20-tokens9B
+239-size32b-lora-lam20-tokens42B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 239b-size32b-lora-lam20-tokens42B
+240-size32b-lora-lam20-tokens84B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 240b-size32b-lora-lam20-tokens84B

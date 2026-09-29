@@ -272,7 +272,9 @@ def main() -> None:
     # ---------------------------------------------------------------- model
     base_dtype = torch.float32 if (args.mode == "full" or dev == "cpu") else torch.bfloat16
     if args.device_map:
-        mem = {i: "36GiB" for i in range(torch.cuda.device_count())} if torch.cuda.is_available() else None
+        # GPU 0 also holds the inputs, the embedding and the geometry prompts' activations: give it less of the model
+        mem = ({i: ("30GiB" if i == 0 else "38GiB") for i in range(torch.cuda.device_count())}
+               if torch.cuda.is_available() else None)
         model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype, device_map=args.device_map, max_memory=mem)
     else:
         model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=base_dtype).to(dev)
@@ -293,6 +295,8 @@ def main() -> None:
         for p in model.parameters():
             if p.requires_grad:
                 p.data = p.data.float()
+        if args.device_map:   # 32B on 2 x 40 GB: recompute activations in backward (same gradients, less memory)
+            model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
         layers = decoder_layers(model)
     elif args.mode == "reft":
         for p in model.parameters():
