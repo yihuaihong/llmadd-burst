@@ -1,0 +1,22 @@
+## task 224-dl-pythia-6.9b  job 3431  host b-10-170  2026-09-29T20:41:43Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:02,  2.47it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:00<00:00,  5.87it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:00<00:00,  5.42it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:20<00:08,  4.00s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:28<00:04,  4.78s/it]Fetching 7 files: 100%|██████████| 7/7 [01:09<00:00,  9.96s/it]Fetching 7 files: 100%|██████████| 7/7 [01:09<00:00,  9.96s/it]
+EleutherAI/pythia-6.9b@step1000: done -> /scratch/yh6210/models/pythia-6.9b/step1000
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:03,  1.68it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:00<00:00,  4.17it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:20<00:08,  4.00s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:31<00:05,  5.19s/it]Fetching 7 files: 100%|██████████| 7/7 [01:28<00:00, 12.70s/it]Fetching 7 files: 100%|██████████| 7/7 [01:28<00:00, 12.70s/it]
+EleutherAI/pythia-6.9b@step4000: done -> /scratch/yh6210/models/pythia-6.9b/step4000
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:02,  2.05it/s]Fetching 7 files:  86%|████████▌ | 6/7 [00:38<00:06,  6.35s/it]Fetching 7 files: 100%|██████████| 7/7 [02:25<00:00, 20.81s/it]Fetching 7 files: 100%|██████████| 7/7 [02:25<00:00, 20.81s/it]
+EleutherAI/pythia-6.9b@step16000: done -> /scratch/yh6210/models/pythia-6.9b/step16000
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:04,  1.26it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:00<00:00,  5.02it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:20<00:08,  4.00s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:24<00:04,  4.02s/it]Fetching 7 files: 100%|██████████| 7/7 [01:08<00:00,  9.84s/it]Fetching 7 files: 100%|██████████| 7/7 [01:08<00:00,  9.84s/it]
+EleutherAI/pythia-6.9b@step32000: done -> /scratch/yh6210/models/pythia-6.9b/step32000
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:01,  3.35it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:00<00:00,  6.58it/s]Fetching 7 files:  71%|███████▏  | 5/7 [00:20<00:08,  4.00s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:53<00:08,  8.98s/it]Fetching 7 files: 100%|██████████| 7/7 [01:28<00:00, 12.62s/it]Fetching 7 files: 100%|██████████| 7/7 [01:28<00:00, 12.62s/it]
+EleutherAI/pythia-6.9b@step64000: done -> /scratch/yh6210/models/pythia-6.9b/step64000
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:02,  2.79it/s]Fetching 7 files:  29%|██▊       | 2/7 [00:00<00:01,  3.63it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:00<00:00,  4.37it/s]Fetching 7 files:  86%|████████▌ | 6/7 [00:38<00:06,  6.36s/it]Fetching 7 files: 100%|██████████| 7/7 [01:18<00:00, 11.27s/it]Fetching 7 files: 100%|██████████| 7/7 [01:18<00:00, 11.27s/it]
+EleutherAI/pythia-6.9b@step143000: done -> /scratch/yh6210/models/pythia-6.9b/step143000
+13G	/scratch/yh6210/models/pythia-6.9b/step1000
+13G	/scratch/yh6210/models/pythia-6.9b/step143000
+13G	/scratch/yh6210/models/pythia-6.9b/step16000
+13G	/scratch/yh6210/models/pythia-6.9b/step32000
+13G	/scratch/yh6210/models/pythia-6.9b/step4000
+13G	/scratch/yh6210/models/pythia-6.9b/step64000
+## rc=0  2026-09-29T20:50:54Z

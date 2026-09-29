@@ -1,0 +1,6 @@
+13G	/scratch/yh6210/models/pythia-6.9b/step1000
+13G	/scratch/yh6210/models/pythia-6.9b/step143000
+13G	/scratch/yh6210/models/pythia-6.9b/step16000
+13G	/scratch/yh6210/models/pythia-6.9b/step32000
+13G	/scratch/yh6210/models/pythia-6.9b/step4000
+13G	/scratch/yh6210/models/pythia-6.9b/step64000
