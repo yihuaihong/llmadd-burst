@@ -1,0 +1,22 @@
+## task 210-dl-pythia-1.4b  job 3414  host b-10-166  2026-09-29T20:14:12Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:01,  3.47it/s]Fetching 5 files:  40%|████      | 2/5 [00:00<00:00,  3.59it/s]Fetching 5 files: 100%|██████████| 5/5 [00:20<00:00,  4.05s/it]Fetching 5 files: 100%|██████████| 5/5 [00:20<00:00,  4.05s/it]
+EleutherAI/pythia-1.4b@step1000: done -> /scratch/yh6210/models/pythia-1.4b/step1000
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:01,  3.33it/s]Fetching 5 files:  60%|██████    | 3/5 [00:00<00:00,  6.88it/s]Fetching 5 files: 100%|██████████| 5/5 [00:14<00:00,  2.81s/it]Fetching 5 files: 100%|██████████| 5/5 [00:14<00:00,  2.81s/it]
+EleutherAI/pythia-1.4b@step4000: done -> /scratch/yh6210/models/pythia-1.4b/step4000
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:01,  3.85it/s]Fetching 5 files:  60%|██████    | 3/5 [00:00<00:00,  7.80it/s]Fetching 5 files:  80%|████████  | 4/5 [00:20<00:05,  5.00s/it]Fetching 5 files: 100%|██████████| 5/5 [00:23<00:00,  4.67s/it]Fetching 5 files: 100%|██████████| 5/5 [00:23<00:00,  4.67s/it]
+EleutherAI/pythia-1.4b@step16000: done -> /scratch/yh6210/models/pythia-1.4b/step16000
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:01,  2.87it/s]Fetching 5 files:  60%|██████    | 3/5 [00:00<00:00,  6.52it/s]Fetching 5 files: 100%|██████████| 5/5 [00:17<00:00,  3.55s/it]Fetching 5 files: 100%|██████████| 5/5 [00:17<00:00,  3.55s/it]
+EleutherAI/pythia-1.4b@step32000: done -> /scratch/yh6210/models/pythia-1.4b/step32000
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:01,  2.95it/s]Fetching 5 files: 100%|██████████| 5/5 [00:15<00:00,  3.07s/it]Fetching 5 files: 100%|██████████| 5/5 [00:15<00:00,  3.07s/it]
+EleutherAI/pythia-1.4b@step64000: done -> /scratch/yh6210/models/pythia-1.4b/step64000
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files:  20%|██        | 1/5 [00:00<00:00,  4.28it/s]Fetching 5 files:  40%|████      | 2/5 [00:00<00:00,  4.23it/s]Fetching 5 files: 100%|██████████| 5/5 [00:21<00:00,  4.24s/it]Fetching 5 files: 100%|██████████| 5/5 [00:21<00:00,  4.24s/it]
+EleutherAI/pythia-1.4b@step143000: done -> /scratch/yh6210/models/pythia-1.4b/step143000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step1000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step143000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step16000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step32000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step4000
+2.8G	/scratch/yh6210/models/pythia-1.4b/step64000
+## rc=0  2026-09-29T20:16:09Z
