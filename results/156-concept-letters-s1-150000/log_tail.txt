@@ -1,0 +1,31 @@
+## task 156-concept-letters-s1-150000  job 2584  host b-19-13  2026-09-29T05:56:38Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.26it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.25it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.17it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.96it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.00it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.58it/s]
+base: {'train': 0.0, 'test': 0.0} geometry L16/emb: {'cka_line': 0.26602107286453247, 'cka_line_shuf': 0.16490337252616882, 'cka_circle': 0.26387399435043335} {'cka_line': 0.25865232944488525, 'cka_line_shuf': 0.1680617481470108, 'cka_circle': 0.2884296476840973} (111s)
+letters none seed0: {'train': 0.9928571581840515, 'test': 0.05319148674607277} (224s)
+letters line seed0: {'train': 0.9964285492897034, 'test': 0.06382978707551956} (366s)
+letters line_shuf seed0: {'train': 1.0, 'test': 0.042553190141916275} (506s)
+letters circle seed0: {'train': 0.9642857313156128, 'test': 0.058510635048151016} (647s)
+letters none seed1: {'train': 1.0, 'test': 0.05319148674607277} (757s)
+letters line seed1: {'train': 0.985714316368103, 'test': 0.05319148674607277} (893s)
+letters line_shuf seed1: {'train': 0.985714316368103, 'test': 0.042553190141916275} (1028s)
+letters circle seed1: {'train': 1.0, 'test': 0.058510635048151016} (1161s)
+letters none seed2: {'train': 1.0, 'test': 0.05319148674607277} (1266s)
+letters line seed2: {'train': 0.9964285492897034, 'test': 0.058510635048151016} (1400s)
+letters line_shuf seed2: {'train': 0.9928571581840515, 'test': 0.04787233844399452} (1533s)
+letters circle seed2: {'train': 0.9821428656578064, 'test': 0.058510635048151016} (1667s)
+# concept shaping: letters (n = {'train': 280, 'test': 188})
+
+base geometry: emb CKA(line) 0.26, L16 CKA(line) 0.27
+
+| geom | seeds | train | test | CKA@L16 line / line_shuf / circle |
+|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.27 / 0.16 / 0.26 |
+| circle | 3 | 0.982 ± 0.018 | 0.059 ± 0.000 | 0.43 / 0.02 / 1.00 |
+| line | 3 | 0.993 ± 0.006 | 0.059 ± 0.005 | 1.00 / 0.01 / 0.48 |
+| line_shuf | 3 | 0.993 ± 0.007 | 0.044 ± 0.003 | 0.02 / 1.00 / 0.03 |
+| none | 3 | 0.998 ± 0.004 | 0.053 ± 0.000 | 0.30 / 0.17 / 0.29 |
+
+## rc=0  2026-09-29T06:24:55Z
