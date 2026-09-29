@@ -1,0 +1,31 @@
+## task 151-concept-letters-s1-2000  job 2579  host b-19-23  2026-09-29T05:55:38Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.22it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.56it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.47it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.47it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.53it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.00it/s]
+base: {'train': 0.0, 'test': 0.0} geometry L16/emb: {'cka_line': 0.25583183765411377, 'cka_line_shuf': 0.16167926788330078, 'cka_circle': 0.30403169989585876} {'cka_line': 0.1984354555606842, 'cka_line_shuf': 0.17042425274848938, 'cka_circle': 0.2720452547073364} (115s)
+letters none seed0: {'train': 1.0, 'test': 0.0} (227s)
+letters line seed0: {'train': 1.0, 'test': 0.005319148767739534} (368s)
+letters line_shuf seed0: {'train': 1.0, 'test': 0.0} (507s)
+letters circle seed0: {'train': 1.0, 'test': 0.0} (647s)
+letters none seed1: {'train': 1.0, 'test': 0.0} (757s)
+letters line seed1: {'train': 0.9821428656578064, 'test': 0.0} (893s)
+letters line_shuf seed1: {'train': 0.9964285492897034, 'test': 0.0} (1026s)
+letters circle seed1: {'train': 1.0, 'test': 0.0} (1159s)
+letters none seed2: {'train': 1.0, 'test': 0.0} (1264s)
+letters line seed2: {'train': 1.0, 'test': 0.005319148767739534} (1398s)
+letters line_shuf seed2: {'train': 1.0, 'test': 0.0} (1530s)
+letters circle seed2: {'train': 1.0, 'test': 0.0} (1663s)
+# concept shaping: letters (n = {'train': 280, 'test': 188})
+
+base geometry: emb CKA(line) 0.20, L16 CKA(line) 0.26
+
+| geom | seeds | train | test | CKA@L16 line / line_shuf / circle |
+|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.26 / 0.16 / 0.30 |
+| circle | 3 | 1.000 ± 0.000 | 0.000 ± 0.000 | 0.44 / 0.01 / 1.00 |
+| line | 3 | 0.994 ± 0.010 | 0.004 ± 0.003 | 1.00 / 0.01 / 0.46 |
+| line_shuf | 3 | 0.999 ± 0.002 | 0.000 ± 0.000 | 0.01 / 1.00 / 0.02 |
+| none | 3 | 1.000 ± 0.000 | 0.000 ± 0.000 | 0.28 / 0.17 / 0.33 |
+
+## rc=0  2026-09-29T06:23:53Z

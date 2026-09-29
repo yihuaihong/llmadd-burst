@@ -1,0 +1,96 @@
+{
+ "domain": "letters",
+ "items": [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z"
+ ],
+ "n": {
+  "train": 280,
+  "test": 188
+ },
+ "eval": {
+  "train": 0.0,
+  "test": 0.0
+ },
+ "geometry": {
+  "L4": {
+   "cka_line": 0.2477152794599533,
+   "cka_line_shuf": 0.15557104349136353,
+   "cka_circle": 0.29177963733673096
+  },
+  "L8": {
+   "cka_line": 0.2545662820339203,
+   "cka_line_shuf": 0.15362663567066193,
+   "cka_circle": 0.3020128011703491
+  },
+  "L12": {
+   "cka_line": 0.2552454173564911,
+   "cka_line_shuf": 0.1568109542131424,
+   "cka_circle": 0.30619508028030396
+  },
+  "L16": {
+   "cka_line": 0.25583183765411377,
+   "cka_line_shuf": 0.16167926788330078,
+   "cka_circle": 0.30403169989585876
+  },
+  "emb": {
+   "cka_line": 0.1984354555606842,
+   "cka_line_shuf": 0.17042425274848938,
+   "cka_circle": 0.2720452547073364
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: T minus 12 letters is",
+    " H"
+   ],
+   [
+    "Q: R plus 2 letters is",
+    " T"
+   ],
+   [
+    "Q: N minus 11 letters is",
+    " C"
+   ]
+  ],
+  "test": [
+   [
+    "Q: J minus 4 letters is",
+    " F"
+   ],
+   [
+    "Q: P plus 6 letters is",
+    " V"
+   ],
+   [
+    "Q: W minus 1 letters is",
+    " V"
+   ]
+  ]
+ }
+}
