@@ -1,0 +1,22 @@
+## task 218-pythia-2.8b-step1000  job 3504  host b-19-55  2026-09-29T22:21:14Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+Traceback (most recent call last):
+  File "/scratch/yh6210/llmadd_runs/218-pythia-2.8b-step1000/code/tools/pythia_train.py", line 194, in <module>
+    main()
+  File "/scratch/yh6210/llmadd_runs/218-pythia-2.8b-step1000/code/tools/pythia_train.py", line 84, in main
+    "test": (enc([f"Q: {a} + {b} =" for a, b in test]), test.sum(1)),
+  File "/scratch/yh6210/llmadd_runs/218-pythia-2.8b-step1000/code/tools/pythia_train.py", line 72, in <lambda>
+    enc = lambda ps: nl.encode(tok, ps, dev)
+  File "/scratch/yh6210/llmadd_runs/218-pythia-2.8b-step1000/code/tools/numlib.py", line 69, in encode
+    enc = tok(prompts, return_tensors="pt", padding=True)
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/tokenization_utils_base.py", line 3078, in __call__
+    encodings = self._call_one(text=text, text_pair=text_pair, **all_kwargs)
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/tokenization_utils_base.py", line 3166, in _call_one
+    return self.batch_encode_plus(
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/tokenization_utils_base.py", line 3358, in batch_encode_plus
+    padding_strategy, truncation_strategy, max_length, kwargs = self._get_padding_truncation_strategies(
+  File "/scratch/yh6210/llmadd_env/lib/python3.9/site-packages/transformers/tokenization_utils_base.py", line 2974, in _get_padding_truncation_strategies
+    raise ValueError(
+ValueError: Asking to pad but the tokenizer does not have a padding token. Please select a token to use as `pad_token` `(tokenizer.pad_token = tokenizer.eos_token e.g.)` or add a new pad token via `tokenizer.add_special_tokens({'pad_token': '[PAD]'})`.
+## rc=1  2026-09-29T22:21:47Z
