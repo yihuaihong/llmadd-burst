@@ -1,0 +1,25 @@
+## task 200-seeds-7b-lora-lam20-s1-5000  job 3462  host b-19-54  2026-09-29T21:45:14Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.53it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.06it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.54it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.29it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.04it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.82it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.68it/s]
+base: {'test': 0.003000000026077032, 'train': 0.005333333276212215, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0} (127s)
+lora none seed3: {'test': 0.0820000022649765, 'train': 0.36133334040641785, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (259s)
+lora helix seed3: {'test': 0.12600000202655792, 'train': 0.4740000069141388, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (417s)
+lora helix_shuf seed3: {'test': 0.04800000041723251, 'train': 0.2906666696071625, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (574s)
+lora digit seed3: {'test': 0.07300000637769699, 'train': 0.44866666197776794, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (731s)
+lora none seed4: {'test': 0.07100000232458115, 'train': 0.40066665410995483, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (861s)
+lora helix seed4: {'test': 0.11600000411272049, 'train': 0.5260000228881836, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (1015s)
+lora helix_shuf seed4: {'test': 0.06300000101327896, 'train': 0.3153333365917206, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (1165s)
+lora digit seed4: {'test': 0.06300000101327896, 'train': 0.42133334279060364, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (1316s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.003 | 0.005 | 0.002 | 0.000 | 0.000 | - |
+| none | 2 | 0.077 ± 0.008 | 0.381 ± 0.028 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.25 / 0.28 CKA@L16 helix 0.71 digit 0.50; emb helix 0.50 digit 0.60 |
+| helix | 2 | 0.121 ± 0.007 | 0.500 ± 0.037 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.64 / 0.62 CKA@L16 helix 1.00 digit 0.64; emb helix 0.50 digit 0.60 |
+| helix_shuf | 2 | 0.056 ± 0.011 | 0.303 ± 0.017 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.000 ± 0.000 | -0.07 / -0.19 CKA@L16 helix 0.09 digit 0.15; emb helix 0.50 digit 0.60 |
+| digit | 2 | 0.068 ± 0.007 | 0.435 ± 0.019 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.001 ± 0.000 | 0.19 / 0.55 CKA@L16 helix 0.62 digit 0.99; emb helix 0.50 digit 0.60 |
+
+## rc=0  2026-09-29T22:07:40Z
