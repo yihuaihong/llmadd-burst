@@ -1,0 +1,93 @@
+{
+ "domain": "days",
+ "items": [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+ ],
+ "n": {
+  "train": 336,
+  "test": 224,
+  "ood": 300
+ },
+ "eval": {
+  "train": 0.0,
+  "test": 0.0,
+  "ood": 0.0
+ },
+ "geometry": {
+  "L5": {
+   "cka_circle": 0.8182192444801331,
+   "cka_circle_shuf": 0.5295121073722839,
+   "cka_line": 0.5713425874710083
+  },
+  "L10": {
+   "cka_circle": 0.8240405917167664,
+   "cka_circle_shuf": 0.532547116279602,
+   "cka_line": 0.5571886897087097
+  },
+  "L15": {
+   "cka_circle": 0.8167305588722229,
+   "cka_circle_shuf": 0.5201288461685181,
+   "cka_line": 0.5651540756225586
+  },
+  "L20": {
+   "cka_circle": 0.8070834279060364,
+   "cka_circle_shuf": 0.5054609179496765,
+   "cka_line": 0.5759724974632263
+  },
+  "emb": {
+   "cka_circle": 0.6216914057731628,
+   "cka_circle_shuf": 0.5839229822158813,
+   "cka_line": 0.4590570032596588
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: Tuesday minus 1 days is",
+    " Monday"
+   ],
+   [
+    "Q: Friday minus 9 days is",
+    " Wednesday"
+   ],
+   [
+    "Q: Thursday plus 36 days is",
+    " Friday"
+   ]
+  ],
+  "test": [
+   [
+    "Q: Friday plus 39 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Thursday minus 30 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Monday plus 4 days is",
+    " Friday"
+   ]
+  ],
+  "ood": [
+   [
+    "Q: Thursday plus 75 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Thursday minus 58 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Saturday minus 50 days is",
+    " Friday"
+   ]
+  ]
+ }
+}

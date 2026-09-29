@@ -1,0 +1,31 @@
+## task 178-size13b-concept-days-tokens9B  job 3410  host b-19-58  2026-09-29T20:24:13Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/12 [00:00<?, ?it/s]Loading checkpoint shards:   8%|▊         | 1/12 [00:00<00:01,  7.90it/s]Loading checkpoint shards:  17%|█▋        | 2/12 [00:00<00:01,  7.58it/s]Loading checkpoint shards:  25%|██▌       | 3/12 [00:00<00:01,  5.69it/s]Loading checkpoint shards:  33%|███▎      | 4/12 [00:00<00:01,  6.23it/s]Loading checkpoint shards:  42%|████▏     | 5/12 [00:00<00:01,  6.79it/s]Loading checkpoint shards:  50%|█████     | 6/12 [00:00<00:00,  6.81it/s]Loading checkpoint shards:  58%|█████▊    | 7/12 [00:01<00:00,  7.15it/s]Loading checkpoint shards:  67%|██████▋   | 8/12 [00:01<00:00,  7.46it/s]Loading checkpoint shards:  75%|███████▌  | 9/12 [00:01<00:00,  7.48it/s]Loading checkpoint shards:  83%|████████▎ | 10/12 [00:01<00:00,  7.34it/s]Loading checkpoint shards:  92%|█████████▏| 11/12 [00:01<00:00,  7.13it/s]Loading checkpoint shards: 100%|██████████| 12/12 [00:01<00:00,  7.59it/s]
+base: {'train': 0.0, 'test': 0.0, 'ood': 0.0} geometry L16/emb: None {'cka_circle': 0.6216914057731628, 'cka_circle_shuf': 0.5839229822158813, 'cka_line': 0.4590570032596588} (264s)
+days none seed0: {'train': 0.2797619104385376, 'test': 0.1071428656578064, 'ood': 0.15666666626930237} (409s)
+days circle seed0: {'train': 0.4017857313156128, 'test': 0.0714285746216774, 'ood': 0.1599999964237213} (594s)
+days circle_shuf seed0: {'train': 0.196428582072258, 'test': 0.1160714328289032, 'ood': 0.1666666716337204} (776s)
+days line seed0: {'train': 0.2916666865348816, 'test': 0.098214291036129, 'ood': 0.15000000596046448} (951s)
+days none seed1: {'train': 0.3333333432674408, 'test': 0.0357142873108387, 'ood': 0.15333333611488342} (1088s)
+days circle seed1: {'train': 0.4107142984867096, 'test': 0.0535714328289032, 'ood': 0.1433333307504654} (1261s)
+days circle_shuf seed1: {'train': 0.25, 'test': 0.0446428582072258, 'ood': 0.15666666626930237} (1434s)
+days line seed1: {'train': 0.25, 'test': 0.0491071455180645, 'ood': 0.1433333307504654} (1609s)
+days none seed2: {'train': 0.4255952537059784, 'test': 0.0357142873108387, 'ood': 0.17000000178813934} (1746s)
+days circle seed2: {'train': 0.4315476417541504, 'test': 0.0580357164144516, 'ood': 0.12666666507720947} (1920s)
+days circle_shuf seed2: {'train': 0.2976190447807312, 'test': 0.0401785746216774, 'ood': 0.1433333307504654} (2093s)
+days line seed2: {'train': 0.3005952537059784, 'test': 0.0401785746216774, 'ood': 0.15666666626930237} (2266s)
+# concept shaping: days (n = {'train': 336, 'test': 224, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.62, L20 CKA(circle) 0.81
+
+| geom | seeds | train | test | ood | CKA@L20 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.81 / 0.51 / 0.58 |
+| circle | 3 | 0.415 ± 0.015 | 0.061 ± 0.009 | 0.143 ± 0.017 | 1.00 / 0.44 / 0.47 |
+| circle_shuf | 3 | 0.248 ± 0.051 | 0.067 ± 0.043 | 0.156 ± 0.012 | 0.43 / 1.00 / 0.12 |
+| line | 3 | 0.281 ± 0.027 | 0.063 ± 0.031 | 0.150 ± 0.007 | 0.48 / 0.13 / 1.00 |
+| none | 3 | 0.346 ± 0.074 | 0.060 ± 0.041 | 0.160 ± 0.009 | 0.85 / 0.52 / 0.53 |
+
+## rc=0  2026-09-29T21:02:42Z
