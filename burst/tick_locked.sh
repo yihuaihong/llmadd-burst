@@ -6,11 +6,25 @@ ROOT=${LLMADD_ROOT:-/scratch/$USER}
 REPO=$ROOT/llmadd
 STATE=$ROOT/llmadd_state
 mkdir -p "$STATE"
-exec 9>"$STATE/tick.lock"
+# Lock = a directory on the shared scratch (mkdir is atomic across nodes). flock on this NFS scratch left a
+# stale lock on 2026-09-29 (a node went away while holding it) and every later tick exited silently for hours.
+# A lock older than 15 min is broken; a tick itself is capped at 10 min, so a live holder is never older.
 # TICK_WAIT=<seconds>: wait for the lock (the final tick of a finishing task must not be skipped)
-if [ -n "${TICK_WAIT:-}" ]; then flock -w "$TICK_WAIT" 9 || exit 0; else flock -n 9 || exit 0; fi
+LOCK="$STATE/tick.lockdir"
+deadline=$(( $(date +%s) + ${TICK_WAIT:-0} ))
+until mkdir "$LOCK" 2>/dev/null; do
+  age=$(( $(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || date +%s) ))
+  if [ "$age" -gt 900 ]; then
+    echo "[$(date -u +%FT%TZ)] breaking stale tick lock ($age s old: $(cat "$LOCK/owner" 2>/dev/null))" >> "$REPO/logs/tick.log"
+    rm -rf "$LOCK"; continue
+  fi
+  [ "$(date +%s)" -lt "$deadline" ] || exit 0
+  sleep 5
+done
+echo "$(hostname -s) $$ ${SLURM_JOB_ID:-manual} $(date -u +%FT%TZ)" > "$LOCK/owner"
+trap 'rm -rf "$LOCK"' EXIT
 cd "$REPO" || exit 0
-git fetch -q origin 2>/dev/null && git reset -q --hard origin/main 2>/dev/null
+timeout 120 git fetch -q origin 2>/dev/null && git reset -q --hard origin/main 2>/dev/null
 # SENTINEL=off in burst/config.env: a running sentinel chain retires itself (root cancels idle jobs after
 # ~38 min anyway, and a 1-CPU sentinel holds a whole exclusive n2c48m24 node of the course allotment).
 # Tasks keep the pipeline moving: each ticks while it runs and once more when it ends.
@@ -21,4 +35,4 @@ if [ "$SENTINEL" = off ] && [ "${SLURM_JOB_NAME:-}" = llmadd_sentinel ]; then
   exit 0
 fi
 # run a copy: the tick itself pulls, and must not rewrite the file bash is reading
-cp burst/tick.sh "$STATE/tick_run.sh" && bash "$STATE/tick_run.sh"
+cp burst/tick.sh "$STATE/tick_run.sh" && timeout 600 bash "$STATE/tick_run.sh"

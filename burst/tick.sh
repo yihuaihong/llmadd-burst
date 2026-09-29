@@ -152,7 +152,7 @@ if [ "${#to_push[@]}" -gt 0 ] || [ "$changed" = 1 ] || [ $(( $(date +%s) - last 
     "${inflight%, }" "${errs%, }" "$prev" > heartbeat.json
   git add -A status results heartbeat.json
   if git commit -q -m "sentinel: $(date -u +%FT%TZ) ${to_push[*]:-heartbeat}" 2>/dev/null; then
-    if git pull -q --rebase origin main 2>>logs/tick.log && git push -q origin HEAD:main 2>>logs/tick.log; then
+    if timeout 120 git pull -q --rebase origin main 2>>logs/tick.log && timeout 120 git push -q origin HEAD:main 2>>logs/tick.log; then
       touch "$STATE/hb_pushed"
       for t in ${to_push[@]+"${to_push[@]}"}; do touch "$STATE/$t.pushed"; done
       log "pushed ${to_push[*]:-heartbeat}"
