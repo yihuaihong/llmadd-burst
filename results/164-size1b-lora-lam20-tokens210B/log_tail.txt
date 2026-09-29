@@ -1,0 +1,29 @@
+## task 164-size1b-lora-lam20-tokens210B  job 2598  host b-19-25  2026-09-29T06:27:37Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  1.13it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:00<00:00,  2.14it/s]
+base: {'test': 0.039000000804662704, 'train': 0.052666667848825455, 'three_term': 0.004999999888241291, 'three_digit': 0.0024999999441206455, 'test_terse': 0.0010000000474974513} (90s)
+lora none seed0: {'test': 0.7040000557899475, 'train': 0.918666660785675, 'three_term': 0.0024999999441206455, 'three_digit': 0.019999999552965164, 'test_terse': 0.055000003427267075} (153s)
+lora helix seed0: {'test': 0.7170000076293945, 'train': 0.9026666283607483, 'three_term': 0.0024999999441206455, 'three_digit': 0.022499999031424522, 'test_terse': 0.10200000554323196} (229s)
+lora helix_shuf seed0: {'test': 0.4970000088214874, 'train': 0.793999969959259, 'three_term': 0.0024999999441206455, 'three_digit': 0.014999999664723873, 'test_terse': 0.08000000566244125} (306s)
+lora digit seed0: {'test': 0.6760000586509705, 'train': 0.890666663646698, 'three_term': 0.0, 'three_digit': 0.019999999552965164, 'test_terse': 0.09700000286102295} (382s)
+lora none seed1: {'test': 0.7140000462532043, 'train': 0.9239999651908875, 'three_term': 0.0024999999441206455, 'three_digit': 0.022499999031424522, 'test_terse': 0.049000002443790436} (442s)
+lora helix seed1: {'test': 0.7380000352859497, 'train': 0.8859999775886536, 'three_term': 0.0024999999441206455, 'three_digit': 0.017500000074505806, 'test_terse': 0.08300000429153442} (518s)
+lora helix_shuf seed1: {'test': 0.5640000104904175, 'train': 0.8460000157356262, 'three_term': 0.0024999999441206455, 'three_digit': 0.017500000074505806, 'test_terse': 0.05300000309944153} (594s)
+lora digit seed1: {'test': 0.6130000352859497, 'train': 0.8513333201408386, 'three_term': 0.0, 'three_digit': 0.01249999925494194, 'test_terse': 0.10100000351667404} (670s)
+lora none seed2: {'test': 0.7090000510215759, 'train': 0.9326666593551636, 'three_term': 0.0, 'three_digit': 0.014999999664723873, 'test_terse': 0.06800000369548798} (731s)
+lora helix seed2: {'test': 0.7160000205039978, 'train': 0.9006666541099548, 'three_term': 0.0024999999441206455, 'three_digit': 0.022499999031424522, 'test_terse': 0.09600000083446503} (806s)
+lora helix_shuf seed2: {'test': 0.5830000042915344, 'train': 0.8886666297912598, 'three_term': 0.0024999999441206455, 'three_digit': 0.017500000074505806, 'test_terse': 0.10100000351667404} (879s)
+lora digit seed2: {'test': 0.6660000085830688, 'train': 0.8939999938011169, 'three_term': 0.0024999999441206455, 'three_digit': 0.017500000074505806, 'test_terse': 0.14800000190734863} (952s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [2, 4, 6, 8], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.039 | 0.053 | 0.005 | 0.002 | 0.001 | - |
+| none | 3 | 0.709 ± 0.005 | 0.925 ± 0.007 | 0.002 ± 0.001 | 0.019 ± 0.004 | 0.057 ± 0.010 | 0.23 / 0.27 CKA@L8 helix 0.77 digit 0.63; emb helix 0.70 digit 0.72 |
+| helix | 3 | 0.724 ± 0.012 | 0.896 ± 0.009 | 0.002 ± 0.000 | 0.021 ± 0.003 | 0.094 ± 0.010 | 0.56 / 0.56 CKA@L8 helix 0.99 digit 0.65; emb helix 0.70 digit 0.72 |
+| helix_shuf | 3 | 0.548 ± 0.045 | 0.843 ± 0.047 | 0.002 ± 0.000 | 0.017 ± 0.001 | 0.078 ± 0.024 | -0.01 / -0.07 CKA@L8 helix 0.15 digit 0.21; emb helix 0.70 digit 0.72 |
+| digit | 3 | 0.652 ± 0.034 | 0.879 ± 0.024 | 0.001 ± 0.001 | 0.017 ± 0.004 | 0.115 ± 0.028 | 0.16 / 0.43 CKA@L8 helix 0.62 digit 0.99; emb helix 0.70 digit 0.72 |
+
+## rc=0  2026-09-29T06:45:14Z
