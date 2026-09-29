@@ -1,0 +1,31 @@
+## task 129-concept-numwords-s1-10000  job 2544  host b-19-24  2026-09-29T02:25:37Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.30it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.61it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.07it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.09it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.12it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.89it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.60it/s]
+base: {'train': 0.18306635320186615, 'test': 0.21232876181602478} geometry L16/emb: {'cka_helix': 0.7395421266555786, 'cka_helix_shuf': 0.21914887428283691, 'cka_digit': 0.7264031171798706} {'cka_helix': 0.6119838953018188, 'cka_helix_shuf': 0.3719722628593445, 'cka_digit': 0.8350778222084045} (119s)
+numwords none seed0: {'train': 0.9999999403953552, 'test': 0.732876718044281} (239s)
+numwords helix seed0: {'train': 0.9908466339111328, 'test': 0.7020547986030579} (389s)
+numwords helix_shuf seed0: {'train': 0.9999999403953552, 'test': 0.48630136251449585} (539s)
+numwords digit seed0: {'train': 0.9999999403953552, 'test': 0.7294520735740662} (689s)
+numwords none seed1: {'train': 0.9999999403953552, 'test': 0.7294520735740662} (807s)
+numwords helix seed1: {'train': 0.9999999403953552, 'test': 0.7294520735740662} (950s)
+numwords helix_shuf seed1: {'train': 0.9999999403953552, 'test': 0.4794520437717438} (1093s)
+numwords digit seed1: {'train': 0.9999999403953552, 'test': 0.7363013625144958} (1234s)
+numwords none seed2: {'train': 0.9999999403953552, 'test': 0.7294520735740662} (1346s)
+numwords helix seed2: {'train': 0.9999999403953552, 'test': 0.7191780805587769} (1487s)
+numwords helix_shuf seed2: {'train': 0.9999999403953552, 'test': 0.49657532572746277} (1628s)
+numwords digit seed2: {'train': 0.9999999403953552, 'test': 0.75} (1769s)
+# concept shaping: numwords (n = {'train': 437, 'test': 292})
+
+base geometry: emb CKA(helix) 0.61, L16 CKA(helix) 0.74
+
+| geom | seeds | train | test | CKA@L16 helix / helix_shuf / digit |
+|---|---|---|---|---|
+| base | - | 0.183 | 0.212 | 0.74 / 0.22 / 0.73 |
+| digit | 3 | 1.000 ± 0.000 | 0.739 ± 0.010 | 0.66 / 0.31 / 1.00 |
+| helix | 3 | 0.997 ± 0.005 | 0.717 ± 0.014 | 1.00 / 0.17 / 0.69 |
+| helix_shuf | 3 | 1.000 ± 0.000 | 0.487 ± 0.009 | 0.17 / 1.00 / 0.34 |
+| none | 3 | 1.000 ± 0.000 | 0.731 ± 0.002 | 0.77 / 0.23 / 0.74 |
+
+## rc=0  2026-09-29T02:55:35Z
