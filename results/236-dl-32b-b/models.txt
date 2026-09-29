@@ -1,0 +1,5 @@
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step1000-tokens9B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step10000-tokens84B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step2000-tokens17B
+61G	/scratch/yh6210/models/OLMo-2-0325-32B/stage1-step5000-tokens42B
+10.36.221.2:/hpc_dev_fs/scratch   13T  9.6T  3.0T  77% /scratch
