@@ -41,9 +41,23 @@ for jf in "$STATE"/*.job; do
   if [ -f "$RUNS/$t/rc" ]; then
     rc=$(cat "$RUNS/$t/rc"); [ "$rc" = 0 ] && st=COMPLETED || st=FAILED
   elif in_queue "$jid"; then
+    # a node that failed to boot leaves the job pending as "held": cancel it here, it is retried below
+    if squeue -h -j "$jid" -o "%r" 2>/dev/null | grep -qi 'held' && [ ! -e "$STATE/$t.cancel_sent" ]; then
+      scancel "$jid" 2>/dev/null && log "$t ($jid) held on a bad node: cancelled for retry"; changed=1
+    fi
     continue
   else
     rc=""; st=$(sacct -n -X -j "$jid" -o State 2>/dev/null | head -1 | awk '{print $1}'); st=${st:-LOST}
+  fi
+  # killed from outside before the task could finish (idle-job reaper, node failure, preemption, held node):
+  # retry up to 3 times, unless the cancel came from burst/cancel.list
+  if [ -z "${rc:-}" ] && [ ! -e "$STATE/$t.cancel_sent" ] && [[ "$st" =~ ^(CANCELLED|NODE_FAIL|PREEMPTED|BOOT_FAIL|LOST) ]]; then
+    n=$(cat "$STATE/$t.retries" 2>/dev/null || echo 0)
+    if [ "$n" -lt 3 ]; then
+      echo $((n + 1)) > "$STATE/$t.retries"; rm -f "$jf"
+      log "$t ($jid) ended $st without finishing: retry $((n + 1))/3"; changed=1
+      continue
+    fi
   fi
   printf '%s %s\n%s %s\n' "$jid" "$kind" "$st" "${rc:-none}" > "$STATE/$t.fin"
   rm -f "$jf"
