@@ -1,0 +1,31 @@
+## task 144-concept-days-s1-150000  job 2563  host b-19-21  2026-09-29T03:28:38Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.57it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.76it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.18it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.31it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.22it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.78it/s]
+base: {'train': 0.008928571827709675, 'test': 0.0133928582072258, 'ood': 0.0} geometry L16/emb: {'cka_circle': 0.7972549796104431, 'cka_circle_shuf': 0.5080381631851196, 'cka_line': 0.5834332704544067} {'cka_circle': 0.7701080441474915, 'cka_circle_shuf': 0.5454086661338806, 'cka_line': 0.5457146167755127} (118s)
+days none seed0: {'train': 0.9583333730697632, 'test': 0.8258928656578064, 'ood': 0.10333333909511566} (232s)
+days circle seed0: {'train': 1.0, 'test': 0.9642857313156128, 'ood': 0.11666666716337204} (373s)
+days circle_shuf seed0: {'train': 0.6904761791229248, 'test': 0.424107164144516, 'ood': 0.1300000101327896} (514s)
+days line seed0: {'train': 0.8928571343421936, 'test': 0.6473214626312256, 'ood': 0.11666666716337204} (655s)
+days none seed1: {'train': 0.9880952835083008, 'test': 0.8035714626312256, 'ood': 0.18000000715255737} (764s)
+days circle seed1: {'train': 0.9970238208770752, 'test': 0.9553571939468384, 'ood': 0.1300000101327896} (900s)
+days circle_shuf seed1: {'train': 0.8452380895614624, 'test': 0.5803571939468384, 'ood': 0.11666666716337204} (1033s)
+days line seed1: {'train': 0.8928571343421936, 'test': 0.6205357313156128, 'ood': 0.13333334028720856} (1166s)
+days none seed2: {'train': 0.9940476417541504, 'test': 0.754464328289032, 'ood': 0.09333333373069763} (1272s)
+days circle seed2: {'train': 1.0, 'test': 0.9553571939468384, 'ood': 0.14666667580604553} (1405s)
+days circle_shuf seed2: {'train': 0.8779761791229248, 'test': 0.53125, 'ood': 0.09000000357627869} (1537s)
+days line seed2: {'train': 0.9255952835083008, 'test': 0.7098214626312256, 'ood': 0.09000000357627869} (1670s)
+# concept shaping: days (n = {'train': 336, 'test': 224, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.77, L16 CKA(circle) 0.80
+
+| geom | seeds | train | test | ood | CKA@L16 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.009 | 0.013 | 0.000 | 0.80 / 0.51 / 0.58 |
+| circle | 3 | 0.999 ± 0.002 | 0.958 ± 0.005 | 0.131 ± 0.015 | 1.00 / 0.45 / 0.48 |
+| circle_shuf | 3 | 0.805 ± 0.100 | 0.512 ± 0.080 | 0.112 ± 0.020 | 0.48 / 1.00 / 0.16 |
+| line | 3 | 0.904 ± 0.019 | 0.659 ± 0.046 | 0.113 ± 0.022 | 0.53 / 0.16 / 1.00 |
+| none | 3 | 0.980 ± 0.019 | 0.795 ± 0.037 | 0.126 ± 0.047 | 0.83 / 0.53 / 0.59 |
+
+## rc=0  2026-09-29T03:57:02Z
