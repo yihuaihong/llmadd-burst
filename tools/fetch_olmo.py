@@ -1,4 +1,4 @@
-"""Download one OLMo-2 revision and store it as bf16 safetensors.
+"""Download one OLMo-2 revision (any size, --repo) and store it as bf16 safetensors.
 
 The Hub copy is fp32 (~29 GB). Shards are converted one tensor at a time, so peak RAM stays near one
 bf16 shard. The fp32 download is deleted afterwards. A `.complete` marker makes reruns no-ops.
@@ -23,6 +23,7 @@ REPO_ID = "allenai/OLMo-2-1124-7B"
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--revision", required=True)
+    parser.add_argument("--repo", default=REPO_ID, help="any OLMo-2 size, e.g. allenai/OLMo-2-0425-1B, allenai/OLMo-2-1124-13B")
     parser.add_argument("--dest", required=True)
     args = parser.parse_args()
 
@@ -32,7 +33,7 @@ def main() -> None:
         return
     tmp = dest.parent / f".{dest.name}.fp32"
     shutil.rmtree(tmp, ignore_errors=True)   # leftovers of an interrupted run
-    snapshot_download(REPO_ID, revision=args.revision, local_dir=tmp, max_workers=8)
+    snapshot_download(args.repo, revision=args.revision, local_dir=tmp, max_workers=8)
     dest.mkdir(parents=True, exist_ok=True)
 
     total = 0
