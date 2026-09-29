@@ -1,0 +1,6 @@
+5.3G	/scratch/yh6210/models/pythia-2.8b/step1000
+5.2G	/scratch/yh6210/models/pythia-2.8b/step143000
+5.3G	/scratch/yh6210/models/pythia-2.8b/step16000
+5.3G	/scratch/yh6210/models/pythia-2.8b/step32000
+5.3G	/scratch/yh6210/models/pythia-2.8b/step4000
+5.2G	/scratch/yh6210/models/pythia-2.8b/step64000
