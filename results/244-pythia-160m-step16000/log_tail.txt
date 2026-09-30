@@ -1,0 +1,28 @@
+## task 244-pythia-160m-step16000  job 3574  host b-19-81  2026-09-30T00:16:45Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+base {'test': 0.0, 'train': 0.0, 'three_term': 0.0, 'three_digit': 0.0} layers [2, 3, 4, 6] (21s)
+none seed0: {'test': 0.13900001347064972, 'train': 0.3059999942779541, 'three_term': 0.0, 'three_digit': 0.0} (41s)
+helix seed0: {'test': 0.15200001001358032, 'train': 0.34200000762939453, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (77s)
+helix_shuf seed0: {'test': 0.10600000619888306, 'train': 0.2280000001192093, 'three_term': 0.0, 'three_digit': 0.0} (113s)
+digit seed0: {'test': 0.10600000619888306, 'train': 0.22866666316986084, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (149s)
+none seed1: {'test': 0.12700000405311584, 'train': 0.29466667771339417, 'three_term': 0.0, 'three_digit': 0.0} (168s)
+helix seed1: {'test': 0.1420000046491623, 'train': 0.3033333420753479, 'three_term': 0.0, 'three_digit': 0.0} (205s)
+helix_shuf seed1: {'test': 0.09200000762939453, 'train': 0.1993333250284195, 'three_term': 0.0, 'three_digit': 0.0} (241s)
+digit seed1: {'test': 0.11500000208616257, 'train': 0.29999998211860657, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (276s)
+none seed2: {'test': 0.11700000613927841, 'train': 0.2939999997615814, 'three_term': 0.0, 'three_digit': 0.0} (296s)
+helix seed2: {'test': 0.1510000079870224, 'train': 0.3453333377838135, 'three_term': 0.0, 'three_digit': 0.0} (331s)
+helix_shuf seed2: {'test': 0.0650000050663948, 'train': 0.1966666579246521, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (366s)
+digit seed2: {'test': 0.125, 'train': 0.29600000381469727, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (401s)
+# Pythia manifold shaping (layers [2, 3, 4, 6] of 12; three_digit n=400)
+
+| geom | seeds | test | train | three_term | three_digit | CKA@L6 helix / digit |
+|---|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.000 | 0.71 / 0.63 |
+| none | 3 | 0.128 ± 0.011 | 0.298 ± 0.007 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.76 / 0.61 |
+| helix | 3 | 0.148 ± 0.006 | 0.330 ± 0.023 | 0.001 ± 0.001 | 0.000 ± 0.000 | 0.99 / 0.65 |
+| helix_shuf | 3 | 0.088 ± 0.021 | 0.208 ± 0.017 | 0.001 ± 0.001 | 0.000 ± 0.000 | 0.16 / 0.22 |
+| digit | 3 | 0.115 ± 0.010 | 0.275 ± 0.040 | 0.003 ± 0.001 | 0.000 ± 0.000 | 0.61 / 0.98 |
+
+## rc=0  2026-09-30T00:24:00Z

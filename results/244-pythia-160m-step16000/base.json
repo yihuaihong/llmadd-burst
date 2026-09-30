@@ -1,0 +1,42 @@
+{
+ "eval": {
+  "test": 0.0,
+  "train": 0.0,
+  "three_term": 0.0,
+  "three_digit": 0.0
+ },
+ "geometry": {
+  "L2": {
+   "cka_helix": 0.7518909573554993,
+   "cka_helix_shuf": 0.12980172038078308,
+   "cka_digit": 0.6707433462142944,
+   "cka_digit_shuf": 0.2255585938692093
+  },
+  "L3": {
+   "cka_helix": 0.7456450462341309,
+   "cka_helix_shuf": 0.12870314717292786,
+   "cka_digit": 0.6690956354141235,
+   "cka_digit_shuf": 0.22892583906650543
+  },
+  "L4": {
+   "cka_helix": 0.7417015433311462,
+   "cka_helix_shuf": 0.12784820795059204,
+   "cka_digit": 0.6668829321861267,
+   "cka_digit_shuf": 0.2279096245765686
+  },
+  "L6": {
+   "cka_helix": 0.7137318253517151,
+   "cka_helix_shuf": 0.12045992165803909,
+   "cka_digit": 0.6348707675933838,
+   "cka_digit_shuf": 0.2155783325433731
+  }
+ },
+ "layers": [
+  2,
+  3,
+  4,
+  6
+ ],
+ "n_layers": 12,
+ "n_three_digit": 400
+}
