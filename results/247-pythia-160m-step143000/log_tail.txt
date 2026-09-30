@@ -1,0 +1,28 @@
+## task 247-pythia-160m-step143000  job 3569  host b-19-44  2026-09-30T00:33:46Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+base {'test': 0.0, 'train': 0.0, 'three_term': 0.0, 'three_digit': 0.0} layers [2, 3, 4, 6] (28s)
+none seed0: {'test': 0.01900000125169754, 'train': 0.02866666577756405, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (46s)
+helix seed0: {'test': 0.023000001907348633, 'train': 0.024666666984558105, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (79s)
+helix_shuf seed0: {'test': 0.015000000596046448, 'train': 0.023333333432674408, 'three_term': 0.0, 'three_digit': 0.0} (111s)
+digit seed0: {'test': 0.013000000268220901, 'train': 0.013333333656191826, 'three_term': 0.007499999832361937, 'three_digit': 0.0} (144s)
+none seed1: {'test': 0.014000000432133675, 'train': 0.03333333134651184, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (162s)
+helix seed1: {'test': 0.01100000087171793, 'train': 0.013333333656191826, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (195s)
+helix_shuf seed1: {'test': 0.02200000174343586, 'train': 0.02266666665673256, 'three_term': 0.0024999999441206455, 'three_digit': 0.0} (227s)
+digit seed1: {'test': 0.01100000087171793, 'train': 0.013333333656191826, 'three_term': 0.007499999832361937, 'three_digit': 0.0} (259s)
+none seed2: {'test': 0.02500000037252903, 'train': 0.02866666577756405, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (277s)
+helix seed2: {'test': 0.036000002175569534, 'train': 0.03866666555404663, 'three_term': 0.0, 'three_digit': 0.0} (309s)
+helix_shuf seed2: {'test': 0.009000000543892384, 'train': 0.013333333656191826, 'three_term': 0.007499999832361937, 'three_digit': 0.0} (341s)
+digit seed2: {'test': 0.007000000216066837, 'train': 0.009999999776482582, 'three_term': 0.004999999888241291, 'three_digit': 0.0} (373s)
+# Pythia manifold shaping (layers [2, 3, 4, 6] of 12; three_digit n=400)
+
+| geom | seeds | test | train | three_term | three_digit | CKA@L6 helix / digit |
+|---|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.000 | 0.69 / 0.58 |
+| none | 3 | 0.019 ± 0.006 | 0.030 ± 0.003 | 0.004 ± 0.001 | 0.000 ± 0.000 | 0.69 / 0.59 |
+| helix | 3 | 0.023 ± 0.013 | 0.026 ± 0.013 | 0.003 ± 0.003 | 0.000 ± 0.000 | 0.84 / 0.63 |
+| helix_shuf | 3 | 0.015 ± 0.007 | 0.020 ± 0.006 | 0.003 ± 0.004 | 0.000 ± 0.000 | 0.72 / 0.64 |
+| digit | 3 | 0.010 ± 0.003 | 0.012 ± 0.002 | 0.007 ± 0.001 | 0.000 ± 0.000 | 0.69 / 0.76 |
+
+## rc=0  2026-09-30T00:40:30Z
