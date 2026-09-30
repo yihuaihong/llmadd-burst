@@ -1,0 +1,30 @@
+## task 239b-size32b-lora-lam20-tokens42B  job 3549  host b-20-4  2026-09-29T23:44:15Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/29 [00:00<?, ?it/s]Loading checkpoint shards:   3%|▎         | 1/29 [00:16<07:39, 16.42s/it]Loading checkpoint shards:   7%|▋         | 2/29 [00:30<06:41, 14.87s/it]Loading checkpoint shards:  10%|█         | 3/29 [00:46<06:39, 15.38s/it]Loading checkpoint shards:  14%|█▍        | 4/29 [01:00<06:17, 15.09s/it]Loading checkpoint shards:  17%|█▋        | 5/29 [01:15<05:58, 14.95s/it]Loading checkpoint shards:  21%|██        | 6/29 [01:31<05:48, 15.15s/it]Loading checkpoint shards:  24%|██▍       | 7/29 [01:45<05:30, 15.04s/it]Loading checkpoint shards:  28%|██▊       | 8/29 [02:00<05:16, 15.06s/it]Loading checkpoint shards:  31%|███       | 9/29 [02:16<05:05, 15.27s/it]Loading checkpoint shards:  34%|███▍      | 10/29 [02:31<04:47, 15.16s/it]Loading checkpoint shards:  38%|███▊      | 11/29 [02:47<04:37, 15.41s/it]Loading checkpoint shards:  41%|████▏     | 12/29 [03:03<04:24, 15.58s/it]Loading checkpoint shards:  45%|████▍     | 13/29 [03:17<04:00, 15.06s/it]Loading checkpoint shards:  48%|████▊     | 14/29 [03:31<03:41, 14.74s/it]Loading checkpoint shards:  52%|█████▏    | 15/29 [03:47<03:32, 15.16s/it]Loading checkpoint shards:  55%|█████▌    | 16/29 [04:01<03:11, 14.76s/it]Loading checkpoint shards:  59%|█████▊    | 17/29 [04:15<02:55, 14.58s/it]Loading checkpoint shards:  62%|██████▏   | 18/29 [04:31<02:44, 14.96s/it]Loading checkpoint shards:  66%|██████▌   | 19/29 [04:45<02:27, 14.74s/it]Loading checkpoint shards:  69%|██████▉   | 20/29 [05:00<02:13, 14.80s/it]Loading checkpoint shards:  72%|███████▏  | 21/29 [05:16<02:01, 15.13s/it]Loading checkpoint shards:  76%|███████▌  | 22/29 [05:30<01:44, 14.86s/it]Loading checkpoint shards:  79%|███████▉  | 23/29 [05:45<01:28, 14.74s/it]Loading checkpoint shards:  83%|████████▎ | 24/29 [06:00<01:14, 14.86s/it]Loading checkpoint shards:  86%|████████▌ | 25/29 [06:14<00:58, 14.55s/it]Loading checkpoint shards:  90%|████████▉ | 26/29 [06:28<00:43, 14.52s/it]Loading checkpoint shards:  93%|█████████▎| 27/29 [06:43<00:29, 14.75s/it]Loading checkpoint shards:  97%|█████████▋| 28/29 [06:55<00:13, 13.90s/it]Loading checkpoint shards: 100%|██████████| 29/29 [07:02<00:00, 11.71s/it]Loading checkpoint shards: 100%|██████████| 29/29 [07:02<00:00, 14.56s/it]
+base: {'test': 0.030000001192092896, 'train': 0.03399999812245369, 'three_term': 0.007499999832361937, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (471s)
+lora none seed0: {'test': 0.27000001072883606, 'train': 0.6753333210945129, 'three_term': 0.0, 'three_digit': 0.004999999888241291, 'test_terse': 0.009000000543892384} (902s)
+lora helix seed0: {'test': 0.30100002884864807, 'train': 0.6673333048820496, 'three_term': 0.0024999999441206455, 'three_digit': 0.007499999832361937, 'test_terse': 0.014000000432133675} (1408s)
+lora helix_shuf seed0: {'test': 0.18000000715255737, 'train': 0.5213333368301392, 'three_term': 0.0024999999441206455, 'three_digit': 0.0024999999441206455, 'test_terse': 0.006000000052154064} (1906s)
+lora digit seed0: {'test': 0.26200002431869507, 'train': 0.6786666512489319, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.017000000923871994} (2402s)
+lora none seed1: {'test': 0.29200002551078796, 'train': 0.7459999918937683, 'three_term': 0.0024999999441206455, 'three_digit': 0.004999999888241291, 'test_terse': 0.009000000543892384} (2819s)
+lora helix seed1: {'test': 0.3330000042915344, 'train': 0.6766666769981384, 'three_term': 0.0024999999441206455, 'three_digit': 0.004999999888241291, 'test_terse': 0.012000000104308128} (3315s)
+lora helix_shuf seed1: {'test': 0.1940000057220459, 'train': 0.5113333463668823, 'three_term': 0.0024999999441206455, 'three_digit': 0.0024999999441206455, 'test_terse': 0.012000000104308128} (3811s)
+lora digit seed1: {'test': 0.2880000174045563, 'train': 0.7353333234786987, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.012000000104308128} (4308s)
+lora none seed2: {'test': 0.2710000276565552, 'train': 0.7353333234786987, 'three_term': 0.0, 'three_digit': 0.007499999832361937, 'test_terse': 0.007000000216066837} (4724s)
+lora helix seed2: {'test': 0.33000001311302185, 'train': 0.6959999799728394, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.012000000104308128} (5222s)
+lora helix_shuf seed2: {'test': 0.1850000023841858, 'train': 0.5659999847412109, 'three_term': 0.004999999888241291, 'three_digit': 0.0024999999441206455, 'test_terse': 0.009000000543892384} (5720s)
+lora digit seed2: {'test': 0.23400001227855682, 'train': 0.6473333239555359, 'three_term': 0.0, 'three_digit': 0.0024999999441206455, 'test_terse': 0.013000000268220901} (6217s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [8, 16, 24, 32], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.030 | 0.034 | 0.007 | 0.000 | 0.001 | - |
+| none | 3 | 0.278 ± 0.012 | 0.719 ± 0.038 | 0.001 ± 0.001 | 0.006 ± 0.001 | 0.008 ± 0.001 | 0.18 / 0.17 CKA@L32 helix 0.74 digit 0.58; emb helix 0.27 digit 0.44 |
+| helix | 3 | 0.321 ± 0.018 | 0.680 ± 0.015 | 0.002 ± 0.001 | 0.005 ± 0.002 | 0.013 ± 0.001 | 0.59 / 0.56 CKA@L32 helix 0.99 digit 0.65; emb helix 0.27 digit 0.44 |
+| helix_shuf | 3 | 0.186 ± 0.007 | 0.533 ± 0.029 | 0.003 ± 0.001 | 0.002 ± 0.000 | 0.009 ± 0.003 | -0.10 / -0.26 CKA@L32 helix 0.11 digit 0.17; emb helix 0.27 digit 0.44 |
+| digit | 3 | 0.261 ± 0.027 | 0.687 ± 0.045 | 0.001 ± 0.001 | 0.001 ± 0.001 | 0.014 ± 0.003 | 0.18 / 0.54 CKA@L32 helix 0.62 digit 0.99; emb helix 0.27 digit 0.44 |
+
+## rc=0  2026-09-30T01:28:30Z
