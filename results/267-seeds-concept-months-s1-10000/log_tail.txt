@@ -1,0 +1,27 @@
+## task 267-seeds-concept-months-s1-10000  job 3598  host b-19-64  2026-09-30T01:31:16Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.02it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.12it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.84it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.79it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.65it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.31it/s]
+base: {'train': 0.0, 'test': 0.0, 'ood': 0.0} geometry L16/emb: {'cka_circle': 0.5915794968605042, 'cka_circle_shuf': 0.27993014454841614, 'cka_line': 0.3003237247467041} {'cka_circle': 0.5183518528938293, 'cka_circle_shuf': 0.4043564796447754, 'cka_line': 0.36558160185813904} (119s)
+months none seed3: {'train': 0.484375, 'test': 0.2760416865348816, 'ood': 0.10000000149011612} (237s)
+months circle seed3: {'train': 0.6927083134651184, 'test': 0.3697916865348816, 'ood': 0.0833333358168602} (382s)
+months circle_shuf seed3: {'train': 0.1440972238779068, 'test': 0.0442708358168602, 'ood': 0.08666666597127914} (527s)
+months line seed3: {'train': 0.3489583432674408, 'test': 0.15625, 'ood': 0.09666667133569717} (672s)
+months none seed4: {'train': 0.5711805820465088, 'test': 0.2760416865348816, 'ood': 0.09000000357627869} (785s)
+months circle seed4: {'train': 0.741319477558136, 'test': 0.4270833432674408, 'ood': 0.08666666597127914} (924s)
+months circle_shuf seed4: {'train': 0.1614583283662796, 'test': 0.046875, 'ood': 0.05666666850447655} (1061s)
+months line seed4: {'train': 0.2986111044883728, 'test': 0.15625, 'ood': 0.13333334028720856} (1198s)
+# concept shaping: months (n = {'train': 576, 'test': 384, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.52, L16 CKA(circle) 0.59
+
+| geom | seeds | train | test | ood | CKA@L16 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.59 / 0.28 / 0.30 |
+| circle | 2 | 0.717 ± 0.034 | 0.398 ± 0.041 | 0.085 ± 0.002 | 1.00 / 0.13 / 0.45 |
+| circle_shuf | 2 | 0.153 ± 0.012 | 0.046 ± 0.002 | 0.072 ± 0.021 | 0.13 / 1.00 / 0.06 |
+| line | 2 | 0.324 ± 0.036 | 0.156 ± 0.000 | 0.115 ± 0.026 | 0.48 / 0.06 / 1.00 |
+| none | 2 | 0.528 ± 0.061 | 0.276 ± 0.000 | 0.095 ± 0.007 | 0.79 / 0.28 / 0.42 |
+
+## rc=0  2026-09-30T01:51:46Z
