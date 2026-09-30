@@ -1,0 +1,39 @@
+## task 255-mse-control-step928646-L13-lam0.1  job 3553  host b-19-54  2026-09-29T23:38:15Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  7.31it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  5.91it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  5.55it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  5.34it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  5.28it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  6.05it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.81it/s]
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.19it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  5.96it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  5.56it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  5.75it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  5.89it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  6.42it/s]
+targets ready (249s); |main| 11.6 |self| 13.7
+base {'test_add': 0.9980000257492065, 'test_sub': 0.9960000514984131, 'three_add': 0.38999998569488525, 'three_sub': 0.06749999523162842}
+none seed0: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.4050000011920929, 'three_sub': 0.2750000059604645} (350s)
+opid_main seed0: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0, 'three_sub': 0.0} (434s)
+run_main seed0: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0, 'three_sub': 0.009999999776482582} (517s)
+run_shuf seed0: {'test_add': 0.9440000653266907, 'test_sub': 1.0, 'three_add': 0.17499999701976776, 'three_sub': 0.03999999910593033} (599s)
+run_self seed0: {'test_add': 0.9860000610351562, 'test_sub': 0.9940000176429749, 'three_add': 0.2775000035762787, 'three_sub': 0.07249999791383743} (681s)
+run_random seed0: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0024999999441206455, 'three_sub': 0.0024999999441206455} (761s)
+none seed1: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.45249998569488525, 'three_sub': 0.25} (841s)
+opid_main seed1: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0, 'three_sub': 0.009999999776482582} (919s)
+run_main seed1: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0, 'three_sub': 0.007499999832361937} (997s)
+run_shuf seed1: {'test_add': 0.9980000257492065, 'test_sub': 1.0, 'three_add': 0.3824999928474426, 'three_sub': 0.0} (1074s)
+run_self seed1: {'test_add': 0.9080000519752502, 'test_sub': 0.9960000514984131, 'three_add': 0.12999999523162842, 'three_sub': 0.032499998807907104} (1152s)
+run_random seed1: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.0024999999441206455, 'three_sub': 0.0024999999441206455} (1230s)
+none seed2: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.5899999737739563, 'three_sub': 0.11749999970197678} (1307s)
+opid_main seed2: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.022499999031424522, 'three_sub': 0.017500000074505806} (1385s)
+run_main seed2: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.004999999888241291, 'three_sub': 0.0} (1463s)
+run_shuf seed2: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.042500000447034836, 'three_sub': 0.0} (1541s)
+run_self seed2: {'test_add': 0.9980000257492065, 'test_sub': 1.0, 'three_add': 0.1875, 'three_sub': 0.032499998807907104} (1618s)
+run_random seed2: {'test_add': 1.0, 'test_sub': 1.0, 'three_add': 0.14000000059604645, 'three_sub': 0.009999999776482582} (1696s)
+# pull-towards-main controls (layer 13, lam 0.1)
+
+| arm | seeds | test_add | test_sub | three_add | three_sub |
+|---|---|---|---|---|---|
+| base | - | 0.998 | 0.996 | 0.390 | 0.067 |
+| none | 3 | 1.000 ± 0.000 | 1.000 ± 0.000 | 0.482 ± 0.096 | 0.214 ± 0.085 |
+| opid_main | 3 | 1.000 ± 0.000 | 1.000 ± 0.000 | 0.007 ± 0.013 | 0.009 ± 0.009 |
+| run_main | 3 | 1.000 ± 0.000 | 1.000 ± 0.000 | 0.002 ± 0.003 | 0.006 ± 0.005 |
+| run_shuf | 3 | 0.981 ± 0.032 | 1.000 ± 0.000 | 0.200 ± 0.171 | 0.013 ± 0.023 |
+| run_self | 3 | 0.964 ± 0.049 | 0.997 ± 0.003 | 0.198 ± 0.074 | 0.046 ± 0.023 |
+| run_random | 3 | 1.000 ± 0.000 | 1.000 ± 0.000 | 0.048 ± 0.079 | 0.005 ± 0.004 |
+
+## rc=0  2026-09-30T00:07:16Z
