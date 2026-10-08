@@ -1,0 +1,85 @@
+## task 275-p1-geomdiag-7b-late  job 5741  host b-19-53  2026-10-08T06:04:19Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  5.41it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  4.35it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  4.32it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  4.27it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  4.20it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.72it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.53it/s]
+stage1-step50000-tokens210B: done (181s) emb kappa10 1.00 phi10 0.023 cka 0.65
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  5.59it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  4.26it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  3.55it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:01<00:00,  3.69it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  3.75it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.06it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  3.97it/s]
+stage1-step150000-tokens630B: done (168s) emb kappa10 1.00 phi10 0.020 cka 0.70
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:01,  4.83it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  4.38it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  4.64it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  4.81it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  5.05it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  6.02it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.30it/s]
+stage1-step400000-tokens1678B: done (132s) emb kappa10 1.00 phi10 0.017 cka 0.69
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:01,  4.39it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:01,  3.45it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  3.44it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:01<00:00,  3.23it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  3.45it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.17it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  3.78it/s]
+stage1-step928646-tokens3896B: done (179s) emb kappa10 1.00 phi10 0.014 cka 0.68
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:01,  4.81it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  4.07it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  4.15it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  4.08it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  4.13it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.65it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  4.39it/s]
+main: done (172s) emb kappa10 1.00 phi10 0.014 cka 0.68
+# P1: spectral vs geometric structure (digits 0..999; kappa = CV ridge classifier, Cohen's kappa)
+
+| ckpt | site | phi_10 | spike_10 | kappa mod2 / mod5 / mod10 | kappa mod3 / mod7 | kappa tens | CKA helix / digit |
+|---|---|---|---|---|---|---|---|
+| main | emb | 0.014 | 10.4 | 1.00 / 1.00 / 1.00 | 0.36 / -0.04 | 0.99 | 0.68 / 0.69 |
+| main | L4 | 0.017 | 14.7 | 1.00 / 1.00 / 1.00 | 0.40 / -0.02 | 0.98 | 0.75 / 0.61 |
+| main | L8 | 0.020 | 24.7 | 1.00 / 1.00 / 1.00 | 0.38 / -0.02 | 0.99 | 0.74 / 0.60 |
+| main | L12 | 0.031 | 43.4 | 1.00 / 1.00 / 1.00 | 0.41 / -0.08 | 0.99 | 0.75 / 0.65 |
+| main | L16 | 0.035 | 64.1 | 1.00 / 1.00 / 1.00 | 0.38 / -0.07 | 1.00 | 0.77 / 0.65 |
+| main | L24 | 0.030 | 57.7 | 1.00 / 0.99 / 1.00 | 0.24 / -0.08 | 1.00 | 0.71 / 0.58 |
+| stage1-step150000-tokens630B | emb | 0.020 | 15.9 | 1.00 / 1.00 / 1.00 | 0.18 / -0.03 | 0.99 | 0.70 / 0.71 |
+| stage1-step150000-tokens630B | L4 | 0.018 | 16.3 | 1.00 / 1.00 / 1.00 | 0.16 / -0.04 | 0.99 | 0.75 / 0.64 |
+| stage1-step150000-tokens630B | L8 | 0.018 | 17.7 | 1.00 / 1.00 / 1.00 | 0.13 / -0.03 | 0.99 | 0.74 / 0.59 |
+| stage1-step150000-tokens630B | L12 | 0.021 | 22.1 | 1.00 / 1.00 / 1.00 | 0.12 / -0.04 | 0.99 | 0.73 / 0.58 |
+| stage1-step150000-tokens630B | L16 | 0.022 | 26.4 | 1.00 / 0.99 / 1.00 | 0.10 / -0.06 | 0.99 | 0.72 / 0.53 |
+| stage1-step150000-tokens630B | L24 | 0.020 | 24.7 | 1.00 / 0.99 / 1.00 | 0.09 / -0.04 | 0.98 | 0.67 / 0.45 |
+| stage1-step400000-tokens1678B | emb | 0.017 | 12.3 | 1.00 / 1.00 / 1.00 | 0.25 / -0.03 | 0.99 | 0.69 / 0.70 |
+| stage1-step400000-tokens1678B | L4 | 0.015 | 12.3 | 1.00 / 1.00 / 1.00 | 0.23 / -0.03 | 1.00 | 0.74 / 0.64 |
+| stage1-step400000-tokens1678B | L8 | 0.017 | 14.7 | 1.00 / 1.00 / 1.00 | 0.22 / -0.02 | 0.99 | 0.73 / 0.62 |
+| stage1-step400000-tokens1678B | L12 | 0.021 | 18.7 | 1.00 / 1.00 / 1.00 | 0.21 / -0.03 | 0.99 | 0.73 / 0.64 |
+| stage1-step400000-tokens1678B | L16 | 0.026 | 27.9 | 1.00 / 1.00 / 1.00 | 0.19 / -0.03 | 0.99 | 0.76 / 0.62 |
+| stage1-step400000-tokens1678B | L24 | 0.025 | 31.4 | 1.00 / 0.99 / 1.00 | 0.13 / -0.06 | 0.99 | 0.74 / 0.58 |
+| stage1-step50000-tokens210B | emb | 0.023 | 19.2 | 1.00 / 0.98 / 1.00 | 0.13 / -0.02 | 0.97 | 0.65 / 0.72 |
+| stage1-step50000-tokens210B | L4 | 0.028 | 38.5 | 1.00 / 0.99 / 1.00 | 0.05 / -0.08 | 0.99 | 0.76 / 0.64 |
+| stage1-step50000-tokens210B | L8 | 0.025 | 35.6 | 1.00 / 0.99 / 1.00 | 0.07 / -0.07 | 0.99 | 0.75 / 0.60 |
+| stage1-step50000-tokens210B | L12 | 0.025 | 36.4 | 1.00 / 0.99 / 1.00 | 0.01 / -0.09 | 0.98 | 0.74 / 0.60 |
+| stage1-step50000-tokens210B | L16 | 0.024 | 34.6 | 1.00 / 0.99 / 1.00 | 0.01 / -0.09 | 0.99 | 0.72 / 0.56 |
+| stage1-step50000-tokens210B | L24 | 0.021 | 30.3 | 1.00 / 0.99 / 1.00 | -0.00 / -0.09 | 0.98 | 0.69 / 0.51 |
+| stage1-step928646-tokens3896B | emb | 0.014 | 10.4 | 1.00 / 1.00 / 1.00 | 0.33 / -0.04 | 1.00 | 0.68 / 0.69 |
+| stage1-step928646-tokens3896B | L4 | 0.016 | 12.7 | 1.00 / 1.00 / 1.00 | 0.28 / -0.05 | 0.99 | 0.75 / 0.61 |
+| stage1-step928646-tokens3896B | L8 | 0.018 | 16.9 | 1.00 / 1.00 / 1.00 | 0.30 / -0.06 | 0.99 | 0.74 / 0.58 |
+| stage1-step928646-tokens3896B | L12 | 0.024 | 25.4 | 1.00 / 1.00 / 1.00 | 0.25 / -0.06 | 0.98 | 0.75 / 0.63 |
+| stage1-step928646-tokens3896B | L16 | 0.030 | 37.7 | 1.00 / 1.00 / 1.00 | 0.27 / -0.06 | 0.99 | 0.76 / 0.62 |
+| stage1-step928646-tokens3896B | L24 | 0.028 | 38.2 | 1.00 / 1.00 / 1.00 | 0.20 / -0.07 | 0.99 | 0.73 / 0.58 |
+
+## same values 1..20: digits vs number words (kappa mod2 / mod5, phi_10 / spike_10 over n = 1..20)
+
+| ckpt | site | digits kappa2 / kappa5 | words kappa2 / kappa5 | digits phi10 / spike10 | words phi10 / spike10 |
+|---|---|---|---|---|---|
+| main | emb | 0.60 / 0.25 | 0.30 / 0.12 | 0.136 / 1.5 | 0.119 / 1.4 |
+| main | L4 | 0.60 / 0.31 | 0.50 / 0.31 | 0.138 / 1.7 | 0.126 / 1.7 |
+| main | L8 | 0.70 / 0.37 | 0.80 / 0.12 | 0.143 / 2.0 | 0.134 / 1.9 |
+| main | L12 | 0.80 / 0.50 | 0.80 / 0.31 | 0.149 / 2.1 | 0.149 / 2.1 |
+| main | L16 | 0.80 / 0.62 | 0.50 / 0.69 | 0.136 / 1.7 | 0.157 / 2.1 |
+| main | L24 | 0.50 / 0.31 | 0.50 / 0.00 | 0.124 / 1.6 | 0.142 / 1.9 |
+| stage1-step150000-tokens630B | emb | 0.70 / 0.37 | 0.40 / 0.19 | 0.135 / 1.5 | 0.121 / 1.4 |
+| stage1-step150000-tokens630B | L4 | 0.40 / 0.31 | 0.40 / 0.25 | 0.136 / 1.7 | 0.129 / 1.6 |
+| stage1-step150000-tokens630B | L8 | 0.40 / 0.31 | 0.40 / 0.19 | 0.139 / 1.7 | 0.141 / 1.9 |
+| stage1-step150000-tokens630B | L12 | 0.60 / 0.37 | 0.50 / 0.44 | 0.140 / 1.7 | 0.151 / 2.0 |
+| stage1-step150000-tokens630B | L16 | 0.50 / 0.31 | 0.50 / 0.37 | 0.141 / 1.8 | 0.154 / 1.8 |
+| stage1-step150000-tokens630B | L24 | 0.30 / 0.12 | 0.40 / 0.06 | 0.142 / 2.0 | 0.151 / 1.8 |
+| stage1-step400000-tokens1678B | emb | 0.70 / 0.37 | 0.30 / 0.12 | 0.135 / 1.5 | 0.121 / 1.5 |
+| stage1-step400000-tokens1678B | L4 | 0.60 / 0.06 | 0.50 / 0.19 | 0.137 / 1.7 | 0.127 / 1.6 |
+| stage1-step400000-tokens1678B | L8 | 0.60 / 0.25 | 0.60 / 0.19 | 0.145 / 1.8 | 0.142 / 2.0 |
+| stage1-step400000-tokens1678B | L12 | 0.70 / 0.50 | 0.70 / 0.44 | 0.159 / 1.9 | 0.154 / 2.1 |
+| stage1-step400000-tokens1678B | L16 | 0.60 / 0.56 | 0.60 / 0.44 | 0.149 / 1.7 | 0.156 / 2.0 |
+| stage1-step400000-tokens1678B | L24 | 0.50 / 0.19 | 0.40 / 0.12 | 0.143 / 1.7 | 0.151 / 1.9 |
+| stage1-step50000-tokens210B | emb | 0.60 / 0.31 | 0.40 / -0.00 | 0.132 / 1.4 | 0.124 / 1.4 |
+| stage1-step50000-tokens210B | L4 | 0.60 / 0.44 | 0.50 / 0.19 | 0.131 / 1.5 | 0.129 / 1.6 |
+| stage1-step50000-tokens210B | L8 | 0.50 / 0.31 | 0.40 / 0.12 | 0.136 / 1.7 | 0.133 / 1.7 |
+| stage1-step50000-tokens210B | L12 | 0.50 / 0.44 | 0.40 / 0.25 | 0.133 / 1.6 | 0.137 / 1.7 |
+| stage1-step50000-tokens210B | L16 | 0.40 / 0.37 | 0.60 / 0.37 | 0.130 / 1.6 | 0.149 / 1.8 |
+| stage1-step50000-tokens210B | L24 | 0.50 / -0.00 | 0.40 / 0.25 | 0.126 / 1.7 | 0.147 / 1.8 |
+| stage1-step928646-tokens3896B | emb | 0.60 / 0.25 | 0.30 / 0.12 | 0.136 / 1.5 | 0.119 / 1.4 |
+| stage1-step928646-tokens3896B | L4 | 0.50 / 0.25 | 0.50 / 0.31 | 0.136 / 1.7 | 0.124 / 1.6 |
+| stage1-step928646-tokens3896B | L8 | 0.40 / 0.25 | 0.50 / 0.31 | 0.142 / 2.0 | 0.136 / 1.9 |
+| stage1-step928646-tokens3896B | L12 | 0.70 / 0.50 | 0.60 / 0.44 | 0.150 / 2.0 | 0.150 / 2.0 |
+| stage1-step928646-tokens3896B | L16 | 0.50 / 0.69 | 0.40 / 0.62 | 0.149 / 1.8 | 0.156 / 1.9 |
+| stage1-step928646-tokens3896B | L24 | 0.60 / 0.19 | 0.50 / 0.00 | 0.141 / 1.7 | 0.146 / 1.7 |
+
+## rc=0  2026-10-08T06:18:50Z
