@@ -1,0 +1,163 @@
+{
+ "domain": "months",
+ "items": [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+ ],
+ "n": {
+  "train": 576,
+  "test": 384,
+  "ood": 300
+ },
+ "eval": {
+  "train": 0.0,
+  "test": 0.0,
+  "ood": 0.0
+ },
+ "geometry": {
+  "L4": {
+   "cka_circle": 0.6340123414993286,
+   "cka_circle_shuf": 0.326873779296875,
+   "cka_line": 0.42894816398620605
+  },
+  "L8": {
+   "cka_circle": 0.624640941619873,
+   "cka_circle_shuf": 0.30922940373420715,
+   "cka_line": 0.3831073045730591
+  },
+  "L12": {
+   "cka_circle": 0.636004626750946,
+   "cka_circle_shuf": 0.2773347795009613,
+   "cka_line": 0.35935619473457336
+  },
+  "L16": {
+   "cka_circle": 0.5703195929527283,
+   "cka_circle_shuf": 0.2623816728591919,
+   "cka_line": 0.29532891511917114
+  },
+  "emb": {
+   "cka_circle": 0.5399752259254456,
+   "cka_circle_shuf": 0.40906432271003723,
+   "cka_line": 0.38764140009880066
+  },
+  "prompt": {
+   "train": {
+    "L12": {
+     "cka_sum_helix": 0.502690315246582,
+     "cka_sum_helix_shuf": 0.058601900935173035,
+     "cka_out_circle": 0.03485334664583206
+    },
+    "L16": {
+     "cka_sum_helix": 0.48008134961128235,
+     "cka_sum_helix_shuf": 0.06394445896148682,
+     "cka_out_circle": 0.03350340202450752
+    },
+    "L20": {
+     "cka_sum_helix": 0.44181498885154724,
+     "cka_sum_helix_shuf": 0.0706808790564537,
+     "cka_out_circle": 0.03455457463860512
+    },
+    "L24": {
+     "cka_sum_helix": 0.4295073449611664,
+     "cka_sum_helix_shuf": 0.07310056686401367,
+     "cka_out_circle": 0.036685895174741745
+    },
+    "L28": {
+     "cka_sum_helix": 0.4205537438392639,
+     "cka_sum_helix_shuf": 0.07290130853652954,
+     "cka_out_circle": 0.03559432551264763
+    }
+   },
+   "test": {
+    "L12": {
+     "cka_sum_helix": 0.547603189945221,
+     "cka_sum_helix_shuf": 0.10770256817340851,
+     "cka_out_circle": 0.036247383803129196
+    },
+    "L16": {
+     "cka_sum_helix": 0.5214027762413025,
+     "cka_sum_helix_shuf": 0.10434935241937637,
+     "cka_out_circle": 0.036709852516651154
+    },
+    "L20": {
+     "cka_sum_helix": 0.49334293603897095,
+     "cka_sum_helix_shuf": 0.09886381775140762,
+     "cka_out_circle": 0.03752696141600609
+    },
+    "L24": {
+     "cka_sum_helix": 0.4797150492668152,
+     "cka_sum_helix_shuf": 0.09604111313819885,
+     "cka_out_circle": 0.038186196237802505
+    },
+    "L28": {
+     "cka_sum_helix": 0.47337663173675537,
+     "cka_sum_helix_shuf": 0.09000792354345322,
+     "cka_out_circle": 0.03653055056929588
+    }
+   },
+   "sum_layers": [
+    12,
+    16,
+    20
+   ],
+   "out_layers": [
+    24,
+    28
+   ]
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: June minus 17 months is",
+    " January"
+   ],
+   [
+    "Q: November plus 17 months is",
+    " April"
+   ],
+   [
+    "Q: May plus 13 months is",
+    " June"
+   ]
+  ],
+  "test": [
+   [
+    "Q: June plus 3 months is",
+    " September"
+   ],
+   [
+    "Q: December plus 16 months is",
+    " April"
+   ],
+   [
+    "Q: January plus 1 months is",
+    " February"
+   ]
+  ],
+  "ood": [
+   [
+    "Q: July plus 46 months is",
+    " May"
+   ],
+   [
+    "Q: April minus 73 months is",
+    " March"
+   ],
+   [
+    "Q: October minus 69 months is",
+    " January"
+   ]
+  ]
+ }
+}
