@@ -98,24 +98,27 @@ def parse_prompt(p: str, items: list):
 
 
 def prompt_targets(dom: dict, items: list, data: dict, evalsets: dict, rng_seed: int, dev):
-    """Target Grams of the prompt-state geometries on a fixed batch of 96 prompts each from train and test."""
+    """Target Grams of the prompt-state geometries on a fixed batch of 96 prompts each from train and test, and a
+    builder for the targets of any batch of train prompts."""
     n, K = len(items), dom["kmax"]
     s_all = np.arange(-K, n + K)
     s_perm = dict(zip(s_all, np.random.default_rng(321).permutation(s_all)))
-    rng = np.random.default_rng(rng_seed)
-    targets, batch = {}, {}
-    for which in ("train", "test"):
-        rows = np.sort(rng.choice(len(data[which]), 96, replace=False))
-        meta = np.array([parse_prompt(data[which][r][0], items) for r in rows])
-        s = meta[:, 1]
+    def grams(s):
         j = s % n
-        targets[which] = {
+        return {
             "sum_helix": centred_gram(nl.features(s)[0], dev),
             "sum_helix_shuf": centred_gram(nl.features(np.array([s_perm[v] for v in s]))[0], dev),
             "out_circle": centred_gram(np.stack([np.cos(2 * np.pi * j / n), np.sin(2 * np.pi * j / n)], 1), dev),
         }
+
+    rng = np.random.default_rng(rng_seed)
+    targets, batch = {}, {}
+    for which in ("train", "test"):
+        rows = np.sort(rng.choice(len(data[which]), 96, replace=False))
+        targets[which] = grams(np.array([parse_prompt(data[which][r][0], items)[1] for r in rows]))
         batch[which] = evalsets[which][0][torch.tensor(rows, device=evalsets[which][0].device)]
-    return targets, batch
+    s_train = np.array([parse_prompt(p, items)[1] for p, _ in data["train"]])
+    return targets, batch, (lambda rows: grams(s_train[rows]))   # last: targets of any train rows (--presample)
 
 
 def build_data(dom: dict, items: list, vals: np.ndarray, rng) -> dict:
@@ -159,6 +162,8 @@ def main() -> None:
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--layers", default="4,8,12,16")
     ap.add_argument("--lam", type=float, default=20.0)
+    ap.add_argument("--plam", type=float, default=None, help="weight of the prompt-state geometries (default: --lam)")
+    ap.add_argument("--presample", action="store_true", help="prompt-state geometries on a fresh batch of 96 train prompts every step (default: one fixed batch)")
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--bs", type=int, default=16)
@@ -215,7 +220,7 @@ def main() -> None:
     out_layers = [int(v) for v in args.out_layers.split(",")] if args.out_layers else [round(nL * f) for f in (3 / 4, 7 / 8)]
     prompt_on = dom["kind"] == "cyclic"
     if prompt_on:
-        ptargets, pbatch = prompt_targets(dom, items, data, evalsets, rng_seed=55, dev=dev)
+        ptargets, pbatch, pgrams = prompt_targets(dom, items, data, evalsets, rng_seed=55, dev=dev)
     store: dict = {}
     for L in sorted(set(man_layers) | (set(sum_layers) | set(out_layers) if prompt_on else set())):
         layers[L].register_forward_hook(lambda _m, _i, o, L=L: store.__setitem__(L, nl._hidden(o)))
@@ -233,10 +238,17 @@ def main() -> None:
         forward(pbatch[which])
         return {L: store[L][:, -1, :] for L in sorted(set(sum_layers) | set(out_layers))}
 
+    presample_rng = np.random.default_rng(0)   # re-seeded per run below
+
     def geo_loss(G):
         if G in PROMPT_GEOMS:
-            Hs = prompt_states("train")
             Ls = out_layers if G == "out_circle" else sum_layers
+            if args.presample:
+                rows = np.sort(presample_rng.choice(len(train_ids), 96, replace=False))
+                forward(train_ids[torch.tensor(rows, device=dev)])
+                K = pgrams(rows)[G]
+                return sum(1 - cka(store[L][:, -1, :], K) for L in Ls) / len(Ls)
+            Hs = prompt_states("train")
             return sum(1 - cka(Hs[L], ptargets["train"][G]) for L in Ls) / len(Ls)
         Hs = geo_states()
         return sum(1 - cka(H, targets[G]) for H in Hs.values()) / len(Hs)
@@ -298,6 +310,7 @@ def main() -> None:
             reset(seed)
             opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr, weight_decay=0.0)
             order_rng = np.random.default_rng(1000 + seed)
+            presample_rng = np.random.default_rng(2000 + seed)
             log = []
             model.train()
             for ep in range(epochs):
@@ -313,7 +326,7 @@ def main() -> None:
                             gl = geo_loss(dom["targets"][0])
                     else:
                         gl = geo_loss(G)
-                        loss = ce + args.lam * gl
+                        loss = ce + (args.plam if (G in PROMPT_GEOMS and args.plam is not None) else args.lam) * gl
                     loss.backward()
                     opt.step()
                     ce_s += float(ce.detach()); g_s += float(gl.detach()); nb += 1
@@ -322,7 +335,7 @@ def main() -> None:
             preds = {} if args.save_preds else None
             ev = evaluate(preds)
             rt = route(f"{G} seed{seed}") if G in route_arms else None
-            path.write_text(json.dumps({"domain": args.domain, "geom": G, "seed": seed, "lam": args.lam, "lr": args.lr,
+            path.write_text(json.dumps({"domain": args.domain, "geom": G, "seed": seed, "lam": args.lam, "plam": args.plam, "presample": args.presample, "lr": args.lr,
                                         "epochs": epochs, "layers": man_layers, "train_log": log, "eval": ev,
                                         "geometry": geometry_report(), "preds": preds, "route": rt}, indent=1))
             print(f"{args.domain} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
