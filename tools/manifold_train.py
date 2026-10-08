@@ -17,6 +17,16 @@ Geometries G: none (task only) | helix | helix_shuf | digit | digit_shuf. "_shuf
        numbers at the same layer (or its embedding rows with --geo_site emb): --main_model's (a later, more
        mature checkpoint) or this checkpoint's own before training ("self": an anchor that only resists drift).
        "3" variants (helix3, digit3, main3, ...) run over 10..999, sampled per step.
+       Spectrum vs separability (Fu et al., arXiv 2604.20817: a Fourier spike at 1/T does not make n mod T
+       linearly separable):
+       helix_nonsep  the helix plus fixed noise in its T = 2, 5, 10 columns that has no power at any helix
+                     frequency: same spike at 1/T, but n mod T is no longer linearly separable in the target
+                     (B = 3: kappa mod 2/5/10 1.0 -> ~0, power at 1/T unchanged, CKA to the helix 0.51);
+       helix_coarse  only the T = 100 pair and x/100 of the helix (no spike at 1/2, 1/5, 1/10, no separability):
+                     the part of helix_nonsep that is still clean, i.e. its control;
+       sep_ce        no shape target: leave-one-out nearest-class-mean cross-entropy of n mod 2, 5, 10 and the
+                     tens digit on the same states (separability only; parameter-free, so unlike a trainable
+                     linear head on 90 points in d dimensions it cannot be satisfied without moving the states).
 Tasks (--task add|sub) and splits (--split random | holdout_operand: 15 operand values never seen in training |
        carry: train without a units carry/borrow, test only with one); --save_preds keeps every eval answer.
 Methods (--mode): lora (r=8, all linear layers) | reft (low-rank edit of the operand states at the
@@ -42,7 +52,7 @@ import torch.nn.functional as Fn
 
 import numlib as nl
 
-GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf")
+GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse", "sep_ce")
 # three-digit geometries over 10..999 (sampled per step, see --geo_sample)
 GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
 # learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
@@ -64,12 +74,50 @@ def three_prompt(a, b, c, op="+"): return f"Q: {a} {op} {b} {op} {c} = "
 def terse_prompt(a, b, op="+"): return f"{nl.PREFIX}{a}{op}{b}="
 
 
+NONSEP_B = 3.0
+
+
+def nonsep_noise(B: float = NONSEP_B) -> np.ndarray:
+    """[90, 5] fixed noise for the T = 2, 5, 10 columns of the helix of 10..99 (rows x - 10): projected off the
+    constant and every helix column, so it has no power at 1/2, 1/5, 1/10 (exact DFT bins of 90 points)."""
+    Hb = np.concatenate([np.ones((90, 1)), nl.features(np.arange(10, 100))[0]], 1)
+    g = np.random.default_rng(77).standard_normal((90, 5))
+    Q = np.linalg.qr(Hb)[0]
+    g = g - Q @ (Q.T @ g)
+    return B * g / g.std(0)
+
+
+def sep_ce_loss(H: torch.Tensor, xs: torch.Tensor, scale: float = 0.1) -> torch.Tensor:
+    """Mean over labels (n mod 2, 5, 10, tens digit) of the leave-one-out nearest-class-mean cross-entropy:
+    logit_c(i) = -|h_i - mean_{j in c, j != i} h_j|^2 / (scale * mean_i |h_i - mean h|^2)."""
+    H = H.float()
+    H = H - H.mean(0)
+    tau = scale * (H ** 2).sum(1).mean()
+    loss = 0.0
+    labels = (xs % 2, xs % 5, xs % 10, (xs // 10) % 10)
+    for y in labels:
+        C = int(y.max()) + 1
+        Y = Fn.one_hot(y, C).float()                       # [n, C]
+        S, cnt = Y.T @ H, Y.sum(0)                          # class sums, counts
+        mu = (S[None] - Y[:, :, None] * H[:, None]) / (cnt[None] - Y).clamp_min(1)[:, :, None]   # LOO means [n, C, d]
+        d2 = ((H[:, None] - mu) ** 2).sum(-1)
+        logits = (-d2 / tau).masked_fill((cnt == 0)[None], float("-inf"))   # classes absent from xs (tens digit 0)
+        loss = loss + Fn.cross_entropy(logits, y)
+    return loss / len(labels)
+
+
 def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
     x = np.asarray(x)
     if G.endswith("_shuf"):
         x = perm[x]; G = G[: -len("_shuf")]
     if G == "helix":
         return nl.features(x)[0]
+    if G == "helix_coarse":
+        return nl.features(x, periods=(100,))[0]
+    if G == "helix_nonsep":
+        F = nl.features(x)[0]
+        F[:, :5] += nonsep_noise()[x - 10]
+        return F
     if G == "digit":
         return np.concatenate([np.eye(10)[x // 10], np.eye(10)[x % 10]], 1)
     if G == "helix3":
@@ -89,7 +137,7 @@ def cka(H: torch.Tensor, K_F: torch.Tensor) -> torch.Tensor:
 def target_grams(perm: np.ndarray, dev) -> dict:
     """Centred Gram matrices of the ideal coordinates of 10..99 for every two-digit geometry."""
     out = {}
-    for G in ("helix", "helix_shuf", "digit", "digit_shuf"):
+    for G in ("helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse"):
         F = geom_features(G, np.arange(10, 100), perm)
         F = F[:, F.std(0) > 1e-9]
         F = (F - F.mean(0)) / F.std(0)
@@ -227,6 +275,7 @@ def main() -> None:
     ap.add_argument("--emb_init", choices=("orig", "main", "main_shuf", "main_shape", "main_shape_shuf"), default="orig",
                     help="replace the number-token rows 0..999 of the input embedding before training: main = Procrustes-aligned rows of --main_model, main_shuf = same rows shuffled among the numbers")
     ap.add_argument("--main_model", default=None)
+    ap.add_argument("--sep_lam", type=float, default=1.0, help="weight of the sep_ce loss (replaces --lam for that arm)")
     ap.add_argument("--geo_sample", type=int, default=180, help="numbers per step for the 10..999 geometries (helix3/digit3)")
     ap.add_argument("--task", choices=("add", "sub"), default="add", help="sub: a - b with a >= b (answers stay single tokens)")
     ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
@@ -489,6 +538,9 @@ def main() -> None:
         else:
             xs = geo_xs2
         Hs = geo_states(reft, xs)
+        if G == "sep_ce":
+            ys = torch.arange(10, 100, device=dev) if xs is None else xs
+            return sum(sep_ce_loss(H, ys) for H in Hs.values()) / len(Hs)
         return sum(1 - cka(Hs[L], target_gram(G, L, xs)) for L in Hs) / len(Hs)
 
     @torch.no_grad()
@@ -499,6 +551,13 @@ def main() -> None:
         Hs = {L: store[L][:, slot_pos["A"], :].to(dev) for L in man_layers}
         Hs["emb"] = number_embedding_rows()
         rep = {key(L): {"cka_" + G: float(cka(H, grams[G])) for G in grams} for L, H in Hs.items()}
+        from geom_diag import kappa   # linear separability of n mod T (CV ridge classifier), see sep_ce
+        x90 = np.arange(10, 100)
+        for L, H in Hs.items():
+            Hn = H.float().cpu().numpy()
+            rep[key(L)].update({f"kappa_mod{T}": kappa(Hn, x90 % T) for T in (2, 5, 10)})
+            rep[key(L)]["kappa_tens"] = kappa(Hn, x90 // 10)
+            rep[key(L)]["sep_ce"] = float(sep_ce_loss(H, torch.tensor(x90, device=H.device)))
         for src in teach:
             for L, H in Hs.items():
                 rep[key(L)]["cka_" + src] = float(cka(H, gram_of(teach[src][L][10:100])))
@@ -550,7 +609,7 @@ def main() -> None:
                             loss = ce
                         else:
                             ml = geo_loss(G, reft=True)
-                            loss = ce + args.lam * ml
+                            loss = ce + (args.sep_lam if G == "sep_ce" else args.lam) * ml
                     loss.backward()
                     opt.step()
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1

@@ -11,6 +11,13 @@ geometry prefix "Q: <item>" equals its state inside every task prompt):
 The number-word and Roman domains keep the geometry of the digit domain but change the surface form (rarer
 tokens): does their manifold form later, and does the benefit window close later?
 
+Prompt-state targets (cyclic domains; P2/P3, after "Arithmetic in the Wild", arXiv 2605.01148, where Llama adds
+days and months on its base-10 number line instead of on a circle). Shaped: the FINAL-token state of a fixed
+batch of 96 training prompts, not the item state:
+  sum_helix       layers 3/8, 1/2, 5/8 of the depth -> helix of the signed pre-mod sum s = i +- k (number route)
+  sum_helix_shuf  the same with s permuted (same basis, wrong values)
+  out_circle      layers 3/4, 7/8 -> circle of the answer index (i +- k) mod n (result on the cycle)
+
     python tools/concept_train.py --model <dir> --out <dir> --domain days --seeds 0,1,2
 """
 
@@ -78,6 +85,37 @@ def centred_gram(F: np.ndarray, dev) -> torch.Tensor:
     return Ft @ Ft.T
 
 
+PROMPT_GEOMS = ("sum_helix", "sum_helix_shuf", "out_circle")
+
+
+def parse_prompt(p: str, items: list):
+    """'Q: Friday plus 3 days is' -> (item index, signed pre-mod sum i +- k)."""
+    w = p.split()
+    i, k = items.index(w[1]), int(w[3])
+    return i, (i + k if w[2] == "plus" else i - k)
+
+
+def prompt_targets(dom: dict, items: list, data: dict, evalsets: dict, rng_seed: int, dev):
+    """Target Grams of the prompt-state geometries on a fixed batch of 96 prompts each from train and test."""
+    n, K = len(items), dom["kmax"]
+    s_all = np.arange(-K, n + K)
+    s_perm = dict(zip(s_all, np.random.default_rng(321).permutation(s_all)))
+    rng = np.random.default_rng(rng_seed)
+    targets, batch = {}, {}
+    for which in ("train", "test"):
+        rows = np.sort(rng.choice(len(data[which]), 96, replace=False))
+        meta = np.array([parse_prompt(data[which][r][0], items) for r in rows])
+        s = meta[:, 1]
+        j = s % n
+        targets[which] = {
+            "sum_helix": centred_gram(nl.features(s)[0], dev),
+            "sum_helix_shuf": centred_gram(nl.features(np.array([s_perm[v] for v in s]))[0], dev),
+            "out_circle": centred_gram(np.stack([np.cos(2 * np.pi * j / n), np.sin(2 * np.pi * j / n)], 1), dev),
+        }
+        batch[which] = evalsets[which][0][torch.tensor(rows, device=evalsets[which][0].device)]
+    return targets, batch
+
+
 def build_data(dom: dict, items: list, vals: np.ndarray, rng) -> dict:
     """{split: [(prompt, answer_string)]}: train / test (unseen combinations) and, for cyclic domains, ood (larger shifts)."""
     probs = []
@@ -124,12 +162,14 @@ def main() -> None:
     ap.add_argument("--bs", type=int, default=16)
     ap.add_argument("--steps", type=int, default=280, help="optimizer steps per run (epochs = ceil(steps * bs / n_train))")
     ap.add_argument("--eval_bs", type=int, default=256)
+    ap.add_argument("--sum_layers", default=None, help="final-token layers of sum_helix* (default 3/8, 1/2, 5/8 of the depth)")
+    ap.add_argument("--out_layers", default=None, help="final-token layers of out_circle (default 3/4, 7/8 of the depth)")
     ap.add_argument("--save_preds", action="store_true")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     dom = DOMAINS[args.domain]
     geoms = (args.geoms.split(",") if args.geoms else ["none", *dom["targets"]])
-    assert all(G == "none" or G in dom["targets"] for G in geoms), geoms
+    assert all(G == "none" or G in dom["targets"] or (G in PROMPT_GEOMS and dom["kind"] == "cyclic") for G in geoms), geoms
     seeds = [int(s) for s in args.seeds.split(",")]
     man_layers = [int(v) for v in args.layers.split(",")]
     t0 = time.time()
@@ -167,8 +207,14 @@ def main() -> None:
         if p.requires_grad:
             p.data = p.data.float()
     layers = decoder_layers(model)
+    nL = len(layers)
+    sum_layers = [int(v) for v in args.sum_layers.split(",")] if args.sum_layers else [round(nL * f) for f in (3 / 8, 1 / 2, 5 / 8)]
+    out_layers = [int(v) for v in args.out_layers.split(",")] if args.out_layers else [round(nL * f) for f in (3 / 4, 7 / 8)]
+    prompt_on = dom["kind"] == "cyclic"
+    if prompt_on:
+        ptargets, pbatch = prompt_targets(dom, items, data, evalsets, rng_seed=55, dev=dev)
     store: dict = {}
-    for L in man_layers:
+    for L in sorted(set(man_layers) | (set(sum_layers) | set(out_layers) if prompt_on else set())):
         layers[L].register_forward_hook(lambda _m, _i, o, L=L: store.__setitem__(L, nl._hidden(o)))
     emb_mod = model.get_input_embeddings()
     item_tok = prefix[:, SLOT]
@@ -180,7 +226,15 @@ def main() -> None:
         forward(prefix)
         return {L: store[L][:, SLOT, :] for L in man_layers}
 
+    def prompt_states(which):
+        forward(pbatch[which])
+        return {L: store[L][:, -1, :] for L in sorted(set(sum_layers) | set(out_layers))}
+
     def geo_loss(G):
+        if G in PROMPT_GEOMS:
+            Hs = prompt_states("train")
+            Ls = out_layers if G == "out_circle" else sum_layers
+            return sum(1 - cka(Hs[L], ptargets["train"][G]) for L in Ls) / len(Ls)
         Hs = geo_states()
         return sum(1 - cka(H, targets[G]) for H in Hs.values()) / len(Hs)
 
@@ -188,7 +242,14 @@ def main() -> None:
     def geometry_report() -> dict:
         model.eval()
         Hs = geo_states(); Hs["emb"] = emb_mod.weight[item_tok].float()
-        return {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, K)) for G, K in targets.items()} for L, H in Hs.items()}
+        rep = {(f"L{L}" if L != "emb" else "emb"): {"cka_" + G: float(cka(H, K)) for G, K in targets.items()} for L, H in Hs.items()}
+        if prompt_on:   # final-token geometry on the fixed train batch and on 96 test prompts
+            rep["prompt"] = {}
+            for which in ("train", "test"):
+                Ps = prompt_states(which)
+                rep["prompt"][which] = {f"L{L}": {"cka_" + G: float(cka(H, K)) for G, K in ptargets[which].items()} for L, H in Ps.items()}
+            rep["prompt"]["sum_layers"], rep["prompt"]["out_layers"] = sum_layers, out_layers
+        return rep
 
     @torch.no_grad()
     def evaluate(preds=None) -> dict:
@@ -269,6 +330,11 @@ def summarize(out: Path) -> None:
             v = np.array([r["eval"][k] for r in rs])
             cells.append(f"{v.mean():.3f} ± {v.std(ddof=1) if len(v) > 1 else 0:.3f}")
         c = " / ".join(f"{np.mean([r['geometry'][Lk]['cka_' + g] for r in rs]):.2f}" for g in tg)
+        if "prompt" in rs[0]["geometry"]:   # final-token geometry on held-out (test) prompts
+            pr = [r["geometry"]["prompt"] for r in rs]
+            sL, oL = f"L{pr[0]['sum_layers'][1]}", f"L{pr[0]['out_layers'][0]}"
+            c += (f"; test prompts: sum_helix@{sL} {np.mean([q['test'][sL]['cka_sum_helix'] for q in pr]):.2f}"
+                  f" out_circle@{oL} {np.mean([q['test'][oL]['cka_out_circle'] for q in pr]):.2f}")
         lines.append(f"| {G} | {len(rs)} | " + " | ".join(cells) + f" | {c} |\n")
     (out / "summary.md").write_text("".join(lines))
     print("".join(lines))
