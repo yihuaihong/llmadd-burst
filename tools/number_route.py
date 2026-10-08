@@ -20,7 +20,11 @@ read-outs per checkpoint, all with permutation nulls:
    embedding, and the "Q: x" state of every probed layer, against 2000 item permutations; linear CKA between the
    item set and the number window as a rotation-invariant version. Number words one..twenty are the positive control.
 
-    python tools/number_route.py --out <dir> <ckpt_dir> [<ckpt_dir> ...]
+Zero-shot, base checkpoints barely solve the domain prompts (<= 5%), so the sum route is also run with
+--shots N (a prefix of N solved prompts of the same domain, never numeric ones) and, through analyze(),
+on fine-tuned models (concept_train.py --route).
+
+    python tools/number_route.py --out <dir> [--shots 4] <ckpt_dir> [<ckpt_dir> ...]
 """
 
 from __future__ import annotations
@@ -186,10 +190,96 @@ def alignment(E_items: np.ndarray, E_nums: np.ndarray, rng) -> dict:
     return out
 
 
+def shot_prefix(dname: str, shots: int) -> str:
+    """Few-shot prefix of `shots` solved prompts of the domain itself (never numeric ones, which would prime the
+    number route); fixed per domain, shared by the numeric fit prompts and the domain prompts."""
+    if shots <= 0:
+        return ""
+    D = DOMAINS[dname]
+    items, n = D["items"], len(D["items"])
+    rng = np.random.default_rng(11)
+    lines = []
+    while len(lines) < shots:
+        i, k = int(rng.integers(n)), int(rng.choice(list(D["ks"])))
+        if dname == "numwords":
+            ans = str(i + 1 + k)
+        else:
+            j = (i + k) % n if D["cyclic"] else i + k
+            if j >= n:
+                continue
+            ans = items[j]
+        lines.append(f"{prompt(items[i], k, D['unit'])} {ans}\n")
+    return "".join(lines)
+
+
+def analyze(model, tok, doms, layers, dev, rng, shots: int = 0, log=print) -> dict:
+    """All three read-outs for one model (a base checkpoint, or a fine-tuned one with its adapter active)."""
+    t0 = time.time()
+    num_ids = nl.number_token_ids(tok, 199)
+    E_in = model.get_input_embeddings().weight.detach().float().cpu().numpy()
+    E_out = model.get_output_embeddings().weight.detach().float().cpu().numpy()
+    res = {"layers": layers, "shots": shots, "operand": {}, "sum": {}, "align": {}}
+
+    # operand route: "Q: n" -> helix(n), applied to "Q: item"
+    S_num, _ = run(model, tok, [f"Q: {v}" for v in CANDS], layers, dev)
+    op_dec = {L: fit_decoder(S_num[L], CANDS, CANDS, dev, folds=10) for L in layers}
+    for dname in doms:
+        D = DOMAINS[dname]
+        items, n = D["items"], len(D["items"])
+        ids = [tok(" " + w, add_special_tokens=False)["input_ids"] for w in items]
+        assert all(len(t) == 1 for t in ids), (dname, ids)
+        ids = np.array([t[0] for t in ids])
+        S_it, _ = run(model, tok, [f"Q: {w}" for w in items], layers, dev)
+        res["operand"][dname] = {}
+        for L in layers:
+            dec, acc, acc1 = op_dec[L]
+            v = dec(S_it[L])
+            rho = float(np.corrcoef(np.argsort(np.argsort(v)), np.arange(n))[0, 1]) if np.ptp(v) > 0 else 0.0
+            res["operand"][dname][f"L{L}"] = {"probe_acc": acc, "probe_acc1": acc1, "decoded": v.tolist(), "spearman": rho}
+
+        # alignment: embeddings and "Q: x" states, item i vs number i + o
+        al = {"emb_in": alignment(E_in[ids], E_in[num_ids[:n + 1]], rng),
+              "emb_out": alignment(E_out[ids], E_out[num_ids[:n + 1]], rng)}
+        for L in layers:
+            al[f"L{L}"] = alignment(S_it[L], S_num[L][:n + 1], rng)
+        res["align"][dname] = al
+
+        # sum route (the few-shot prefix, if any, precedes both the numeric fit prompts and the domain prompts)
+        pre = shot_prefix(dname, shots)
+        ks = np.array(list(D["ks"]))
+        A, K = np.meshgrid(np.arange(60), ks, indexing="ij")
+        A, K = A.ravel(), K.ravel()
+        S_fit, _ = run(model, tok, [pre + prompt(a, k, D["unit"]) for a, k in zip(A, K)], layers, dev)
+        I, KK = np.meshgrid(np.arange(n), ks, indexing="ij")
+        I, KK = I.ravel(), KK.ravel()
+        S_dom, nxt = run(model, tok, [pre + prompt(items[i], k, D["unit"]) for i, k in zip(I, KK)], layers, dev)
+        if dname == "numwords":
+            correct, ok = None, None   # the answer starts with a bare space token
+        else:
+            ans = (I + KK) % n if D["cyclic"] else I + KK
+            ok = ans < n
+            correct = ok & (nxt == ids[np.minimum(ans, n - 1)])
+        rs = {"model_acc": None if correct is None else float(correct[ok].mean()), "prefix": pre, "layers": {}}
+        for L in layers:
+            dec, acc, acc1 = fit_decoder(S_fit[L], A + K, A, dev)
+            sh = dec(S_dom[L])
+            st = route_stats(sh, I, KK, n, D["cyclic"])
+            st.update(probe_acc=acc, probe_acc1=acc1, null=null_stats(sh, I, KK, n, D["cyclic"], rng),
+                      decoded_hist=np.bincount(sh, minlength=200).tolist())
+            if correct is not None and correct.sum() >= 20 and (ok & ~correct).sum() >= 20:
+                st["by_correct"] = {c: route_stats(sh[m], I[m], KK[m], n, D["cyclic"])
+                                    for c, m in (("correct", correct), ("wrong", ok & ~correct))}
+            rs["layers"][f"L{L}"] = st
+        res["sum"][dname] = rs
+        log(f"route {dname}: model_acc {rs['model_acc']} ({time.time() - t0:.0f}s)")
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
     ap.add_argument("--domains", default=",".join(DOMAINS))
+    ap.add_argument("--shots", type=int, default=0, help="few-shot prefix of solved domain prompts for the sum route")
     ap.add_argument("ckpts", nargs="+")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
@@ -201,75 +291,15 @@ def main() -> None:
         path = out / f"route_{name}.json"
         if path.exists():
             continue
-        t0 = time.time()
-        rng = np.random.default_rng(0)
         tok = AutoTokenizer.from_pretrained(ck)
         model = AutoModelForCausalLM.from_pretrained(ck, torch_dtype=torch.bfloat16).to(dev)
         model.config.use_cache = False
         nL = model.config.num_hidden_layers
-        layers = list(range(2, nL, 2))
-        num_ids = nl.number_token_ids(tok, 199)
-        E_in = model.get_input_embeddings().weight.detach().float().cpu().numpy()
-        E_out = model.get_output_embeddings().weight.detach().float().cpu().numpy()
-        res = {"ckpt": ck, "n_layers": nL, "layers": layers, "operand": {}, "sum": {}, "align": {}}
-
-        # operand route: "Q: n" -> helix(n), applied to "Q: item"
-        S_num, _ = run(model, tok, [f"Q: {v}" for v in CANDS], layers, dev)
-        op_dec = {}
-        for L in layers:
-            dec, acc, acc1 = fit_decoder(S_num[L], CANDS, CANDS, dev, folds=10)
-            op_dec[L] = (dec, acc, acc1)
-        for dname in doms:
-            D = DOMAINS[dname]
-            items, n = D["items"], len(D["items"])
-            ids = [tok(" " + w, add_special_tokens=False)["input_ids"] for w in items]
-            assert all(len(t) == 1 for t in ids), (dname, ids)
-            ids = np.array([t[0] for t in ids])
-            S_it, _ = run(model, tok, [f"Q: {w}" for w in items], layers, dev)
-            res["operand"][dname] = {}
-            for L in layers:
-                dec, acc, acc1 = op_dec[L]
-                v = dec(S_it[L])
-                rho = float(np.corrcoef(np.argsort(np.argsort(v)), np.arange(n))[0, 1]) if np.ptp(v) > 0 else 0.0
-                res["operand"][dname][f"L{L}"] = {"probe_acc": acc, "probe_acc1": acc1, "decoded": v.tolist(), "spearman": rho}
-
-            # alignment: embeddings and "Q: x" states, item i vs number i + o
-            al = {"emb_in": alignment(E_in[ids], E_in[num_ids[:n + 1]], rng),
-                  "emb_out": alignment(E_out[ids], E_out[num_ids[:n + 1]], rng)}
-            for L in layers:
-                al[f"L{L}"] = alignment(S_it[L], S_num[L][:n + 1], rng)
-            res["align"][dname] = al
-
-            # sum route
-            ks = np.array(list(D["ks"]))
-            a_vals = np.arange(60)
-            A, K = np.meshgrid(a_vals, ks, indexing="ij")
-            A, K = A.ravel(), K.ravel()
-            S_fit, _ = run(model, tok, [prompt(a, k, D["unit"]) for a, k in zip(A, K)], layers, dev)
-            I, KK = np.meshgrid(np.arange(n), ks, indexing="ij")
-            I, KK = I.ravel(), KK.ravel()
-            S_dom, nxt = run(model, tok, [prompt(items[i], k, D["unit"]) for i, k in zip(I, KK)], layers, dev)
-            if dname == "numwords":
-                correct = None   # the answer starts with a bare space token
-            else:
-                ans = (I + KK) % n if D["cyclic"] else I + KK
-                ok = ans < n
-                correct = ok & (nxt == ids[np.minimum(ans, n - 1)])
-            rs = {"model_acc": None if correct is None else float(correct[ok].mean()), "layers": {}}
-            for L in layers:
-                dec, acc, acc1 = fit_decoder(S_fit[L], A + K, A, dev)
-                sh = dec(S_dom[L])
-                st = route_stats(sh, I, KK, n, D["cyclic"])
-                st.update(probe_acc=acc, probe_acc1=acc1, null=null_stats(sh, I, KK, n, D["cyclic"], rng),
-                          decoded_hist=np.bincount(sh, minlength=200).tolist())
-                if correct is not None and correct.sum() >= 20 and (ok & ~correct).sum() >= 20:
-                    st["by_correct"] = {c: route_stats(sh[m], I[m], KK[m], n, D["cyclic"])
-                                        for c, m in (("correct", correct), ("wrong", ok & ~correct))}
-                rs["layers"][f"L{L}"] = st
-            res["sum"][dname] = rs
-            print(f"{name} {dname}: model_acc {rs['model_acc']} ({time.time() - t0:.0f}s)", flush=True)
+        res = {"ckpt": ck, "n_layers": nL}
+        res.update(analyze(model, tok, doms, list(range(2, nL, 2)), dev, np.random.default_rng(0), args.shots,
+                           log=lambda s: print(f"{name} {s}", flush=True)))
         path.write_text(json.dumps(res, indent=1))
-        del model, E_in, E_out
+        del model
         gc.collect()
         torch.cuda.empty_cache() if dev == "cuda" else None
     summarize(out)
@@ -277,7 +307,7 @@ def main() -> None:
 
 def summarize(out: Path) -> None:
     rows = [json.loads(p.read_text()) for p in sorted(out.glob("route_*.json"))]
-    lines = ["# P2: number route\n\n## sum route (layer with the highest consistency; null = k permuted within item)\n\n",
+    lines = [f"# P2: number route (shots {rows[0].get('shots', 0) if rows else 0})\n\n## sum route (layer with the highest consistency; null = k permuted within item)\n\n",
              "| ckpt | domain | model acc | layer | probe acc (numeric) | slope | r2 (null p95) | consistency (null p95) | "
              "line acc (null p95) | mod acc (null p95) | offsets |\n|---|---|---|---|---|---|---|---|---|---|---|\n"]
     for r in rows:

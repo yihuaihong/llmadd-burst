@@ -17,6 +17,8 @@ batch of 96 training prompts, not the item state:
   sum_helix       layers 3/8, 1/2, 5/8 of the depth -> helix of the signed pre-mod sum s = i +- k (number route)
   sum_helix_shuf  the same with s permuted (same basis, wrong values)
   out_circle      layers 3/4, 7/8 -> circle of the answer index (i +- k) mod n (result on the cycle)
+--route none,circle runs the number-route read-outs of number_route.py (sum route, operand route, item-number
+alignment) on the base model and on every trained model of the listed arms, i.e. on models that solve the task.
 
     python tools/concept_train.py --model <dir> --out <dir> --domain days --seeds 0,1,2
 """
@@ -165,6 +167,7 @@ def main() -> None:
     ap.add_argument("--sum_layers", default=None, help="final-token layers of sum_helix* (default 3/8, 1/2, 5/8 of the depth)")
     ap.add_argument("--out_layers", default=None, help="final-token layers of out_circle (default 3/4, 7/8 of the depth)")
     ap.add_argument("--save_preds", action="store_true")
+    ap.add_argument("--route", default="", help="arms (comma list, or all) analysed with number_route.analyze after training (days / months / letters)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     dom = DOMAINS[args.domain]
@@ -269,8 +272,21 @@ def main() -> None:
             if isinstance(m, LoraLayer):
                 m.reset_lora_parameters("default", True)
 
+    route_arms = set(geoms if args.route == "all" else filter(None, args.route.split(",")))
+    if route_arms:
+        from number_route import DOMAINS as ROUTE_DOMAINS, analyze
+        assert args.domain in ROUTE_DOMAINS and args.domain != "numwords", "--route: days, months or letters"
+        route_layers = list(range(2, nL, 2))
+
+    def route(tag):
+        model.eval()
+        return analyze(model, tok, [args.domain], route_layers, dev, np.random.default_rng(0), shots=0,
+                       log=lambda m: print(f"{tag} {m}", flush=True))
+
     base = {"domain": args.domain, "items": items, "n": {k: len(v) for k, v in data.items()},
             "eval": evaluate(), "geometry": geometry_report(), "examples": {k: v[:3] for k, v in data.items()}}
+    if route_arms:
+        base["route"] = route("base")
     (out / "base.json").write_text(json.dumps(base, indent=1))
     print(f"base: {base['eval']} geometry L16/emb: {base['geometry'].get('L16')} {base['geometry']['emb']} ({time.time() - t0:.0f}s)")
     epochs = max(1, math.ceil(args.steps * args.bs / len(train_ids)))
@@ -305,9 +321,10 @@ def main() -> None:
             del opt
             preds = {} if args.save_preds else None
             ev = evaluate(preds)
+            rt = route(f"{G} seed{seed}") if G in route_arms else None
             path.write_text(json.dumps({"domain": args.domain, "geom": G, "seed": seed, "lam": args.lam, "lr": args.lr,
                                         "epochs": epochs, "layers": man_layers, "train_log": log, "eval": ev,
-                                        "geometry": geometry_report(), "preds": preds}, indent=1))
+                                        "geometry": geometry_report(), "preds": preds, "route": rt}, indent=1))
             print(f"{args.domain} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
     summarize(out)
 
