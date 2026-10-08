@@ -1,0 +1,26 @@
+## task 295-p2c-route-trained-months-50k  job 5767  host b-19-53  2026-10-08T06:54:48Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.50it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  6.60it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.47it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.81it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.70it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.17it/s]
+base route months: model_acc 0.0 (54s)
+base: {'train': 0.0, 'test': 0.0, 'ood': 0.0} geometry L16/emb: {'cka_circle': 0.6465569734573364, 'cka_circle_shuf': 0.3202025294303894, 'cka_line': 0.3446138799190521} {'cka_circle': 0.5698192119598389, 'cka_circle_shuf': 0.38839665055274963, 'cka_line': 0.388415664434433} (178s)
+none seed0 route months: model_acc 0.8895833333333333 (53s)
+months none seed0: {'train': 0.9965277910232544, 'test': 0.609375, 'ood': 0.18333333730697632} (343s)
+circle seed0 route months: model_acc 0.8916666666666667 (53s)
+months circle seed0: {'train': 0.9392361044883728, 'test': 0.8333333730697632, 'ood': 0.12333333492279053} (537s)
+none seed1 route months: model_acc 0.8916666666666667 (53s)
+months none seed1: {'train': 0.9930555820465088, 'test': 0.7109375, 'ood': 0.17666667699813843} (700s)
+circle seed1 route months: model_acc 0.9770833333333333 (52s)
+months circle seed1: {'train': 0.9826388955116272, 'test': 0.9192708730697632, 'ood': 0.16333334147930145} (892s)
+# concept shaping: months (n = {'train': 576, 'test': 384, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.57, L16 CKA(circle) 0.65
+
+| geom | seeds | train | test | ood | CKA@L16 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.65 / 0.32 / 0.34 |
+| circle | 2 | 0.961 ± 0.031 | 0.876 ± 0.061 | 0.143 ± 0.028 | 1.00 / 0.14 / 0.44; test prompts: sum_helix@L16 0.31 out_circle@L24 0.38 |
+| none | 2 | 0.995 ± 0.002 | 0.660 ± 0.072 | 0.180 ± 0.005 | 0.71 / 0.33 / 0.42; test prompts: sum_helix@L16 0.35 out_circle@L24 0.16 |
+
+## rc=0  2026-10-08T07:10:17Z
