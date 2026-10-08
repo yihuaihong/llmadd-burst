@@ -1,0 +1,112 @@
+# P2: number route (shots 4)
+
+## sum route (layer with the highest consistency; null = k permuted within item)
+
+| ckpt | domain | model acc | layer | probe acc (numeric) | slope | r2 (null p95) | consistency (null p95) | line acc (null p95) | mod acc (null p95) | offsets |
+|---|---|---|---|---|---|---|---|---|---|---|
+| stage1-step150000-tokens630B | days | 0.16 | L10 | 0.18 | 0.90 | 0.72 (0.05) | 0.15 (0.08) | 0.00 (0.03) | 0.18 (0.20) | [21, 31, 26, 21, 21, 21, 25] |
+| stage1-step150000-tokens630B | months | 0.13 | L12 | 0.18 | 0.59 | 0.78 (0.05) | 0.15 (0.08) | 0.05 (0.04) | 0.12 (0.12) | [21, 20, 20, 30, 21, 22, 21, 20, 31, 26, 26, 27] |
+| stage1-step150000-tokens630B | letters | 0.06 | L8 | 0.28 | 1.35 | 0.53 (0.13) | 0.21 (0.16) | 0.04 (0.05) | - | [48, 0, 23, 10, 10, 20, 20, 7, 1, 21, 22, 11] |
+| stage1-step150000-tokens630B | numwords | - | L20 | 0.56 | 0.87 | 0.82 (0.08) | 0.55 (0.15) | 0.54 (0.07) | - | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] |
+| stage1-step20000-tokens84B | days | 0.15 | L22 | 0.53 | 0.86 | 0.79 (0.05) | 0.12 (0.08) | 0.01 (0.03) | 0.17 (0.19) | [29, 34, 32, 30, 21, 26, 20] |
+| stage1-step20000-tokens84B | months | 0.09 | L16 | 0.26 | 0.64 | 0.81 (0.04) | 0.12 (0.08) | 0.05 (0.04) | 0.10 (0.12) | [25, 19, 26, 18, 19, 22, 25, 28, 20, 29, 16, 21] |
+| stage1-step20000-tokens84B | letters | 0.03 | L2 | 0.02 | 1.23 | 0.74 (0.14) | 0.20 (0.14) | 0.06 (0.06) | - | [11, 30, 31, 30, 30, 30, 30, 31, 31, 30, 30, 31] |
+| stage1-step20000-tokens84B | numwords | - | L24 | 0.50 | 0.99 | 0.90 (0.08) | 0.55 (0.15) | 0.53 (0.07) | - | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] |
+| stage1-step50000-tokens210B | days | 0.16 | L28 | 0.44 | 0.65 | 0.82 (0.05) | 0.12 (0.08) | 0.03 (0.04) | 0.16 (0.19) | [16, 32, 23, 18, 20, 24, 23] |
+| stage1-step50000-tokens210B | months | 0.09 | L26 | 0.44 | 0.82 | 0.82 (0.04) | 0.14 (0.08) | 0.08 (0.04) | 0.13 (0.12) | [21, 21, 2, 4, 4, 16, 16, 18, 19, 20, 21, 27] |
+| stage1-step50000-tokens210B | letters | 0.06 | L4 | 0.06 | 0.89 | 0.54 (0.13) | 0.20 (0.17) | 0.05 (0.06) | - | [21, 30, 37, 30, 31, 30, 30, 30, 36, 30, 30, 31] |
+| stage1-step50000-tokens210B | numwords | - | L30 | 0.46 | 0.92 | 0.83 (0.08) | 0.37 (0.14) | 0.37 (0.07) | - | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11] |
+
+## operand route ("Q: item" decoded on the number line; layer with the highest |spearman|)
+
+| ckpt | domain | layer | probe acc (numeric) | spearman | decoded |
+|---|---|---|---|---|---|
+| stage1-step150000-tokens630B | days | L26 | 0.96 | 0.89 | [108, 108, 108, 108, 113, 108, 108] |
+| stage1-step150000-tokens630B | months | L22 | 0.96 | -0.69 | [100, 102, 108, 104, 101, 96, 98, 98, 89, 100, 100, 92] |
+| stage1-step150000-tokens630B | letters | L30 | 0.96 | 0.80 | [88, 88, 88, 88, 88, 88, 88, 88, 79, 88, 88, 88] |
+| stage1-step150000-tokens630B | numwords | L2 | 0.99 | 1.00 | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] |
+| stage1-step20000-tokens84B | days | L4 | 0.98 | 0.96 | [17, 20, 19, 21, 21, 28, 99] |
+| stage1-step20000-tokens84B | months | L8 | 0.97 | -0.58 | [113, 104, 103, 104, 109, 96, 97, 98, 99, 103, 99, 102] |
+| stage1-step20000-tokens84B | letters | L12 | 0.96 | 0.73 | [99, 100, 100, 100, 100, 100, 100, 101, 100, 110, 110, 100] |
+| stage1-step20000-tokens84B | numwords | L2 | 0.97 | 0.71 | [101, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] |
+| stage1-step50000-tokens210B | days | L26 | 0.97 | 0.89 | [105, 106, 106, 106, 116, 106, 108] |
+| stage1-step50000-tokens210B | months | L24 | 0.97 | -0.55 | [105, 104, 103, 94, 99, 96, 97, 88, 89, 100, 100, 92] |
+| stage1-step50000-tokens210B | letters | L8 | 0.98 | 0.91 | [90, 100, 100, 100, 100, 90, 100, 100, 90, 100, 100, 100] |
+| stage1-step50000-tokens210B | numwords | L2 | 0.99 | 0.97 | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] |
+
+## alignment: item i vs number i + o (centred cosine, p vs 2000 permutations; CKA, p vs 300)
+
+| ckpt | domain | site | o | cos (null) p | CKA (null) p |
+|---|---|---|---|---|---|
+| stage1-step150000-tokens630B | days | emb_in | 0 | 0.003 (0.000) 0.483 | 0.98 (0.92) 0.003 |
+| stage1-step150000-tokens630B | days | emb_in | 1 | 0.053 (-0.001) 0.001 | 0.98 (0.92) 0.003 |
+| stage1-step150000-tokens630B | days | emb_out | 0 | -0.005 (-0.000) 0.677 | 0.91 (0.83) 0.023 |
+| stage1-step150000-tokens630B | days | emb_out | 1 | 0.034 (0.000) 0.001 | 0.94 (0.84) 0.017 |
+| stage1-step150000-tokens630B | days | L10 | 0 | 0.009 (-0.000) 0.324 | 0.82 (0.72) 0.053 |
+| stage1-step150000-tokens630B | days | L10 | 1 | 0.081 (0.000) 0.000 | 0.89 (0.74) 0.007 |
+| stage1-step150000-tokens630B | months | emb_in | 0 | -0.001 (-0.000) 0.451 | 0.95 (0.87) 0.003 |
+| stage1-step150000-tokens630B | months | emb_in | 1 | 0.237 (0.000) 0.000 | 0.94 (0.86) 0.003 |
+| stage1-step150000-tokens630B | months | emb_out | 0 | -0.044 (-0.000) 1.000 | 0.88 (0.78) 0.003 |
+| stage1-step150000-tokens630B | months | emb_out | 1 | 0.212 (-0.000) 0.000 | 0.89 (0.78) 0.003 |
+| stage1-step150000-tokens630B | months | L16 | 0 | -0.005 (-0.000) 0.516 | 0.73 (0.69) 0.183 |
+| stage1-step150000-tokens630B | months | L16 | 1 | 0.308 (0.001) 0.000 | 0.81 (0.71) 0.030 |
+| stage1-step150000-tokens630B | letters | emb_in | 0 | 0.009 (0.000) 0.047 | 0.83 (0.76) 0.003 |
+| stage1-step150000-tokens630B | letters | emb_in | 1 | 0.009 (0.000) 0.049 | 0.84 (0.76) 0.003 |
+| stage1-step150000-tokens630B | letters | emb_out | 0 | 0.002 (-0.000) 0.080 | 0.80 (0.78) 0.003 |
+| stage1-step150000-tokens630B | letters | emb_out | 1 | 0.005 (-0.000) 0.003 | 0.80 (0.78) 0.003 |
+| stage1-step150000-tokens630B | letters | L8 | 0 | 0.010 (0.000) 0.087 | 0.62 (0.54) 0.010 |
+| stage1-step150000-tokens630B | letters | L8 | 1 | 0.021 (0.000) 0.002 | 0.62 (0.54) 0.010 |
+| stage1-step150000-tokens630B | numwords | emb_in | 0 | 0.161 (0.003) 0.000 | 0.95 (0.63) 0.003 |
+| stage1-step150000-tokens630B | numwords | emb_in | 1 | 0.547 (0.002) 0.000 | 0.97 (0.63) 0.003 |
+| stage1-step150000-tokens630B | numwords | emb_out | 0 | 0.146 (-0.000) 0.001 | 0.95 (0.59) 0.003 |
+| stage1-step150000-tokens630B | numwords | emb_out | 1 | 0.610 (-0.001) 0.000 | 0.97 (0.59) 0.003 |
+| stage1-step150000-tokens630B | numwords | L16 | 0 | 0.215 (0.001) 0.001 | 0.91 (0.52) 0.003 |
+| stage1-step150000-tokens630B | numwords | L16 | 1 | 0.672 (0.000) 0.000 | 0.97 (0.53) 0.003 |
+| stage1-step20000-tokens84B | days | emb_in | 0 | -0.009 (0.000) 0.694 | 0.97 (0.97) 0.355 |
+| stage1-step20000-tokens84B | days | emb_in | 1 | 0.017 (-0.001) 0.218 | 0.98 (0.97) 0.116 |
+| stage1-step20000-tokens84B | days | emb_out | 0 | -0.003 (-0.000) 0.629 | 0.92 (0.84) 0.020 |
+| stage1-step20000-tokens84B | days | emb_out | 1 | 0.027 (0.000) 0.005 | 0.95 (0.85) 0.007 |
+| stage1-step20000-tokens84B | days | L4 | 0 | 0.006 (0.001) 0.429 | 0.84 (0.77) 0.063 |
+| stage1-step20000-tokens84B | days | L4 | 1 | 0.054 (0.000) 0.009 | 0.89 (0.79) 0.010 |
+| stage1-step20000-tokens84B | months | emb_in | 0 | -0.031 (0.000) 0.950 | 0.98 (0.96) 0.003 |
+| stage1-step20000-tokens84B | months | emb_in | 1 | 0.170 (0.000) 0.000 | 0.98 (0.95) 0.003 |
+| stage1-step20000-tokens84B | months | emb_out | 0 | -0.008 (0.000) 0.670 | 0.89 (0.81) 0.003 |
+| stage1-step20000-tokens84B | months | emb_out | 1 | 0.129 (-0.000) 0.000 | 0.90 (0.80) 0.003 |
+| stage1-step20000-tokens84B | months | L4 | 0 | 0.003 (0.001) 0.430 | 0.87 (0.78) 0.010 |
+| stage1-step20000-tokens84B | months | L4 | 1 | 0.251 (0.000) 0.000 | 0.90 (0.79) 0.003 |
+| stage1-step20000-tokens84B | letters | emb_in | 0 | 0.012 (-0.000) 0.092 | 0.90 (0.90) 0.266 |
+| stage1-step20000-tokens84B | letters | emb_in | 1 | -0.004 (-0.000) 0.663 | 0.91 (0.90) 0.010 |
+| stage1-step20000-tokens84B | letters | emb_out | 0 | 0.002 (-0.000) 0.110 | 0.84 (0.81) 0.003 |
+| stage1-step20000-tokens84B | letters | emb_out | 1 | 0.004 (-0.000) 0.015 | 0.84 (0.81) 0.003 |
+| stage1-step20000-tokens84B | letters | L30 | 0 | -0.009 (-0.000) 0.851 | 0.63 (0.59) 0.073 |
+| stage1-step20000-tokens84B | letters | L30 | 1 | 0.009 (-0.000) 0.111 | 0.63 (0.58) 0.030 |
+| stage1-step20000-tokens84B | numwords | emb_in | 0 | 0.093 (0.000) 0.002 | 0.95 (0.86) 0.003 |
+| stage1-step20000-tokens84B | numwords | emb_in | 1 | 0.431 (-0.000) 0.000 | 0.96 (0.86) 0.003 |
+| stage1-step20000-tokens84B | numwords | emb_out | 0 | 0.145 (-0.001) 0.000 | 0.94 (0.61) 0.003 |
+| stage1-step20000-tokens84B | numwords | emb_out | 1 | 0.505 (-0.001) 0.000 | 0.96 (0.61) 0.003 |
+| stage1-step20000-tokens84B | numwords | L4 | 0 | 0.223 (-0.000) 0.000 | 0.93 (0.54) 0.003 |
+| stage1-step20000-tokens84B | numwords | L4 | 1 | 0.647 (-0.001) 0.000 | 0.95 (0.54) 0.003 |
+| stage1-step50000-tokens210B | days | emb_in | 0 | -0.004 (0.000) 0.598 | 0.98 (0.96) 0.027 |
+| stage1-step50000-tokens210B | days | emb_in | 1 | 0.030 (-0.001) 0.096 | 0.99 (0.96) 0.007 |
+| stage1-step50000-tokens210B | days | emb_out | 0 | -0.003 (-0.000) 0.605 | 0.91 (0.82) 0.020 |
+| stage1-step50000-tokens210B | days | emb_out | 1 | 0.034 (0.000) 0.001 | 0.94 (0.83) 0.007 |
+| stage1-step50000-tokens210B | days | L4 | 0 | -0.002 (0.001) 0.553 | 0.87 (0.78) 0.037 |
+| stage1-step50000-tokens210B | days | L4 | 1 | 0.060 (-0.000) 0.011 | 0.92 (0.81) 0.003 |
+| stage1-step50000-tokens210B | months | emb_in | 0 | -0.014 (-0.000) 0.691 | 0.98 (0.94) 0.003 |
+| stage1-step50000-tokens210B | months | emb_in | 1 | 0.216 (0.000) 0.000 | 0.98 (0.93) 0.003 |
+| stage1-step50000-tokens210B | months | emb_out | 0 | -0.023 (-0.000) 0.963 | 0.88 (0.79) 0.003 |
+| stage1-step50000-tokens210B | months | emb_out | 1 | 0.183 (-0.000) 0.000 | 0.90 (0.79) 0.003 |
+| stage1-step50000-tokens210B | months | L14 | 0 | 0.011 (0.001) 0.316 | 0.81 (0.73) 0.063 |
+| stage1-step50000-tokens210B | months | L14 | 1 | 0.282 (-0.001) 0.000 | 0.86 (0.76) 0.010 |
+| stage1-step50000-tokens210B | letters | emb_in | 0 | 0.010 (-0.000) 0.092 | 0.89 (0.87) 0.007 |
+| stage1-step50000-tokens210B | letters | emb_in | 1 | 0.004 (-0.000) 0.286 | 0.90 (0.87) 0.003 |
+| stage1-step50000-tokens210B | letters | emb_out | 0 | 0.002 (-0.000) 0.133 | 0.81 (0.79) 0.003 |
+| stage1-step50000-tokens210B | letters | emb_out | 1 | 0.004 (-0.000) 0.005 | 0.82 (0.79) 0.003 |
+| stage1-step50000-tokens210B | letters | L28 | 0 | 0.001 (-0.000) 0.460 | 0.64 (0.59) 0.003 |
+| stage1-step50000-tokens210B | letters | L28 | 1 | 0.014 (-0.000) 0.036 | 0.63 (0.58) 0.003 |
+| stage1-step50000-tokens210B | numwords | emb_in | 0 | 0.096 (0.000) 0.003 | 0.96 (0.80) 0.003 |
+| stage1-step50000-tokens210B | numwords | emb_in | 1 | 0.474 (-0.000) 0.000 | 0.97 (0.80) 0.003 |
+| stage1-step50000-tokens210B | numwords | emb_out | 0 | 0.155 (-0.001) 0.000 | 0.94 (0.59) 0.003 |
+| stage1-step50000-tokens210B | numwords | emb_out | 1 | 0.578 (-0.001) 0.000 | 0.97 (0.59) 0.003 |
+| stage1-step50000-tokens210B | numwords | L16 | 0 | 0.209 (0.001) 0.001 | 0.91 (0.51) 0.003 |
+| stage1-step50000-tokens210B | numwords | L16 | 1 | 0.653 (-0.000) 0.000 | 0.98 (0.51) 0.003 |
