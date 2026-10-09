@@ -1,0 +1,158 @@
+{
+ "domain": "days",
+ "items": [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+ ],
+ "n": {
+  "train": 336,
+  "test": 224,
+  "ood": 300
+ },
+ "eval": {
+  "train": 0.008928571827709675,
+  "test": 0.008928571827709675,
+  "ood": 0.0
+ },
+ "geometry": {
+  "L4": {
+   "cka_circle": 0.8687465786933899,
+   "cka_circle_shuf": 0.5343082547187805,
+   "cka_line": 0.5365954041481018
+  },
+  "L8": {
+   "cka_circle": 0.8793039321899414,
+   "cka_circle_shuf": 0.500175952911377,
+   "cka_line": 0.5694698691368103
+  },
+  "L12": {
+   "cka_circle": 0.8632790446281433,
+   "cka_circle_shuf": 0.4955255687236786,
+   "cka_line": 0.5915285348892212
+  },
+  "L16": {
+   "cka_circle": 0.8106761574745178,
+   "cka_circle_shuf": 0.49809014797210693,
+   "cka_line": 0.5824589133262634
+  },
+  "emb": {
+   "cka_circle": 0.6979501843452454,
+   "cka_circle_shuf": 0.5815606713294983,
+   "cka_line": 0.4842256009578705
+  },
+  "prompt": {
+   "train": {
+    "L12": {
+     "cka_sum_helix": 0.5505779385566711,
+     "cka_sum_helix_shuf": 0.1425827592611313,
+     "cka_out_circle": 0.041442885994911194
+    },
+    "L16": {
+     "cka_sum_helix": 0.5096354484558105,
+     "cka_sum_helix_shuf": 0.13259856402873993,
+     "cka_out_circle": 0.04196636378765106
+    },
+    "L20": {
+     "cka_sum_helix": 0.4763811230659485,
+     "cka_sum_helix_shuf": 0.1315554976463318,
+     "cka_out_circle": 0.04243076965212822
+    },
+    "L24": {
+     "cka_sum_helix": 0.4733681082725525,
+     "cka_sum_helix_shuf": 0.13258180022239685,
+     "cka_out_circle": 0.04201878607273102
+    },
+    "L28": {
+     "cka_sum_helix": 0.4718807637691498,
+     "cka_sum_helix_shuf": 0.13159479200839996,
+     "cka_out_circle": 0.04088469222187996
+    }
+   },
+   "test": {
+    "L12": {
+     "cka_sum_helix": 0.5825439691543579,
+     "cka_sum_helix_shuf": 0.13198329508304596,
+     "cka_out_circle": 0.012216342613101006
+    },
+    "L16": {
+     "cka_sum_helix": 0.5442959666252136,
+     "cka_sum_helix_shuf": 0.13133683800697327,
+     "cka_out_circle": 0.011481711640954018
+    },
+    "L20": {
+     "cka_sum_helix": 0.5109997987747192,
+     "cka_sum_helix_shuf": 0.13418535888195038,
+     "cka_out_circle": 0.012595592997968197
+    },
+    "L24": {
+     "cka_sum_helix": 0.5088419914245605,
+     "cka_sum_helix_shuf": 0.13548612594604492,
+     "cka_out_circle": 0.012515163980424404
+    },
+    "L28": {
+     "cka_sum_helix": 0.5112888813018799,
+     "cka_sum_helix_shuf": 0.13788463175296783,
+     "cka_out_circle": 0.013195198960602283
+    }
+   },
+   "sum_layers": [
+    12,
+    16,
+    20
+   ],
+   "out_layers": [
+    24,
+    28
+   ]
+  }
+ },
+ "examples": {
+  "train": [
+   [
+    "Q: Tuesday minus 1 days is",
+    " Monday"
+   ],
+   [
+    "Q: Friday minus 9 days is",
+    " Wednesday"
+   ],
+   [
+    "Q: Thursday plus 36 days is",
+    " Friday"
+   ]
+  ],
+  "test": [
+   [
+    "Q: Friday plus 39 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Thursday minus 30 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Monday plus 4 days is",
+    " Friday"
+   ]
+  ],
+  "ood": [
+   [
+    "Q: Thursday plus 75 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Thursday minus 58 days is",
+    " Tuesday"
+   ],
+   [
+    "Q: Saturday minus 50 days is",
+    " Friday"
+   ]
+  ]
+ }
+}
