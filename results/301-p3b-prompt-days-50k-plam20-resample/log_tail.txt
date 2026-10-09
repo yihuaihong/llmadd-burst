@@ -1,0 +1,31 @@
+## task 301-p3b-prompt-days-50k-plam20-resample  job 6168  host b-19-31  2026-10-09T16:39:34Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  8.95it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.56it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.28it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.96it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.82it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.54it/s]
+base: {'train': 0.008928571827709675, 'test': 0.008928571827709675, 'ood': 0.0} geometry L16/emb: {'cka_circle': 0.8106761574745178, 'cka_circle_shuf': 0.49809014797210693, 'cka_line': 0.5824589133262634} {'cka_circle': 0.6979501843452454, 'cka_circle_shuf': 0.5815606713294983, 'cka_line': 0.4842256009578705} (121s)
+days none seed0: {'train': 1.0, 'test': 0.7366071939468384, 'ood': 0.1300000101327896} (235s)
+days sum_helix seed0: {'train': 1.0, 'test': 0.4285714626312256, 'ood': 0.14666667580604553} (403s)
+days sum_helix_shuf seed0: {'train': 0.9940476417541504, 'test': 0.1473214328289032, 'ood': 0.12333333492279053} (570s)
+days out_circle seed0: {'train': 1.0, 'test': 0.7142857313156128, 'ood': 0.15000000596046448} (749s)
+days none seed1: {'train': 0.9851190447807312, 'test': 0.6071428656578064, 'ood': 0.13333334028720856} (858s)
+days sum_helix seed1: {'train': 0.961309552192688, 'test': 0.4062500298023224, 'ood': 0.11666666716337204} (1019s)
+days sum_helix_shuf seed1: {'train': 0.9583333730697632, 'test': 0.2321428656578064, 'ood': 0.15666666626930237} (1180s)
+days out_circle seed1: {'train': 1.0, 'test': 0.7633928656578064, 'ood': 0.12333333492279053} (1353s)
+days none seed2: {'train': 0.9345238208770752, 'test': 0.535714328289032, 'ood': 0.1300000101327896} (1458s)
+days sum_helix seed2: {'train': 0.9940476417541504, 'test': 0.4375000298023224, 'ood': 0.1599999964237213} (1619s)
+days sum_helix_shuf seed2: {'train': 0.9851190447807312, 'test': 0.1383928656578064, 'ood': 0.12333333492279053} (1779s)
+days out_circle seed2: {'train': 1.0, 'test': 0.9151785969734192, 'ood': 0.18333333730697632} (1951s)
+# concept shaping: days (n = {'train': 336, 'test': 224, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.70, L16 CKA(circle) 0.81
+
+| geom | seeds | train | test | ood | CKA@L16 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.009 | 0.009 | 0.000 | 0.81 / 0.50 / 0.58 |
+| none | 3 | 0.973 ± 0.034 | 0.626 ± 0.102 | 0.131 ± 0.002 | 0.86 / 0.52 / 0.59; test prompts: sum_helix@L16 0.26 out_circle@L24 0.28 |
+| out_circle | 3 | 1.000 ± 0.000 | 0.798 ± 0.105 | 0.152 ± 0.030 | 0.89 / 0.48 / 0.57; test prompts: sum_helix@L16 0.35 out_circle@L24 0.81 |
+| sum_helix | 3 | 0.985 ± 0.021 | 0.424 ± 0.016 | 0.141 ± 0.022 | 0.88 / 0.52 / 0.58; test prompts: sum_helix@L16 0.70 out_circle@L24 0.13 |
+| sum_helix_shuf | 3 | 0.979 ± 0.019 | 0.173 ± 0.052 | 0.134 ± 0.019 | 0.80 / 0.52 / 0.56; test prompts: sum_helix@L16 0.22 out_circle@L24 0.08 |
+
+## rc=0  2026-10-09T17:12:37Z
