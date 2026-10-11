@@ -1,0 +1,21 @@
+## task 308-e1-size-7b-21B-n7000  job 6581  host b-19-12  2026-10-11T22:42:25Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.13it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.74it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  6.72it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.92it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  7.46it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.98it/s]
+base: {'test': 0.003000000026077032, 'train': 0.00671428581699729, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0} (141s)
+lora none seed0: {'test': 0.18900001049041748, 'train': 0.3642857074737549, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (722s)
+lora helix seed0: {'test': 0.859000027179718, 'train': 0.9148571491241455, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.032999999821186066} (1411s)
+lora none seed1: {'test': 0.1550000011920929, 'train': 0.3555714190006256, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0010000000474974513} (1968s)
+lora helix seed1: {'test': 0.937000036239624, 'train': 0.9714285731315613, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.021000001579523087} (2645s)
+lora none seed2: {'test': 0.13600000739097595, 'train': 0.31542855501174927, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.003000000026077032} (3201s)
+lora helix seed2: {'test': 0.7970000505447388, 'train': 0.8395714163780212, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.023000001907348633} (3878s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.003 | 0.007 | 0.002 | 0.000 | 0.000 | - |
+| none | 3 | 0.160 ± 0.027 | 0.345 ± 0.026 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.002 ± 0.001 | 0.31 / 0.34 CKA@L16 helix 0.71 digit 0.47; emb helix 0.50 digit 0.60 |
+| helix | 3 | 0.864 ± 0.070 | 0.909 ± 0.066 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.026 ± 0.006 | 0.76 / 0.75 CKA@L16 helix 1.00 digit 0.63; emb helix 0.50 digit 0.60 |
+
+## rc=0  2026-10-11T23:47:33Z
