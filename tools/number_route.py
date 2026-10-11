@@ -51,6 +51,17 @@ DOMAINS = {
     "months": dict(items=MONTHS, unit="months", ks=range(1, 41), cyclic=True),
     "letters": dict(items=LETTERS, unit="letters", ks=range(1, 13), cyclic=False),
     "numwords": dict(items=WORDS, unit="", ks=range(1, 21), cyclic=False),
+    # E5, alignment only (no arithmetic prompts): item -> its number in the text world; single-token items only,
+    # so some numbers are skipped (values = the numbers of the kept items)
+    "planets": dict(items="Mercury Venus Earth Mars Jupiter Saturn".split(), align_only=True),
+    "elements": dict(items="hydrogen helium lithium carbon nitrogen oxygen neon sodium magnesium".split(),
+                     values=[1, 2, 3, 6, 7, 8, 10, 11, 12], align_only=True),
+    "presidents": dict(items="Washington Adams Jefferson Madison Monroe Jackson Harrison Tyler Taylor Pierce Buchanan Lincoln".split(),
+                       values=[1, 2, 3, 4, 5, 7, 9, 10, 12, 14, 15, 16], align_only=True),
+    "greek": dict(items="alpha beta gamma delta epsilon eta theta iota kappa lambda mu".split(),
+                  values=[1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12], align_only=True),
+    "ordinals": dict(items="first second third fourth fifth sixth seventh eighth ninth tenth".split(), align_only=True),
+    "solfege": dict(items="do re mi fa sol la ti".split(), align_only=True),
 }
 ALPHAS = tuple(10.0 ** k for k in range(-2, 7))
 CANDS = np.arange(200)
@@ -174,13 +185,14 @@ def centred_cos(A: np.ndarray, B: np.ndarray) -> float:
     return float((A * B).sum(1).mean())
 
 
-def alignment(E_items: np.ndarray, E_nums: np.ndarray, rng) -> dict:
-    """Item i vs number i + o: centred cosine and CKA, each against item permutations."""
+def alignment(E_items: np.ndarray, E_nums: np.ndarray, rng, idx: np.ndarray | None = None) -> dict:
+    """Item i vs number idx[i] + o (idx default 0..n-1): centred cosine and CKA, each against item permutations."""
     n = len(E_items)
+    idx = np.arange(n) if idx is None else idx
     out = {}
     perms = [rng.permutation(n) for _ in range(2000)]
     for o in (0, 1):
-        B = E_nums[o:o + n]
+        B = E_nums[idx + o]
         obs = centred_cos(E_items, B)
         null = np.array([centred_cos(E_items[p], B) for p in perms])
         ck = cka_np(E_items, B)
@@ -229,20 +241,25 @@ def analyze(model, tok, doms, layers, dev, rng, shots: int = 0, log=print) -> di
         ids = [tok(" " + w, add_special_tokens=False)["input_ids"] for w in items]
         assert all(len(t) == 1 for t in ids), (dname, ids)
         ids = np.array([t[0] for t in ids])
+        idx = np.array(D["values"]) - 1 if "values" in D else np.arange(n)   # 0-based; o = 1 pairs item with its number
+        top = int(idx.max()) + 2
         S_it, _ = run(model, tok, [f"Q: {w}" for w in items], layers, dev)
         res["operand"][dname] = {}
         for L in layers:
             dec, acc, acc1 = op_dec[L]
             v = dec(S_it[L])
-            rho = float(np.corrcoef(np.argsort(np.argsort(v)), np.arange(n))[0, 1]) if np.ptp(v) > 0 else 0.0
+            rho = float(np.corrcoef(np.argsort(np.argsort(v)), idx)[0, 1]) if np.ptp(v) > 0 else 0.0
             res["operand"][dname][f"L{L}"] = {"probe_acc": acc, "probe_acc1": acc1, "decoded": v.tolist(), "spearman": rho}
 
         # alignment: embeddings and "Q: x" states, item i vs number i + o
-        al = {"emb_in": alignment(E_in[ids], E_in[num_ids[:n + 1]], rng),
-              "emb_out": alignment(E_out[ids], E_out[num_ids[:n + 1]], rng)}
+        al = {"emb_in": alignment(E_in[ids], E_in[num_ids[:top]], rng, idx),
+              "emb_out": alignment(E_out[ids], E_out[num_ids[:top]], rng, idx)}
         for L in layers:
-            al[f"L{L}"] = alignment(S_it[L], S_num[L][:n + 1], rng)
+            al[f"L{L}"] = alignment(S_it[L], S_num[L][:top], rng, idx)
         res["align"][dname] = al
+        if D.get("align_only"):
+            log(f"align {dname} ({time.time() - t0:.0f}s)")
+            continue
 
         # sum route (the few-shot prefix, if any, precedes both the numeric fit prompts and the domain prompts)
         pre = shot_prefix(dname, shots)
