@@ -1,0 +1,27 @@
+## task 317-e4-numshape-months-50k  job 6593  host b-19-37  2026-10-11T22:49:54Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  9.42it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  8.80it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  8.38it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  8.34it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  9.11it/s]
+base: {'train': 0.0, 'test': 0.0, 'ood': 0.0} geometry L16/emb: {'cka_circle': 0.6465569734573364, 'cka_circle_shuf': 0.3202025294303894, 'cka_line': 0.3446138799190521} {'cka_circle': 0.5698192119598389, 'cka_circle_shuf': 0.38839665055274963, 'cka_line': 0.388415664434433} (115s)
+months none seed0: {'train': 0.9965277910232544, 'test': 0.609375, 'ood': 0.18333333730697632} (234s)
+months num_helix seed0: {'train': 0.9930555820465088, 'test': 0.7317708730697632, 'ood': 0.07666666805744171} (380s)
+months num_helix_shuf seed0: {'train': 0.9965277910232544, 'test': 0.578125, 'ood': 0.18666666746139526} (526s)
+months none seed1: {'train': 0.9930555820465088, 'test': 0.7109375, 'ood': 0.17666667699813843} (641s)
+months num_helix seed1: {'train': 0.9982638955116272, 'test': 0.8203125, 'ood': 0.07333333790302277} (785s)
+months num_helix_shuf seed1: {'train': 0.9878472089767456, 'test': 0.5052083730697632, 'ood': 0.25333333015441895} (925s)
+months none seed2: {'train': 0.9809027910232544, 'test': 0.6041666865348816, 'ood': 0.18000000715255737} (1036s)
+months num_helix seed2: {'train': 0.9930555820465088, 'test': 0.7135416865348816, 'ood': 0.0833333358168602} (1174s)
+months num_helix_shuf seed2: {'train': 1.0, 'test': 0.7005208730697632, 'ood': 0.2199999988079071} (1312s)
+# concept shaping: months (n = {'train': 576, 'test': 384, 'ood': 300})
+
+base geometry: emb CKA(circle) 0.57, L16 CKA(circle) 0.65
+
+| geom | seeds | train | test | ood | CKA@L16 circle / circle_shuf / line |
+|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.65 / 0.32 / 0.34 |
+| none | 3 | 0.990 ± 0.008 | 0.641 ± 0.060 | 0.180 ± 0.003 | 0.71 / 0.33 / 0.41; test prompts: sum_helix@L16 0.34 out_circle@L24 0.15 |
+| num_helix | 3 | 0.995 ± 0.003 | 0.755 ± 0.057 | 0.078 ± 0.005 | 0.75 / 0.30 / 0.45; test prompts: sum_helix@L16 0.34 out_circle@L24 0.19 |
+| num_helix_shuf | 3 | 0.995 ± 0.006 | 0.595 ± 0.099 | 0.220 ± 0.033 | 0.72 / 0.32 / 0.40; test prompts: sum_helix@L16 0.45 out_circle@L24 0.13 |
+
+## rc=0  2026-10-11T23:12:19Z
