@@ -87,7 +87,8 @@ def centred_gram(F: np.ndarray, dev) -> torch.Tensor:
     return Ft @ Ft.T
 
 
-PROMPT_GEOMS = ("sum_helix", "sum_helix_shuf", "out_circle")
+PROMPT_GEOMS = ("sum_helix", "sum_helix_shuf", "out_circle", "out_circle_shuf", "out_onehot")
+NUM_GEOMS = ("num_helix", "num_helix_shuf")   # cyclic domains: shape the number manifold "Q: x", x = 10..99
 
 
 def parse_prompt(p: str, items: list):
@@ -103,12 +104,17 @@ def prompt_targets(dom: dict, items: list, data: dict, evalsets: dict, rng_seed:
     n, K = len(items), dom["kmax"]
     s_all = np.arange(-K, n + K)
     s_perm = dict(zip(s_all, np.random.default_rng(321).permutation(s_all)))
+    j_perm = np.random.default_rng(322).permutation(n)
     def grams(s):
         j = s % n
         return {
             "sum_helix": centred_gram(nl.features(s)[0], dev),
             "sum_helix_shuf": centred_gram(nl.features(np.array([s_perm[v] for v in s]))[0], dev),
             "out_circle": centred_gram(np.stack([np.cos(2 * np.pi * j / n), np.sin(2 * np.pi * j / n)], 1), dev),
+            # same circle, answers at permuted positions (clusters kept, neighbourhoods wrong)
+            "out_circle_shuf": centred_gram(np.stack([np.cos(2 * np.pi * j_perm[j] / n), np.sin(2 * np.pi * j_perm[j] / n)], 1), dev),
+            # answer clusters only, all equidistant (supervised-contrastive-like, no circle)
+            "out_onehot": centred_gram(np.eye(n)[j], dev),
         }
 
     rng = np.random.default_rng(rng_seed)
@@ -172,12 +178,13 @@ def main() -> None:
     ap.add_argument("--sum_layers", default=None, help="final-token layers of sum_helix* (default 3/8, 1/2, 5/8 of the depth)")
     ap.add_argument("--out_layers", default=None, help="final-token layers of out_circle (default 3/4, 7/8 of the depth)")
     ap.add_argument("--save_preds", action="store_true")
+    ap.add_argument("--ablate", default="", help="arms (comma list, or all) re-evaluated with the number-value subspace (or a random one) mean-ablated at the item position (cyclic domains)")
     ap.add_argument("--route", default="", help="arms (comma list, or all) analysed with number_route.analyze after training (days / months / letters)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     dom = DOMAINS[args.domain]
     geoms = (args.geoms.split(",") if args.geoms else ["none", *dom["targets"]])
-    assert all(G == "none" or G in dom["targets"] or (G in PROMPT_GEOMS and dom["kind"] == "cyclic") for G in geoms), geoms
+    assert all(G == "none" or G in dom["targets"] or (G in PROMPT_GEOMS + NUM_GEOMS and dom["kind"] == "cyclic") for G in geoms), geoms
     seeds = [int(s) for s in args.seeds.split(",")]
     man_layers = [int(v) for v in args.layers.split(",")]
     t0 = time.time()
@@ -225,6 +232,10 @@ def main() -> None:
     for L in sorted(set(man_layers) | (set(sum_layers) | set(out_layers) if prompt_on else set())):
         layers[L].register_forward_hook(lambda _m, _i, o, L=L: store.__setitem__(L, nl._hidden(o)))
     emb_mod = model.get_input_embeddings()
+    num_prefix = enc([f"Q: {x}" for x in range(10, 100)])
+    num_perm = np.random.default_rng(124).permutation(90)
+    num_targets = {"num_helix": centred_gram(nl.features(np.arange(10, 100))[0], dev),
+                   "num_helix_shuf": centred_gram(nl.features(np.arange(10, 100)[num_perm])[0], dev)}
     item_tok = prefix[:, SLOT]
 
     def forward(ids):
@@ -242,7 +253,7 @@ def main() -> None:
 
     def geo_loss(G):
         if G in PROMPT_GEOMS:
-            Ls = out_layers if G == "out_circle" else sum_layers
+            Ls = out_layers if G.startswith("out_") else sum_layers
             if args.presample:
                 rows = np.sort(presample_rng.choice(len(train_ids), 96, replace=False))
                 forward(train_ids[torch.tensor(rows, device=dev)])
@@ -250,6 +261,9 @@ def main() -> None:
                 return sum(1 - cka(store[L][:, -1, :], K) for L in Ls) / len(Ls)
             Hs = prompt_states("train")
             return sum(1 - cka(Hs[L], ptargets["train"][G]) for L in Ls) / len(Ls)
+        if G in NUM_GEOMS:
+            forward(num_prefix)
+            return sum(1 - cka(store[L][:, -1, :], num_targets[G]) for L in man_layers) / len(man_layers)
         Hs = geo_states()
         return sum(1 - cka(H, targets[G]) for H in Hs.values()) / len(Hs)
 
@@ -283,6 +297,52 @@ def main() -> None:
         for m in model.modules():
             if isinstance(m, LoraLayer):
                 m.reset_lora_parameters("default", True)
+
+    ablate_arms = set(geoms if args.ablate == "all" else filter(None, args.ablate.split(",")))
+    num_all = enc([f"Q: {x}" for x in range(200)])
+    bands = {"early": list(range(1, nL // 4 + 1)), "mid": list(range(nL // 4 + 1, nL // 2 + 1)), "both": list(range(1, nL // 2 + 1))}
+
+    @torch.no_grad()
+    def ablate_eval() -> dict:
+        """Test accuracy with the item-position state mean-ablated along the number-value subspace (row space of
+        the ridge map helix(x) -> state of 'Q: x', x = 0..199, fitted per layer on the current model) or along a
+        random subspace of the same dimension, over bands of layers. Only the item position: the shift k is
+        itself a number token and stays intact."""
+        model.eval()
+        F = nl.features(np.arange(200))[0]
+        caps = {}
+        hs = [layers[L].register_forward_hook(lambda _m, _i, o, L=L: caps.__setitem__(L, nl._hidden(o)[:, -1, :].float().cpu().numpy()))
+              for L in bands["both"]]
+        forward(num_all)
+        for h in hs:
+            h.remove()
+        g = torch.Generator().manual_seed(0)
+        sub = {}
+        for L in bands["both"]:
+            _, W = nl.fit_map(F, caps[L])
+            Qn = torch.tensor(nl.row_space_projector(W), dtype=torch.float32)
+            Qr = torch.linalg.qr(torch.randn(Qn.shape, generator=g))[0]
+            sub[L] = {"num": Qn.to(dev), "rand": Qr.to(dev), "mu": torch.tensor(caps[L].mean(0), device=dev)}
+        ids, ans = evalsets["test"]
+
+        def acc():
+            am = torch.cat([forward(ids[i:i + args.eval_bs]).argmax(-1) for i in range(0, len(ids), args.eval_bs)])
+            return float((am == ans).float().mean())
+        res = {"dim": int(sub[1]["num"].shape[1]), "bands": bands, "clean": acc()}
+        for bname, band in bands.items():
+            for kind in ("num", "rand"):
+                hooks = []
+                for L in band:
+                    def hk(_m, _i, o, B=sub[L][kind], mu=sub[L]["mu"]):
+                        h = nl._hidden(o).clone()
+                        x = h[:, SLOT, :].float()
+                        h[:, SLOT, :] = (x - ((x - mu) @ B) @ B.T).to(h.dtype)
+                        return nl._with_hidden(o, h)
+                    hooks.append(layers[L].register_forward_hook(hk))
+                res[f"{bname}_{kind}"] = acc()
+                for h in hooks:
+                    h.remove()
+        return res
 
     route_arms = set(geoms if args.route == "all" else filter(None, args.route.split(",")))
     if route_arms:
@@ -335,9 +395,10 @@ def main() -> None:
             preds = {} if args.save_preds else None
             ev = evaluate(preds)
             rt = route(f"{G} seed{seed}") if G in route_arms else None
+            ab = ablate_eval() if G in ablate_arms else None
             path.write_text(json.dumps({"domain": args.domain, "geom": G, "seed": seed, "lam": args.lam, "plam": args.plam, "presample": args.presample, "lr": args.lr,
                                         "epochs": epochs, "layers": man_layers, "train_log": log, "eval": ev,
-                                        "geometry": geometry_report(), "preds": preds, "route": rt}, indent=1))
+                                        "geometry": geometry_report(), "preds": preds, "route": rt, "ablate": ab}, indent=1))
             print(f"{args.domain} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
     summarize(out)
 

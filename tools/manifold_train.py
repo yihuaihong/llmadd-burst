@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import time
 from pathlib import Path
 
@@ -58,7 +59,8 @@ GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
 # learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
 TEACHER = {"main": ("main", False, 2), "main_shuf": ("main", True, 2), "self": ("self", False, 2),
            "main3": ("main", False, 3), "main3_shuf": ("main", True, 3), "self3": ("self", False, 3)}
-ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER)
+STAGED = ("sep_then_helix",)   # sep_ce for the first half of the steps, then helix (causal test of the kappa gate)
+ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED
 
 
 def geom_range(G: str) -> np.ndarray:
@@ -263,6 +265,7 @@ def main() -> None:
     ap.add_argument("--layers", default="4,8,12,16")
     ap.add_argument("--lam", type=float, default=1.0)
     ap.add_argument("--train_pairs", type=int, default=1500)
+    ap.add_argument("--fixed_test", action="store_true", help="split random: always the default test set (pairs[1500:2500]); extra train pairs come from pairs[2500:]")
     ap.add_argument("--test_pairs", type=int, default=1000)
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--bs", type=int, default=16)
@@ -437,7 +440,11 @@ def main() -> None:
     pairs = pairs[rng.permutation(len(pairs))]
     heldout = np.array([], dtype=int)
     if args.split == "random":
-        train, test = pairs[: args.train_pairs], pairs[args.train_pairs: args.train_pairs + args.test_pairs]
+        if args.fixed_test:
+            test = pairs[1500: 1500 + args.test_pairs]
+            train = np.concatenate([pairs[: min(args.train_pairs, 1500)], pairs[1500 + args.test_pairs:][: max(0, args.train_pairs - 1500)]])
+        else:
+            train, test = pairs[: args.train_pairs], pairs[args.train_pairs: args.train_pairs + args.test_pairs]
     else:
         if args.split == "holdout_operand":
             heldout = np.sort(np.random.default_rng(7).choice(np.arange(10, 100), 15, replace=False))
@@ -590,6 +597,7 @@ def main() -> None:
             order_rng = np.random.default_rng(1000 + seed)
             log = []
             model.train()
+            step, half = 0, args.epochs * math.ceil(len(train) / args.bs) // 2
             for ep in range(args.epochs):
                 order = order_rng.permutation(len(train))
                 ce_s = man_s = 0.0; nb = 0
@@ -608,10 +616,11 @@ def main() -> None:
                                 ml = geo_loss("helix", reft=True)
                             loss = ce
                         else:
-                            ml = geo_loss(G, reft=True)
-                            loss = ce + (args.sep_lam if G == "sep_ce" else args.lam) * ml
+                            Gs = ("sep_ce" if step < half else "helix") if G == "sep_then_helix" else G
+                            ml = geo_loss(Gs, reft=True)
+                            loss = ce + (args.sep_lam if Gs == "sep_ce" else args.lam) * ml
                     loss.backward()
-                    opt.step()
+                    opt.step(); step += 1
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
                     del logits, loss
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
