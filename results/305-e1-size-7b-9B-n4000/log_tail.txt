@@ -1,0 +1,21 @@
+## task 305-e1-size-7b-9B-n4000  job 6578  host b-19-53  2026-10-11T22:39:54Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  5.66it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  4.72it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  4.42it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  4.65it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:01<00:00,  4.85it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.58it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.12it/s]
+base: {'test': 0.0, 'train': 0.0002500000118743628, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (143s)
+lora none seed0: {'test': 0.07500000298023224, 'train': 0.28050002455711365, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.004000000189989805} (483s)
+lora helix seed0: {'test': 0.3680000305175781, 'train': 0.6995000243186951, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (897s)
+lora none seed1: {'test': 0.09400000423192978, 'train': 0.2980000078678131, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.007000000216066837} (1225s)
+lora helix seed1: {'test': 0.406000018119812, 'train': 0.7385000586509705, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (1620s)
+lora none seed2: {'test': 0.08400000631809235, 'train': 0.29325002431869507, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.006000000052154064} (1946s)
+lora helix seed2: {'test': 0.3850000202655792, 'train': 0.7422500252723694, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (2341s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | - |
+| none | 3 | 0.084 ± 0.010 | 0.291 ± 0.009 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.006 ± 0.002 | 0.26 / 0.22 CKA@L16 helix 0.70 digit 0.44; emb helix 0.30 digit 0.44 |
+| helix | 3 | 0.386 ± 0.019 | 0.727 ± 0.024 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.002 ± 0.000 | 0.73 / 0.69 CKA@L16 helix 1.00 digit 0.63; emb helix 0.30 digit 0.44 |
+
+## rc=0  2026-10-11T23:19:35Z
