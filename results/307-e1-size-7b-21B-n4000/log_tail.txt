@@ -1,0 +1,21 @@
+## task 307-e1-size-7b-21B-n4000  job 6580  host b-19-57  2026-10-11T22:40:55Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  6.05it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  5.07it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  5.01it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  5.28it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  5.30it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.95it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:01<00:00,  5.57it/s]
+base: {'test': 0.003000000026077032, 'train': 0.005750000476837158, 'three_term': 0.0024999999441206455, 'three_digit': 0.0, 'test_terse': 0.0} (136s)
+lora none seed0: {'test': 0.15900000929832458, 'train': 0.37325000762939453, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (468s)
+lora helix seed0: {'test': 0.6390000581741333, 'train': 0.8527500629425049, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.020000001415610313} (872s)
+lora none seed1: {'test': 0.14300000667572021, 'train': 0.3800000250339508, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (1197s)
+lora helix seed1: {'test': 0.6440000534057617, 'train': 0.8490000367164612, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.010000000707805157} (1585s)
+lora none seed2: {'test': 0.1420000046491623, 'train': 0.3837500214576721, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0020000000949949026} (1906s)
+lora helix seed2: {'test': 0.6050000190734863, 'train': 0.846250057220459, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.01600000075995922} (2294s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0001, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.003 | 0.006 | 0.002 | 0.000 | 0.000 | - |
+| none | 3 | 0.148 ± 0.010 | 0.379 ± 0.005 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.001 ± 0.001 | 0.28 / 0.31 CKA@L16 helix 0.71 digit 0.48; emb helix 0.50 digit 0.60 |
+| helix | 3 | 0.629 ± 0.021 | 0.849 ± 0.003 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.015 ± 0.005 | 0.73 / 0.71 CKA@L16 helix 1.00 digit 0.63; emb helix 0.50 digit 0.60 |
+
+## rc=0  2026-10-11T23:19:40Z
