@@ -98,7 +98,7 @@ FORMATS = {   # training surface formats for --mixed_formats (none of them is th
 }
 GPT3_FILES = {"add": ("two_digit_addition", "plus"), "sub": ("two_digit_subtraction", "minus"),
               "mul": ("two_digit_multiplication", "times")}
-OPS = {"add": "+", "sub": "-", "mul": "*", "mod": "#", "max": "max"}
+OPS = {"add": "+", "sub": "-", "mul": "*", "mod": "#", "max": "max", "mixed": "+"}   # mixed: + is the probe / slot op
 
 
 def answers(task: str, P: np.ndarray) -> np.ndarray:
@@ -331,7 +331,7 @@ def main() -> None:
     ap.add_argument("--main_model", default=None)
     ap.add_argument("--sep_lam", type=float, default=1.0, help="weight of the sep_ce loss (replaces --lam for that arm)")
     ap.add_argument("--geo_sample", type=int, default=180, help="numbers per step for the 10..999 geometries (helix3/digit3)")
-    ap.add_argument("--task", choices=("add", "sub", "mul", "mod", "max"), default="add",
+    ap.add_argument("--task", choices=("add", "sub", "mul", "mod", "max", "mixed"), default="add",
                     help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
     ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
@@ -490,7 +490,7 @@ def main() -> None:
             return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float().to(dev)
 
     # ---------------------------------------------------------------- data
-    ans_of = lambda P: answers(args.task, P)
+    ans_of = lambda P: answers("add" if args.task == "mixed" else args.task, P)
     rng = np.random.default_rng(0)
     pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100)
                       if (args.task != "sub" or a >= b) and (args.task != "mul" or a * b <= 999)])
@@ -511,7 +511,20 @@ def main() -> None:
             assert args.task in ("add", "sub"), "--split carry: add / sub only"
             in_train = (u[:, 0] + u[:, 1] < 10) if args.task == "add" else (u[:, 0] >= u[:, 1])
         train, test = pairs[in_train][: args.train_pairs], pairs[~in_train][: args.test_pairs]
-    assert len(train) == args.train_pairs and len(test) == args.test_pairs, (len(train), len(test))
+    mixed = {}
+    if args.task == "mixed":   # per-operation splits; "test" stays the addition test set
+        mrng = np.random.default_rng(0)
+        for o, ntr, nte in (("add", 1500, 1000), ("sub", 1500, 1000), ("mul", 900, 500)):
+            P = np.array([(a, b) for a in range(10, 100) for b in range(10, 100) if (o != "sub" or a >= b) and (o != "mul" or a * b <= 999)])
+            P = P[mrng.permutation(len(P))]
+            mixed[o] = (P[:ntr], P[ntr:ntr + nte])
+        train = np.concatenate([mixed[o][0] for o in mixed])
+        train_op = sum(([OPS[o]] * len(mixed[o][0]) for o in mixed), [])
+        train_ans = np.concatenate([answers(o, mixed[o][0]) for o in mixed])
+        test = mixed["add"][1]
+    else:
+        assert len(train) == args.train_pairs and len(test) == args.test_pairs, (len(train), len(test))
+        train_op, train_ans = [op] * len(train), ans_of(train)
     # per-number means are taken per slot, so every value must occur in every slot of the probe prompts
     # a small --fixed_test train set (E1) misses some values: probe on the default 1500 train pairs (never test pairs)
     probe_is_train = args.task == "add" and args.split == "random" and len(train) >= 1500
@@ -530,10 +543,19 @@ def main() -> None:
     perm = np.arange(100); perm[10:] = 10 + np.random.default_rng(123).permutation(90)
     evalsets = {
         "test": (enc([two_prompt(*x, op) for x in test]), ans_of(test)),
-        "train": (enc([two_prompt(*x, op) for x in train]), ans_of(train)),
+        "train": (enc([two_prompt(a, b, o) for (a, b), o in zip(train, train_op)]), train_ans),
         "test_terse": (enc([terse_prompt(*x, op) for x in test]), ans_of(test)),
     }
     items = {"test": test, "test_terse": test}
+    for o in ("sub", "mul") if mixed else ():
+        evalsets[f"test_{o}"] = (enc([two_prompt(a, b, OPS[o]) for a, b in mixed[o][1]]), answers(o, mixed[o][1]))
+        items[f"test_{o}"] = mixed[o][1]
+    if mixed and args.gpt3_arith:   # GPT-3 arithmetic, pairs unseen in that operation's training set
+        for o in mixed:
+            seen_o = {tuple(x) for x in mixed[o][0].tolist()}
+            P = np.array([x for x in gpt3_items(args.gpt3_arith, o) if tuple(x) not in seen_o])
+            evalsets[f"gpt3_unseen_{o}"] = (enc([gpt3_prompt(a, b, GPT3_FILES[o][1]) for a, b in P]), answers(o, P))
+            items[f"gpt3_unseen_{o}"] = P
     if args.task in ("add", "sub"):
         evalsets["three_term"] = (enc([three_prompt(*x, op) for x in three]), ans_of(three))
         evalsets["three_digit"] = (enc([two_prompt(*x, op) for x in big]), ans_of(big))
@@ -706,7 +728,7 @@ def main() -> None:
                     opt.zero_grad(set_to_none=True)
                     with autocast:
                         logits = forward(fmt_ids[nb % len(fmt_ids)][torch.tensor(bi, device=dev)], reft=True)   # format rotates per batch
-                        ce = Fn.cross_entropy(logits, num_ids[torch.tensor(ans_of(chunk), device=dev)])
+                        ce = Fn.cross_entropy(logits, num_ids[torch.tensor(train_ans[bi], device=dev)])
                         if G == "none":
                             with torch.no_grad():
                                 ml = geo_loss("helix", reft=True)
