@@ -74,6 +74,53 @@ def is_three(G: str) -> bool:
 def two_prompt(a, b, op="+"): return f"Q: {a} {op} {b} = "
 def three_prompt(a, b, c, op="+"): return f"Q: {a} {op} {b} {op} {c} = "
 def terse_prompt(a, b, op="+"): return f"{nl.PREFIX}{a}{op}{b}="
+def gpt3_prompt(a, b, word): return f"Q: What is {a} {word} {b}?\n\nA: "   # EleutherAI/arithmetic context + the answer's space
+
+
+# natural-language templates (test pairs only); each template is its own eval set (prompts must share one length)
+WORD = {
+    "add": ("Tom has {a} apples and buys {b} more. How many apples does he have now? Answer: ",
+            "A shelf holds {a} books and {b} more books are added. How many books are on the shelf? Answer: ",
+            "There are {a} people on a bus and {b} more get on. How many people are on the bus? Answer: "),
+    "sub": ("Tom has {a} apples and gives away {b}. How many apples does he have left? Answer: ",
+            "A shelf holds {a} books and {b} books are removed. How many books are on the shelf? Answer: ",
+            "There are {a} people on a bus and {b} get off. How many people are on the bus? Answer: "),
+    "mul": ("There are {a} boxes with {b} pencils in each box. How many pencils are there? Answer: ",
+            "A farmer plants {a} rows of {b} trees. How many trees does he plant? Answer: ",
+            "Each of {a} students reads {b} pages. How many pages do they read in total? Answer: "),
+    "max": ("Tom has {a} apples and Anna has {b} apples. How many apples does the one with more apples have? Answer: ",
+            "Which number is larger, {a} or {b}? Answer: ",
+            "Shelf A holds {a} books and shelf B holds {b} books. How many books are on the fuller shelf? Answer: "),
+}
+GPT3_FILES = {"add": ("two_digit_addition", "plus"), "sub": ("two_digit_subtraction", "minus"),
+              "mul": ("two_digit_multiplication", "times")}
+OPS = {"add": "+", "sub": "-", "mul": "*", "mod": "#", "max": "max"}
+
+
+def answers(task: str, P: np.ndarray) -> np.ndarray:
+    """Answer of each operand row (two or more operands for add / sub)."""
+    if task == "add":
+        return P.sum(1)
+    if task == "sub":
+        return P[:, 0] - P[:, 1:].sum(1)
+    if task == "mul":
+        return P[:, 0] * P[:, 1]
+    if task == "mod":
+        return (P[:, 0] + P[:, 1]) % 100
+    return P.max(1)
+
+
+def gpt3_items(path: str, task: str) -> np.ndarray:
+    """(a, b) rows of the GPT-3 two-digit arithmetic file for `task` with operands 10..99 and answers 0..999."""
+    import re
+    fname, word = GPT3_FILES[task]
+    rows = []
+    for line in open(f"{path}/data/{fname}.jsonl"):
+        m = re.search(rf"What is (\d+) {word} (\d+)\?", json.loads(line)["context"])
+        a, b = int(m.group(1)), int(m.group(2))
+        if 10 <= a <= 99 and 10 <= b <= 99 and 0 <= answers(task, np.array([[a, b]]))[0] <= 999:
+            rows.append((a, b))
+    return np.array(rows)
 
 
 NONSEP_B = 3.0
@@ -280,7 +327,10 @@ def main() -> None:
     ap.add_argument("--main_model", default=None)
     ap.add_argument("--sep_lam", type=float, default=1.0, help="weight of the sep_ce loss (replaces --lam for that arm)")
     ap.add_argument("--geo_sample", type=int, default=180, help="numbers per step for the 10..999 geometries (helix3/digit3)")
-    ap.add_argument("--task", choices=("add", "sub"), default="add", help="sub: a - b with a >= b (answers stay single tokens)")
+    ap.add_argument("--task", choices=("add", "sub", "mul", "mod", "max"), default="add",
+                    help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
+    ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
+    ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
     ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
     ap.add_argument("--geo_numbers", choices=("all", "seen"), default="all",
                     help="two-digit geometries over all of 10..99, or only over the operand values seen in training")
@@ -296,7 +346,7 @@ def main() -> None:
     assert not any(TEACHER.get(G, ("",))[0] == "main" for G in geoms) or args.main_model, "main* targets need --main_model"
     assert args.geo_numbers == "all" or not any(is_three(G) for G in geoms), "--geo_numbers seen is for the two-digit geometries"
     man_layers = [int(v) for v in args.layers.split(",")]
-    op = {"add": "+", "sub": "-"}[args.task]
+    op = OPS[args.task]
     t0 = time.time()
 
     # ---------------------------------------------------------------- tokenizer, prefixes, teacher states
@@ -434,9 +484,10 @@ def main() -> None:
             return model(input_ids=ids, logits_to_keep=1).logits[:, -1].float().to(dev)
 
     # ---------------------------------------------------------------- data
-    ans_of = (lambda P: P.sum(1)) if args.task == "add" else (lambda P: P[:, 0] - P[:, 1:].sum(1))
+    ans_of = lambda P: answers(args.task, P)
     rng = np.random.default_rng(0)
-    pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100) if args.task == "add" or a >= b])
+    pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100)
+                      if (args.task != "sub" or a >= b) and (args.task != "mul" or a * b <= 999)])
     pairs = pairs[rng.permutation(len(pairs))]
     heldout = np.array([], dtype=int)
     if args.split == "random":
@@ -451,6 +502,7 @@ def main() -> None:
             in_train = ~np.isin(pairs, heldout).any(1)
         else:   # units carry (add) / borrow (sub) only in the test set
             u = pairs % 10
+            assert args.task in ("add", "sub"), "--split carry: add / sub only"
             in_train = (u[:, 0] + u[:, 1] < 10) if args.task == "add" else (u[:, 0] >= u[:, 1])
         train, test = pairs[in_train][: args.train_pairs], pairs[~in_train][: args.test_pairs]
     assert len(train) == args.train_pairs and len(test) == args.test_pairs, (len(train), len(test))
@@ -473,15 +525,34 @@ def main() -> None:
     evalsets = {
         "test": (enc([two_prompt(*x, op) for x in test]), ans_of(test)),
         "train": (enc([two_prompt(*x, op) for x in train]), ans_of(train)),
-        "three_term": (enc([three_prompt(*x, op) for x in three]), ans_of(three)),
-        "three_digit": (enc([two_prompt(*x, op) for x in big]), ans_of(big)),
         "test_terse": (enc([terse_prompt(*x, op) for x in test]), ans_of(test)),
     }
-    items = {"test": test, "three_term": three, "three_digit": big, "test_terse": test}
+    items = {"test": test, "test_terse": test}
+    if args.task in ("add", "sub"):
+        evalsets["three_term"] = (enc([three_prompt(*x, op) for x in three]), ans_of(three))
+        evalsets["three_digit"] = (enc([two_prompt(*x, op) for x in big]), ans_of(big))
+        items.update(three_term=three, three_digit=big)
+    for k, tpl in enumerate(WORD.get(args.task, ())):   # natural-language templates on the test pairs
+        evalsets[f"word{k}"] = (enc([tpl.format(a=a, b=b) for a, b in test]), ans_of(test))
+        items[f"word{k}"] = test
+    if args.gpt3_arith and args.task in GPT3_FILES:    # GPT-3 arithmetic benchmark (two-digit items)
+        g3 = gpt3_items(args.gpt3_arith, args.task)
+        seen_pairs = {tuple(x) for x in train.tolist()}
+        g3u = np.array([x for x in g3 if tuple(x) not in seen_pairs])
+        for name, P in (("gpt3", g3), ("gpt3_unseen", g3u)):
+            evalsets[name] = (enc([gpt3_prompt(a, b, GPT3_FILES[args.task][1]) for a, b in P]), ans_of(P))
+            items[name] = P
     train_ids = evalsets["train"][0]
     probe_ids = train_ids if probe_is_train else enc([two_prompt(*x, op) for x in probe])
     num_of = torch.full((model.config.vocab_size,), -1, dtype=torch.long, device=dev)
     num_of[num_ids[:1000]] = torch.arange(1000, device=dev)
+
+    @torch.no_grad()
+    def test_acc(reft: bool) -> float:
+        model.eval()
+        ids, ans = evalsets["test"]
+        am = torch.cat([forward(ids[i:i + args.eval_bs], reft).argmax(-1) for i in range(0, len(ids), args.eval_bs)])
+        return float((am == num_ids[torch.tensor(ans, device=dev)]).float().mean())
 
     @torch.no_grad()
     def evaluate(reft: bool, preds: dict | None = None) -> dict:
@@ -599,6 +670,7 @@ def main() -> None:
             log = []
             model.train()
             step, half = 0, args.epochs * math.ceil(len(train) / args.bs) // 2
+            curve = []
             for ep in range(args.epochs):
                 order = order_rng.permutation(len(train))
                 ce_s = man_s = 0.0; nb = 0
@@ -622,6 +694,9 @@ def main() -> None:
                             loss = ce + (args.sep_lam if Gs == "sep_ce" else args.lam) * ml
                     loss.backward()
                     opt.step(); step += 1
+                    if args.curve_every and step % args.curve_every == 0:
+                        curve.append({"step": step, "test": test_acc(reft=True)})
+                        model.train()
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
                     del logits, loss
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
@@ -633,7 +708,7 @@ def main() -> None:
                                         "task": args.task, "split": args.split, "geo_numbers": args.geo_numbers, "preds": preds,
                                         "emb_init": args.emb_init, "emb_init_info": emb_info, "geom": G, "seed": seed, "lam": args.lam, "lr": lr,
                                         "geo_sample": args.geo_sample if is_three(G) else None,
-                                        "layers": man_layers, "train_log": log, "eval": ev, "manifold": diag,
+                                        "layers": man_layers, "train_log": log, "curve": curve, "eval": ev, "manifold": diag,
                                         "geometry": geometry_report(reft=True)}, indent=1))
             print(f"{args.mode} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
     summarize(out)
