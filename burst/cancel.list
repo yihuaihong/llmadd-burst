@@ -11,3 +11,5 @@
 237-size32b-lora-lam20-tokens9B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 237b-size32b-lora-lam20-tokens9B
 239-size32b-lora-lam20-tokens42B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 239b-size32b-lora-lam20-tokens42B
 240-size32b-lora-lam20-tokens84B   # submitted before the 32B memory fix (would OOM at the first geometry run); re-queued as 240b-size32b-lora-lam20-tokens84B
+322b-e1c-9B-n7000-geomctrl   # running on Torch instead (job 19650228)
+323b-e1c-9B-n7000-none-10ep   # running on Torch instead (job 19650232)
