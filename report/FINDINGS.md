@@ -1142,3 +1142,21 @@
 - 不管 checkpoint 成熟与否，增益都随训练数据量增加。所以 F27 里早期增益小，是数据量的问题，不是表征成熟度的问题。
 - task 324：9B、7000 对，none 把 lr 提高到 3e-4 后：test 12.6%（各 seed 13.3 / 11.2 / 13.4），train 19%。与 lr 1e-4 时（11.3%）没有区别；同条件下 helix 为 81.7%。所以 none 的失败不是学习率太小。
 - 322 / 323（helix_shuf / digit 对照、none 训 10 epochs）在任务文件修正前就被调度，因此失败，已作为 322b / 323b 重跑。
+
+### F41 补充 2（Torch jobs 19650648 / 19650649，结果在 results/322b-torch、323b-torch；代码为 commit b775d09 的快照）：+70 是几何特异的，其中很大一部分是"学得快"
+
+- 设置：7B 9B checkpoint，7000 对，固定测试集。
+
+| 条件 | test | train |
+|---|---|---|
+| none，3 epochs | 11.3% | 24% |
+| none，3 epochs，lr 3e-4 | 12.6% | 19% |
+| none，**10 epochs** | **61.8%**（各 seed 67.9 / 55.7） | 90% |
+| helix_shuf，3 epochs | 7.6% | 17% |
+| digit，3 epochs | 36.7%（46.5 / 29.5 / 34.2） | 62% |
+| **helix，3 epochs** | **81.7%** | 89% |
+
+- **几何特异**：打乱的 helix（7.6%）比 none 还差；digit 居中。顺序与 7B 1500 对时一致：helix > digit > none > helix_shuf。
+- **加速，而非"解锁"**：none 训到 10 epochs 能达到 61.8%，所以 3 epochs 时的 +70 主要是 none 还没学会。不过 helix 只用 3 epochs（训练量为 none 的 30%）就比 none 训 10 epochs 还高约 20 点。
+- 论文表述应为："在早期 checkpoint 上，正确的几何先验让模型用不到三分之一的训练量达到更高的泛化"，而不是"让原本学不会的模型学会"。
+- 尚未测：helix 训 10 epochs 的上限。
