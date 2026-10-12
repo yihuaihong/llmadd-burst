@@ -4,4 +4,4 @@
 # after: 006b-dl-early 007b-dl-mid 080b-dl-early2
 # E1 control: does none catch up with a 3x learning rate (3e-4)?
 set -eu
-cd tools \&\& "$PY" manifold_train.py --model "$MODELS/OLMo-2-1124-7B/stage1-step2000-tokens9B" --out "$OUT" --mode lora --lam 20 --fixed_test --train_pairs 7000 --save_preds --epochs 3 --lr 3e-4 --geoms none --seeds 0,1,2
+cd tools && "$PY" manifold_train.py --model "$MODELS/OLMo-2-1124-7B/stage1-step2000-tokens9B" --out "$OUT" --mode lora --lam 20 --fixed_test --train_pairs 7000 --save_preds --epochs 3 --lr 3e-4 --geoms none --seeds 0,1,2
