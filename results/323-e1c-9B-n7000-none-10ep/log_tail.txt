@@ -1,0 +1,5 @@
+## task 323-e1c-9B-n7000-none-10ep  job 6627  host b-19-55  2026-10-12T01:23:25Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+tasks/323-e1c-9B-n7000-none-10ep.sh: line 7: cd: too many arguments
+## rc=1  2026-10-12T01:23:25Z
