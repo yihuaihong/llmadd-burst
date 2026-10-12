@@ -1,0 +1,8 @@
+{
+ "tokenizer": "/scratch/yh6210/llmadd_torch/models/OLMo-2-1124-7B/stage1-step2000-tokens9B",
+ "train_tokens": 400000000,
+ "val_tokens": 2000000,
+ "eos": 100257,
+ "vocab": 100278,
+ "files": "sample/10BT/000_00000.parquet,sample/10BT/001_00000.parquet"
+}
