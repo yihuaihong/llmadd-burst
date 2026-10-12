@@ -1,0 +1,27 @@
+none seed0: t_mem 300 t_grok 10100 final test 1.000 (858s)
+always seed0: t_mem 12900 t_grok None final test 0.279 (1718s)
+w0 seed0: t_mem 9100 t_grok None final test 0.277 (2567s)
+w1000 seed0: t_mem 300 t_grok 3000 final test 1.000 (3417s)
+w2000 seed0: t_mem 300 t_grok 3800 final test 1.000 (4267s)
+w4000 seed0: t_mem 300 t_grok 5500 final test 1.000 (5116s)
+w6000 seed0: t_mem 300 t_grok 7000 final test 1.000 (5965s)
+w8000 seed0: t_mem 300 t_grok 8400 final test 1.000 (6817s)
+w12000 seed0: t_mem 300 t_grok 10100 final test 1.000 (7668s)
+always_shuf seed0: t_mem 300 t_grok 11400 final test 1.000 (8528s)
+w2000_shuf seed0: t_mem 300 t_grok 7500 final test 1.000 (9363s)
+# toy grokking: geometry prior switched on in a window (p, frac, lam, width in the run files)
+
+| arm | seeds | t_mem | t_grok (mean ± sd; ungrokked = never) | final test |
+|---|---|---|---|---|
+| none | 5 | 260 | 12120 ± 1754 (5/5) | 1.000 |
+| always | 5 | 9840 | 19200 ± 0 (1/5) | 0.640 |
+| w0 | 5 | 8520 | 22850 ± 1050 (2/5) | 0.667 |
+| w1000 | 5 | 260 | 5620 ± 1950 (5/5) | 1.000 |
+| w2000 | 5 | 260 | 6360 ± 1900 (5/5) | 1.000 |
+| w4000 | 5 | 260 | 7000 ± 1171 (5/5) | 1.000 |
+| w6000 | 5 | 260 | 8340 ± 1065 (5/5) | 1.000 |
+| w8000 | 5 | 260 | 9520 ± 801 (5/5) | 1.000 |
+| w12000 | 5 | 260 | 11620 ± 1165 (5/5) | 1.000 |
+| always_shuf | 5 | 320 | 16867 ± 4371 (3/5) | 0.617 |
+| w2000_shuf | 4 | 275 | 8525 ± 1379 (4/4) | 1.000 |
+

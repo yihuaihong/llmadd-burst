@@ -1,0 +1,29 @@
+/scratch/yh6210/llmadd_runs/321-e6-toy-grok/code/tools/toy_grok.py:60: UserWarning: Specified kernel cache directory could not be created! This disables kernel caching. Specified directory is /home/yh6210/.cache/torch/kernels. This warning will appear only once per process. (Triggered internally at /pytorch/aten/src/ATen/native/cuda/jit_utils.cpp:1487.)
+  P = torch.fft.rfft(W.float(), dim=0).abs().pow(2).sum(1)[1:]
+none seed1: t_mem 200 t_grok 13800 final test 1.000 (859s)
+always seed1: t_mem 13900 t_grok 19200 final test 1.000 (1720s)
+w0 seed1: t_mem 12700 t_grok 21800 final test 0.988 (2569s)
+w1000 seed1: t_mem 200 t_grok 4300 final test 1.000 (3426s)
+w2000 seed1: t_mem 200 t_grok 4900 final test 1.000 (4278s)
+w4000 seed1: t_mem 200 t_grok 6200 final test 1.000 (5129s)
+w6000 seed1: t_mem 200 t_grok 7800 final test 1.000 (5981s)
+w8000 seed1: t_mem 200 t_grok 9300 final test 1.000 (6834s)
+w12000 seed1: t_mem 200 t_grok 12600 final test 1.000 (7688s)
+always_shuf seed1: t_mem 300 t_grok None final test 0.065 (8548s)
+w2000_shuf seed1: t_mem 200 t_grok 10500 final test 1.000 (9366s)
+# toy grokking: geometry prior switched on in a window (p, frac, lam, width in the run files)
+
+| arm | seeds | t_mem | t_grok (mean ± sd; ungrokked = never) | final test |
+|---|---|---|---|---|
+| none | 5 | 260 | 12120 ± 1754 (5/5) | 1.000 |
+| always | 5 | 9840 | 19200 ± 0 (1/5) | 0.640 |
+| w0 | 5 | 8520 | 22850 ± 1050 (2/5) | 0.667 |
+| w1000 | 5 | 260 | 5620 ± 1950 (5/5) | 1.000 |
+| w2000 | 5 | 260 | 6360 ± 1900 (5/5) | 1.000 |
+| w4000 | 5 | 260 | 7000 ± 1171 (5/5) | 1.000 |
+| w6000 | 5 | 260 | 8340 ± 1065 (5/5) | 1.000 |
+| w8000 | 5 | 260 | 9520 ± 801 (5/5) | 1.000 |
+| w12000 | 5 | 260 | 11620 ± 1165 (5/5) | 1.000 |
+| always_shuf | 5 | 320 | 16867 ± 4371 (3/5) | 0.617 |
+| w2000_shuf | 5 | 260 | 8920 ± 1465 (5/5) | 1.000 |
+
