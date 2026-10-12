@@ -92,6 +92,10 @@ WORD = {
             "Which number is larger, {a} or {b}? Answer: ",
             "Shelf A holds {a} books and shelf B holds {b} books. How many books are on the fuller shelf? Answer: "),
 }
+FORMATS = {   # training surface formats for --mixed_formats (none of them is the GPT-3 or a word-problem format)
+    "add": ("Q: {a} + {b} = ", "Compute {a} + {b}. Result: ", "The sum of {a} and {b} is ", "{a} plus {b} equals "),
+    "sub": ("Q: {a} - {b} = ", "Compute {a} - {b}. Result: ", "The difference between {a} and {b} is ", "{a} minus {b} equals "),
+}
 GPT3_FILES = {"add": ("two_digit_addition", "plus"), "sub": ("two_digit_subtraction", "minus"),
               "mul": ("two_digit_multiplication", "times")}
 OPS = {"add": "+", "sub": "-", "mul": "*", "mod": "#", "max": "max"}
@@ -331,6 +335,7 @@ def main() -> None:
                     help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
     ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
+    ap.add_argument("--mixed_formats", action="store_true", help="add / sub: training batches rotate over FORMATS (GPT-3 and word formats held out)")
     ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
     ap.add_argument("--geo_numbers", choices=("all", "seen"), default="all",
                     help="two-digit geometries over all of 10..99, or only over the operand values seen in training")
@@ -543,6 +548,13 @@ def main() -> None:
             evalsets[name] = (enc([gpt3_prompt(a, b, GPT3_FILES[args.task][1]) for a, b in P]), ans_of(P))
             items[name] = P
     train_ids = evalsets["train"][0]
+    fmt_ids = [train_ids]
+    if args.mixed_formats:
+        assert args.task in FORMATS and FORMATS[args.task][0] == two_prompt("{a}", "{b}", op), "--mixed_formats: add / sub"
+        fmt_ids = [enc([f.format(a=a, b=b) for a, b in train]) for f in FORMATS[args.task]]
+        for k, f in enumerate(FORMATS[args.task][1:], 1):
+            evalsets[f"fmt{k}"] = (enc([f.format(a=a, b=b) for a, b in test]), ans_of(test))
+            items[f"fmt{k}"] = test
     probe_ids = train_ids if probe_is_train else enc([two_prompt(*x, op) for x in probe])
     num_of = torch.full((model.config.vocab_size,), -1, dtype=torch.long, device=dev)
     num_of[num_ids[:1000]] = torch.arange(1000, device=dev)
@@ -682,7 +694,7 @@ def main() -> None:
                     # overflowed 140 GB)
                     opt.zero_grad(set_to_none=True)
                     with autocast:
-                        logits = forward(train_ids[torch.tensor(bi, device=dev)], reft=True)
+                        logits = forward(fmt_ids[nb % len(fmt_ids)][torch.tensor(bi, device=dev)], reft=True)   # format rotates per batch
                         ce = Fn.cross_entropy(logits, num_ids[torch.tensor(ans_of(chunk), device=dev)])
                         if G == "none":
                             with torch.no_grad():
