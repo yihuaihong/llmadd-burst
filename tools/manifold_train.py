@@ -335,6 +335,7 @@ def main() -> None:
                     help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
     ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
+    ap.add_argument("--save_states_every", type=int, default=0, help="snapshot the number states (last layer of --layers) every K steps")
     ap.add_argument("--mixed_formats", action="store_true", help="add / sub: training batches rotate over FORMATS (GPT-3 and word formats held out)")
     ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
     ap.add_argument("--geo_numbers", choices=("all", "seen"), default="all",
@@ -683,6 +684,16 @@ def main() -> None:
             model.train()
             step, half = 0, args.epochs * math.ceil(len(train) / args.bs) // 2
             curve = []
+            snaps, snap_steps = [], []
+
+            def snapshot():
+                with torch.no_grad():
+                    model.eval()
+                    H = geo_states(reft=True)[man_layers[-1]]
+                    snaps.append(H.float().cpu().numpy().astype(np.float16)); snap_steps.append(step)
+                    model.train()
+            if args.save_states_every:
+                snapshot()
             for ep in range(args.epochs):
                 order = order_rng.permutation(len(train))
                 ce_s = man_s = 0.0; nb = 0
@@ -706,6 +717,8 @@ def main() -> None:
                             loss = ce + (args.sep_lam if Gs == "sep_ce" else args.lam) * ml
                     loss.backward()
                     opt.step(); step += 1
+                    if args.save_states_every and step % args.save_states_every == 0:
+                        snapshot()
                     if args.curve_every and step % args.curve_every == 0:
                         curve.append({"step": step, "test": test_acc(reft=True)})
                         model.train()
@@ -713,6 +726,9 @@ def main() -> None:
                     del logits, loss
                 log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
             del opt
+            if snaps:
+                np.savez_compressed(out / f"states_{G}_seed{seed}.npz", states=np.stack(snaps), steps=np.array(snap_steps),
+                                    layer=man_layers[-1], numbers=np.arange(10, 100))
             preds = {} if args.save_preds else None
             ev = evaluate(reft=True, preds=preds)
             diag = diagnostics(number_means(reft=True), None, slot_pos)
