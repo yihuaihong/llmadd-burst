@@ -455,8 +455,9 @@ def main() -> None:
         train, test = pairs[in_train][: args.train_pairs], pairs[~in_train][: args.test_pairs]
     assert len(train) == args.train_pairs and len(test) == args.test_pairs, (len(train), len(test))
     # per-number means are taken per slot, so every value must occur in every slot of the probe prompts
-    probe_is_train = args.task == "add" and args.split == "random"
-    probe = train if probe_is_train else pairs
+    # a small --fixed_test train set (E1) misses some values: probe on the default 1500 train pairs (never test pairs)
+    probe_is_train = args.task == "add" and args.split == "random" and len(train) >= 1500
+    probe = train if probe_is_train else (pairs[:1500] if args.split == "random" else pairs)
     for j in range(2):
         assert set(np.unique(probe[:, j])) >= set(range(10, 100)), f"slot {j}: some operand value never occurs in the probe prompts"
     seen = np.unique(train)
