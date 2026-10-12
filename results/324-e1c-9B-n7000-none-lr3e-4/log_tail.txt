@@ -1,0 +1,17 @@
+## task 324-e1c-9B-n7000-none-lr3e-4  job 6629  host b-19-64  2026-10-12T01:26:58Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/6 [00:00<?, ?it/s]Loading checkpoint shards:  17%|█▋        | 1/6 [00:00<00:00,  9.33it/s]Loading checkpoint shards:  33%|███▎      | 2/6 [00:00<00:00,  7.72it/s]Loading checkpoint shards:  50%|█████     | 3/6 [00:00<00:00,  7.37it/s]Loading checkpoint shards:  67%|██████▋   | 4/6 [00:00<00:00,  6.96it/s]Loading checkpoint shards:  83%|████████▎ | 5/6 [00:00<00:00,  6.92it/s]Loading checkpoint shards: 100%|██████████| 6/6 [00:00<00:00,  7.62it/s]
+base: {'test': 0.0, 'train': 0.0001428571413271129, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.0} (144s)
+lora none seed0: {'test': 0.13300000131130219, 'train': 0.2037142813205719, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.05400000140070915} (721s)
+lora none seed1: {'test': 0.1120000034570694, 'train': 0.16442857682704926, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.05000000074505806} (1285s)
+lora none seed2: {'test': 0.1340000033378601, 'train': 0.2094285637140274, 'three_term': 0.0, 'three_digit': 0.0, 'test_terse': 0.03100000135600567} (1840s)
+# manifold fine-tuning (lora, lam 20.0, lr 0.0003, layers [4, 8, 12, 16], task add, split random)
+
+| geom | n seeds | test | train | three_term | three_digit | test_terse | r2 helix / digit (first layer) |
+|---|---|---|---|---|---|---|---|
+| base | - | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | - |
+| none | 3 | 0.126 ± 0.012 | 0.193 ± 0.024 | 0.000 ± 0.000 | 0.000 ± 0.000 | 0.045 ± 0.012 | 0.57 / 0.55 CKA@L16 helix 0.67 digit 0.42; emb helix 0.30 digit 0.44 |
+
+## rc=0  2026-10-12T01:58:09Z
