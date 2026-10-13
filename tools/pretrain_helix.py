@@ -67,6 +67,7 @@ def main() -> None:
     ap.add_argument("--tokens", type=float, default=3e8, help="training tokens")
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--lam", type=float, default=5.0)
+    ap.add_argument("--lam_after", type=float, default=0.0, help="helix_window: weight after the window ends (0 = release)")
     ap.add_argument("--geo_layers", default=None, help="default: n_layers/3 and 2 n_layers/3")
     ap.add_argument("--eval_every", type=int, default=250)
     args = ap.parse_args()
@@ -112,8 +113,12 @@ def main() -> None:
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.1, fused=(dev == "cuda"))
     sched = lambda s: min(1.0, (s + 1) / warm) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1.0, s / steps))))
     w0, w1 = (float(v) for v in args.window.split(","))
-    geo_on = {"none": lambda s: False, "helix": lambda s: True, "helix_shuf": lambda s: True,
-              "helix_window": lambda s: w0 * steps <= s < w1 * steps}[args.arm]
+    def geo_weight(s):
+        if args.arm == "none":
+            return 0.0
+        if args.arm == "helix_window":
+            return args.lam if w0 * steps <= s < w1 * steps else (args.lam_after if s >= w1 * steps else 0.0)
+        return args.lam
     target = K["helix_shuf" if args.arm == "helix_shuf" else "helix"]
     rng = np.random.default_rng(1000 + data_seed)
 
@@ -157,8 +162,9 @@ def main() -> None:
         x = batch()
         with torch.autocast(dev, dtype=torch.bfloat16):
             lm = model(input_ids=x, labels=x).loss
-            gl = geo_loss() if geo_on(s) else torch.zeros((), device=dev)
-            loss = lm + args.lam * gl
+            gw = geo_weight(s)
+            gl = geo_loss() if gw > 0 else torch.zeros((), device=dev)
+            loss = lm + gw * gl
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
