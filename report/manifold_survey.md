@@ -84,3 +84,34 @@ from §5), enough items for a stable Gram matrix (≥ 12), and known or measurab
 | years 1900..1999 | 100 | "10 years after 1945" | line + period-10 | high (shares digits) | control only |
 | colours | 6–12 | hue offsets / complements | hue circle | unknown | low (few items, naming not standard) |
 | sky, places, emotions | many | knowledge-dependent | sphere / plane / circumplex | – | not suitable for early checkpoints or small pretraining |
+
+## 9. Atlas v2 (2026-10-13): general-knowledge and tokenizer-independent manifolds
+
+Goal: candidates whose geometry does not come from how numbers are tokenised, so that a prior could transfer across
+model families (digit-split tokenizers already carry the number structure, F73). Sources checked on arXiv abstract
+pages; "ours" = added to tools/manifold_domains.py.
+
+| family of rules | geometry | evidence in LMs | ours |
+|---|---|---|---|
+| geography: places, countries, landmarks | lat/long linearly decodable; sphere | Gurnee & Tegmark ICLR 2024 (2310.02207); Godey et al. 2402.19406 ("observable even for tiny models", scales with size); linear spatial world models 2506.02996 | countries, landmarks, us_cities (+ v1 cities, stars) |
+| historical time: people, works | 1-D (line), linearly decodable | Gurnee & Tegmark 2024 (people, art, headlines) | people (birth year; line vs log-time compression) |
+| numeric attributes of entities | monotonic 1-D directions (birth year, population, …), editable | Heinzerling & Inui ACL 2024 (2403.10381); 2410.13194 (comparison in linear subspaces) | country_size (log population, log area), animal_size (log mass) |
+| physical magnitudes / units | log-scale magnitude | "Do language embeddings capture scales?" (2010.05345); log-magnitude of numerals 2502.16147, 2603.20642 | units (time / length / mass), prefixes (powers of ten) |
+| taxonomies / hierarchies | orthogonal parent–child subspaces; hierarchical splitting from co-occurrence | Park et al. ICLR 2025 (2406.01506); Nava & Wyart 2605.23821 (WordNet; word2vec, Gemma-2B) | animals (class / order), languages (family / branch) |
+| scientific structure | periodic table as a 3-D spiral (LLaMA) | Lei & Cooper 2502.10871 | elements: new "table" and "spiral" targets |
+| perception | colour, pitch, emotion, taste align with human perceptual spaces; geometry peaks in middle layers ("transient") | Singh & Chopra 2605.27970; Abdou et al. 2109.06129 | colours: new CIELAB target |
+| ordinal scales | adjective intensity rankable from representations | 2404.03301; Garí Soler & Apidianaki 2020 | scalar_adj (5 scales), ranks, life_stages |
+| social / relational | kinship (generation × sex); political left–right (linear, DW-NOMINATE) | kinship: no geometry paper found; politics: 2503.02080, 2506.04774 (4 axes) | kinship (politics left out: sensitive, needs per-person data) |
+| cyclic, not number-based | Z_n circles | days / months (Engels et al.) | zodiac (Z_12, does it reuse months?), chinese_zodiac (Z_12, no month link), compass (Z_8) |
+| geologic / historical order | line | — | geo_periods |
+
+Methods and universality:
+- SMDS (Tiblias, Bigoulaeva, Niu, Balloccu, Gurevych; TMLR 2026, 2510.01025): tests circle vs line vs cluster
+  hypotheses per feature; reports the shapes are stable across model families and sizes and causally used.
+- Shared concept geometry across families: 2607.04525 (context transforms concepts with a shared geometry across six
+  families), 2606.16897 (contrastive-difference CKA; moderate geometric convergence, near-perfect functional transfer).
+- Scale: 2605.17084 (Pythia 70M–6.9B) — models with d ≤ 1024 lose predictive geometry in late layers, d ≥ 2048 keep it;
+  relevant to the 53M → 1B ladder.
+
+Caveat for priors: geography / time / size targets encode FACTS (where Paris is), not only a symmetry. A prior built
+from them is closer to knowledge injection than to the number helix; its evaluation must use held-out entities.

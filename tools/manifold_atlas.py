@@ -37,9 +37,10 @@ from manifold_domains import domains, tasks
 # i.e. it is the one-hot code, so a held-out item can never be predicted whatever the geometry (R^2 = 0 by
 # construction). The circle (k = 1) is the geometric claim (Engels et al.); pitch / keys use the chromatic circle,
 # colours the hue circle.
-PRIMARY = {"helix": "helix", "cyclic": "circle", "linear": "curve", "sphere": "harmonics", "plane": "plane"}
+PRIMARY = {"helix": "helix", "cyclic": "circle", "linear": "curve", "sphere": "harmonics", "plane": "plane",
+           "magnitude": "log", "tree": "tree", "kin": "generation", "scalar": "within"}   # last four: atlas v2
 PRIMARY_OVERRIDE = {"pitch": "chromatic", "keys": "chromatic", "colours": "hue"}
-LAYERS = (0, 4, 8, 12, 16, 20, 24, 28, 32)
+LAYERS = (0, 4, 8, 12, 16, 20, 24, 28, 32)   # OLMo-2-7B; other depths: 9 evenly spaced layers (set in main)
 N_NULL = 200
 
 
@@ -164,6 +165,7 @@ def main() -> None:
     ap.add_argument("--n_null", type=int, default=N_NULL)
     ap.add_argument("--tiny", action="store_true", help="smoke test: a small random OLMo-2 with the given tokenizer, on CPU")
     ap.add_argument("--random_init", action="store_true", help="negative control: the --model architecture with random weights")
+    ap.add_argument("--only", default=None, help="smoke tests: comma-separated subset of domains")
     args = ap.parse_args()
     from transformers import AutoModelForCausalLM, AutoTokenizer
     t0 = time.time()
@@ -176,13 +178,21 @@ def main() -> None:
                                              num_attention_heads=4, num_key_value_heads=4)).eval()
     elif args.random_init:
         from transformers import AutoConfig
-        dev = "cuda"
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         torch.manual_seed(0)
         model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(args.model), torch_dtype=torch.bfloat16).to(dev).eval()
     else:
-        dev = "cuda"
+        dev = "cuda" if torch.cuda.is_available() else "cpu"
         model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.bfloat16).to(dev).eval()
+    if not args.tiny:   # 9 evenly spaced layers 0..L (= 0, 4, .., 32 for the 32-layer OLMo-2-7B)
+        nl_ = model.config.num_hidden_layers
+        LAYERS = tuple(sorted({int(round(i * nl_ / 8)) for i in range(9)}))
+    keep_layers = [LAYERS[len(LAYERS) * q // 4] for q in (1, 2, 3)]   # states saved at 1/4, 1/2, 3/4 depth
+    print(f"model {args.model} ({type(model).__name__}, {model.config.num_hidden_layers} layers); layers {LAYERS}; "
+          f"states saved at {keep_layers}", flush=True)
     D = domains()
+    if args.only:
+        D = {k: D[k] for k in args.only.split(",")}
     names = list(D)
     rng = np.random.default_rng(0)
     res = {"tag": args.tag, "layers": LAYERS, "domains": {k: {"n": len(d["items"]), "kind": d["kind"], "primary": primary(d, k),
@@ -197,7 +207,7 @@ def main() -> None:
         owner = np.array(owner)
         S = collect(model, tok, prompts, dev)
         S = (S - S.mean(1, keepdims=True)) / (S.std(1, keepdims=True) + 1e-6)
-        keep[tmpl] = S[[LAYERS.index(l) for l in (8, 16, 24) if l in LAYERS]].astype(np.float16)
+        keep[tmpl] = S[[LAYERS.index(l) for l in keep_layers]].astype(np.float16)
         fits, overlap, overlap_null, removal = {}, [], [], []
         perms = {(k, tn): [rng.permutation(len(T)) for _ in range(args.n_null)] for k, d in D.items() for tn, T in d["targets"].items()}
         nulls = {key: [] for key in perms}
@@ -247,7 +257,7 @@ def main() -> None:
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     (out / f"atlas_{args.tag}.json").write_text(json.dumps(res))
     np.savez_compressed(out / f"states_{args.tag}.npz", neutral=keep["neutral"], cued=keep["cued"],
-                        owner=np.array([k for k, d in D.items() for _ in d["items"]]), layers=np.array([8, 16, 24]))
+                        owner=np.array([k for k, d in D.items() for _ in d["items"]]), layers=np.array(keep_layers))
     for k in names:
         b = res["cued"]["best"][k][primary(D[k], k)]
         t = res["tasks"][k]

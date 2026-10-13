@@ -7,7 +7,11 @@
   <out>_gallery.png   at one checkpoint: each domain's leave-one-out predicted coordinates (honest, not in-sample),
                       coloured by the true coordinate
 
+  <out>_families.png  (atlas v2, --families) per domain × model family (final checkpoints): geometry score and test
+                      accuracy, to see which manifolds are universal
+
     python tools/viz_atlas.py --dir <atlas out dir> --out report/figures/atlas [--tag 210B]
+    atlas v2 (tags "<model>-<tokens>"): --prefix olmo2-7b- selects one trajectory; --families olmo2-7b-main,qwen2.5-7b,...
 """
 
 from __future__ import annotations
@@ -26,23 +30,25 @@ import numpy as np
 from manifold_domains import domains
 
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e5e1"
-KIND_ORDER = ("helix", "cyclic", "linear", "sphere", "plane")
+KIND_ORDER = ("helix", "cyclic", "linear", "magnitude", "kin", "scalar", "tree", "sphere", "plane")
 
 
 def tokens_of(tag):
+    tag = tag.rsplit("-", 1)[-1]   # v2 tags: "<model>-<tokens>"
     if tag == "main":
         return 4.05e12
-    if tag == "rand":   # random-init control, drawn left of the first checkpoint
+    if tag in ("rand", "0B"):   # random-init controls, drawn left of the first checkpoint
         return 2e8
     m = re.match(r"(\d+)B", tag)
-    return float(m.group(1)) * 1e9
+    return float(m.group(1)) * 1e9 if m else np.nan
 
 
-def load(d):
+def load(d, prefix=None):
     res = {}
     for p in Path(d).glob("atlas_*.json"):
         r = json.loads(p.read_text())
-        res[r["tag"]] = r
+        if prefix is None or r["tag"].startswith(prefix):
+            res[r["tag"]] = r
     return dict(sorted(res.items(), key=lambda kv: tokens_of(kv[0])))
 
 
@@ -161,10 +167,17 @@ def gallery(res, ddir, out, tag, tmpl):
             T = d["targets"]["circle" if "circle" in d["targets"] else ("chromatic" if "chromatic" in d["targets"] else "hue")]
             P = loo_pred(H, T[:, :2])
             c = d["coord"]
-        elif kind in ("helix", "linear"):
-            T = d["targets"]["line"]
-            P = np.stack([T[:, 0], loo_pred(H, T)[:, 0]], 1)
-            c = d["coord"]
+        elif kind in ("helix", "linear", "magnitude", "kin", "scalar"):
+            T = d["targets"]["line" if "line" in d["targets"] else prim]
+            if kind == "scalar":   # separate scales: the within-scale position, coloured by scale
+                T = d["targets"]["within"].sum(1, keepdims=True)
+            P = np.stack([T[:, 0], loo_pred(H, T[:, :1])[:, 0]], 1)
+            c = np.unique(d["group"], return_inverse=True)[1] if kind == "scalar" else np.asarray(d["coord"], dtype=float)
+        elif kind == "tree":   # predicted hierarchy code, first two principal axes, coloured by top-level category
+            Pt = loo_pred(H, d["targets"]["tree"])
+            Pt = Pt - Pt.mean(0)
+            P = Pt @ np.linalg.svd(Pt, full_matrices=False)[2][:2].T
+            c = np.unique(d["label"], return_inverse=True)[1]
         elif kind == "sphere":
             T = d["targets"]["plane"]   # (lat, lon) standardised; show predicted vs true map
             P = loo_pred(H, T)[:, ::-1]
@@ -172,11 +185,13 @@ def gallery(res, ddir, out, tag, tmpl):
         else:
             T = d["targets"]["plane"]
             P = loo_pred(H, T)
+            if k == "us_cities":   # (lat, lon) -> map orientation
+                P = P[:, ::-1]
             c = d["coord"][:, 0]
         ax.scatter(P[:, 0], P[:, 1], c=c, cmap="twilight" if kind == "cyclic" else "viridis", s=16, edgecolors="none")
         if kind in ("cyclic",):
             o = np.argsort(c); ax.plot(P[o, 0], P[o, 1], color=GRID, linewidth=0.8, zorder=0)
-        if kind in ("helix", "linear"):
+        if kind in ("helix", "linear", "magnitude", "kin", "scalar"):
             ax.plot([-2, 2], [-2, 2], color=GRID, linewidth=0.8, zorder=0)
         r2 = fits[res[tag]["layers"].index(layers[li])]
         ax.set_title(f"{k}  (L{layers[li]}, R² {r2['r2']:.2f})", fontsize=9.5, color=INK)
@@ -185,11 +200,35 @@ def gallery(res, ddir, out, tag, tmpl):
             s.set_color(GRID)
     for ax in list(axs.flat)[len(show):]:
         ax.axis("off")
-    fig.suptitle(f"Concept manifolds in OLMo-2-7B at {tag} tokens: leave-one-out decoded coordinates "
-                 "(circles: predicted cos/sin; lines: true vs predicted position; sky / cities: predicted longitude × latitude; "
-                 "emotions: predicted valence × arousal)", color=INK, fontsize=10.5, x=0.01, ha="left")
+    fig.suptitle(f"Concept manifolds at {tag}: leave-one-out decoded coordinates "
+                 "(circles: predicted cos/sin; lines / magnitudes / scales: true vs predicted position; places: predicted "
+                 "longitude × latitude; trees: predicted hierarchy code, 2 PCs; emotions: valence × arousal)",
+                 color=INK, fontsize=10.5, x=0.01, ha="left")
     fig.tight_layout()
     fig.savefig(f"{out}_gallery.png", facecolor=SURFACE)
+
+
+def families(res, out, tags, tmpl):
+    """Domain x model: geometry score (best-layer R^2 - best-layer null) and rescaled test accuracy."""
+    names = order(res[tags[0]])
+    G = np.array([[geo_score(res[t], tmpl, k, res[t]["domains"][k]["primary"]) for t in tags] for k in names])
+    A = np.array([[(res[t]["tasks"][k]["acc"] - res[t]["tasks"][k]["chance"]) / (1 - res[t]["tasks"][k]["chance"])
+                   for t in tags] for k in names])
+    fig, axs = plt.subplots(1, 2, figsize=(4 + 1.3 * len(tags) * 2, 0.32 * len(names) + 2), dpi=150)
+    fig.patch.set_facecolor(SURFACE)
+    for ax, M, t in zip(axs, (G, A), ("geometry (R² − null, best layer)", "3-shot test (chance 0, perfect 1)")):
+        im = ax.imshow(M, cmap="viridis", vmin=0, vmax=1, aspect="auto")
+        ax.set_xticks(range(len(tags))); ax.set_xticklabels(tags, rotation=45, ha="right", fontsize=9, color=INK2)
+        ax.set_yticks(range(len(names))); ax.set_yticklabels(names, fontsize=9, color=INK2)
+        for i in range(len(names)):
+            for j in range(len(tags)):
+                ax.text(j, i, f"{M[i, j]:.2f}", ha="center", va="center", fontsize=6.5, color="white" if M[i, j] < 0.5 else INK)
+        ax.set_title(t, color=INK, fontsize=11.5, loc="left")
+        fig.colorbar(im, ax=ax, fraction=0.04)
+    fig.suptitle(f"Which concept manifolds are universal across model families? ({tmpl} prompts)", color=INK, fontsize=14,
+                 x=0.01, ha="left", weight="bold")
+    fig.tight_layout()
+    fig.savefig(f"{out}_families.png", facecolor=SURFACE)
 
 
 def main() -> None:
@@ -198,8 +237,15 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default=None, help="checkpoint for the overlap and gallery figures (default: the latest)")
     ap.add_argument("--tmpl", default="cued", choices=("cued", "neutral"))
+    ap.add_argument("--prefix", default=None, help="atlas v2: one trajectory, e.g. olmo2-7b-")
+    ap.add_argument("--families", default=None, help="atlas v2: comma-separated final-checkpoint tags for the families figure")
     a = ap.parse_args()
-    res = load(a.dir)
+    if a.families:
+        tags = a.families.split(",")
+        families(load(a.dir), a.out, tags, a.tmpl)
+        print("wrote", f"{a.out}_families.png", tags)
+        return
+    res = load(a.dir, a.prefix)
     tag = a.tag or list(res)[-1]
     timeline(res, a.out, a.tmpl)
     overlap(res, a.out, tag, a.tmpl)

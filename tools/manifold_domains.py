@@ -55,6 +55,99 @@ EMOTIONS = ("happy sad angry afraid calm excited bored relaxed anxious content d
             "thrilled worried ashamed disgusted ecstatic embarrassed energetic inspired lively panicked satisfied "
             "tranquil triumphant uneasy weary alert amused annoyed").split()
 
+# ---- atlas v2 (2026-10-13): general-knowledge and tokenizer-independent domains (report/manifold_survey.md §9)
+# famous people; birth years are looked up in Gurnee & Tegmark's historical_figure table (names not found are dropped)
+PEOPLE = ["Confucius", "Sun Tzu", "Pericles", "Socrates", "Plato", "Aristotle", "Alexander the Great", "Hannibal", "Spartacus",
+          "Cleopatra", "Attila", "Justinian I", "Charlemagne", "Richard I of England", "Genghis Khan", "Kublai Khan",
+          "Thomas Aquinas", "Marco Polo", "Dante Alighieri", "Petrarch", "Ibn Battuta", "Giovanni Boccaccio", "Geoffrey Chaucer",
+          "Johannes Gutenberg", "Joan of Arc", "Christopher Columbus", "Leonardo da Vinci", "Vasco da Gama",
+          "Niccolò Machiavelli", "Nicolaus Copernicus", "Michelangelo", "Ferdinand Magellan", "Martin Luther", "Hernán Cortés",
+          "Henry VIII of England", "Suleiman the Magnificent", "Akbar", "Galileo Galilei", "William Shakespeare",
+          "Johannes Kepler", "René Descartes", "Rembrandt", "Blaise Pascal", "Isaac Newton", "Peter the Great",
+          "Johann Sebastian Bach", "Benjamin Franklin", "Adam Smith", "Immanuel Kant", "Joseph Haydn", "George Washington",
+          "Thomas Jefferson", "Johann Wolfgang von Goethe", "Wolfgang Amadeus Mozart", "Napoleon", "Ludwig van Beethoven",
+          "Jane Austen", "Simón Bolívar", "Abraham Lincoln", "Charles Darwin", "Charles Dickens", "Karl Marx", "Queen Victoria",
+          "Florence Nightingale", "Leo Tolstoy", "Mark Twain", "Claude Monet", "Vincent van Gogh", "Oscar Wilde",
+          "Sigmund Freud", "Nikola Tesla", "Theodore Roosevelt", "Marie Curie", "Mahatma Gandhi", "Vladimir Lenin",
+          "Winston Churchill", "Joseph Stalin", "Albert Einstein", "Pablo Picasso", "Virginia Woolf", "Charlie Chaplin",
+          "Mao Zedong", "Ernest Hemingway", "Walt Disney", "George Orwell", "Frida Kahlo", "Alan Turing", "John F. Kennedy",
+          "Nelson Mandela", "Marilyn Monroe", "Andy Warhol", "Che Guevara", "Martin Luther King Jr.", "Audrey Hepburn",
+          "Neil Armstrong", "Elvis Presley", "John Lennon", "Bruce Lee", "Stephen Hawking", "Jimi Hendrix", "Muhammad Ali",
+          "Bob Marley", "Freddie Mercury", "Steve Jobs", "Michael Jackson", "Kurt Cobain"]
+GEO_PERIODS = ("Cambrian Ordovician Silurian Devonian Carboniferous Permian Triassic Jurassic Cretaceous Paleogene Neogene "
+               "Quaternary").split()
+# (animal, class, order, typical adult mass in kg). Orders are the traditional ones (whales as Cetacea); masses are
+# order-of-magnitude values (the targets use log10 mass; the test only compares animals >= 10x apart)
+ANIMALS = [
+    ("mouse", "mammal", "rodent", 0.02), ("rat", "mammal", "rodent", 0.3), ("squirrel", "mammal", "rodent", 0.5),
+    ("beaver", "mammal", "rodent", 20), ("rabbit", "mammal", "lagomorph", 2), ("bat", "mammal", "bat", 0.02),
+    ("cat", "mammal", "carnivore", 4), ("fox", "mammal", "carnivore", 6), ("dog", "mammal", "carnivore", 25),
+    ("wolf", "mammal", "carnivore", 40), ("lion", "mammal", "carnivore", 190), ("tiger", "mammal", "carnivore", 200),
+    ("bear", "mammal", "carnivore", 300), ("horse", "mammal", "odd-toed", 500), ("zebra", "mammal", "odd-toed", 350),
+    ("rhinoceros", "mammal", "odd-toed", 2000), ("sheep", "mammal", "even-toed", 70), ("goat", "mammal", "even-toed", 50),
+    ("pig", "mammal", "even-toed", 150), ("deer", "mammal", "even-toed", 100), ("cow", "mammal", "even-toed", 700),
+    ("camel", "mammal", "even-toed", 500), ("giraffe", "mammal", "even-toed", 1000),
+    ("hippopotamus", "mammal", "even-toed", 1500), ("dolphin", "mammal", "cetacean", 150),
+    ("whale", "mammal", "cetacean", 40000), ("elephant", "mammal", "proboscidean", 5000),
+    ("monkey", "mammal", "primate", 8), ("chimpanzee", "mammal", "primate", 50), ("gorilla", "mammal", "primate", 150),
+    ("kangaroo", "mammal", "marsupial", 60), ("sparrow", "bird", "songbird", 0.03), ("crow", "bird", "songbird", 0.5),
+    ("pigeon", "bird", "pigeon", 0.35), ("parrot", "bird", "parrot", 0.4), ("owl", "bird", "owl", 1.5),
+    ("hawk", "bird", "raptor", 1), ("eagle", "bird", "raptor", 5), ("chicken", "bird", "fowl", 2.5),
+    ("turkey", "bird", "fowl", 8), ("duck", "bird", "waterfowl", 1.2), ("goose", "bird", "waterfowl", 4),
+    ("penguin", "bird", "penguin", 20), ("ostrich", "bird", "ratite", 100), ("lizard", "reptile", "squamate", 0.1),
+    ("snake", "reptile", "squamate", 2), ("turtle", "reptile", "testudine", 10), ("crocodile", "reptile", "crocodilian", 400),
+    ("frog", "amphibian", "anuran", 0.05), ("toad", "amphibian", "anuran", 0.08), ("salamander", "amphibian", "urodele", 0.02),
+    ("goldfish", "fish", "cypriniform", 0.1), ("carp", "fish", "cypriniform", 5), ("salmon", "fish", "salmoniform", 5),
+    ("trout", "fish", "salmoniform", 2), ("tuna", "fish", "scombriform", 200), ("shark", "fish", "shark", 500),
+    ("ant", "insect", "hymenopteran", 3e-6), ("bee", "insect", "hymenopteran", 1e-4), ("wasp", "insect", "hymenopteran", 1e-4),
+    ("butterfly", "insect", "lepidopteran", 5e-4), ("moth", "insect", "lepidopteran", 3e-4), ("beetle", "insect", "beetle", 1e-3),
+    ("fly", "insect", "dipteran", 1e-5), ("mosquito", "insect", "dipteran", 2.5e-6)]
+# (language, family, branch); single-branch families use the family name as the branch
+LANGUAGES = [(l, "Indo-European", b) for b, ls in (
+    ("Germanic", "English German Dutch Swedish Danish Norwegian Icelandic"),
+    ("Romance", "French Spanish Italian Portuguese Romanian Catalan"),
+    ("Slavic", "Russian Polish Czech Ukrainian Serbian Bulgarian"),
+    ("Indo-Aryan", "Hindi Bengali Urdu Punjabi Marathi"), ("Iranian", "Persian Kurdish Pashto"),
+    ("Celtic", "Irish Welsh"), ("Hellenic", "Greek")) for l in ls.split()] + [
+    (l, f, f) for f, ls in (("Uralic", "Finnish Hungarian Estonian"), ("Turkic", "Turkish Kazakh Uzbek Azerbaijani"),
+                            ("Semitic", "Arabic Hebrew Amharic"), ("Sino-Tibetan", "Chinese Burmese Tibetan"),
+                            ("Japonic", "Japanese"), ("Koreanic", "Korean"),
+                            ("Austronesian", "Indonesian Malay Tagalog Javanese Hawaiian"),
+                            ("Niger-Congo", "Swahili Zulu Xhosa Yoruba"), ("Dravidian", "Tamil Telugu Kannada Malayalam"),
+                            ("Austroasiatic", "Vietnamese Khmer"), ("Kra-Dai", "Thai Lao")) for l in ls.split()]
+# (term, generation relative to ego, sex +1 male / -1 female / 0 either, lineal 1 / collateral 0 / by marriage -1)
+KINSHIP = [("great-grandfather", 3, 1, 1), ("great-grandmother", 3, -1, 1), ("grandfather", 2, 1, 1),
+           ("grandmother", 2, -1, 1), ("father", 1, 1, 1), ("mother", 1, -1, 1), ("uncle", 1, 1, 0), ("aunt", 1, -1, 0),
+           ("brother", 0, 1, 0), ("sister", 0, -1, 0), ("cousin", 0, 0, 0), ("husband", 0, 1, -1), ("wife", 0, -1, -1),
+           ("son", -1, 1, 1), ("daughter", -1, -1, 1), ("nephew", -1, 1, 0), ("niece", -1, -1, 0),
+           ("grandson", -2, 1, 1), ("granddaughter", -2, -1, 1), ("great-grandson", -3, 1, 1),
+           ("great-granddaughter", -3, -1, 1)]
+# scalar adjectives / adverbs: (scale, comparison question, words from low to high)
+SCALES = [("temperature", "Which is hotter", "freezing cold cool lukewarm warm hot scorching"),
+          ("size", "Which is bigger", "tiny small medium large huge gigantic"),
+          ("quality", "Which is better", "awful bad mediocre decent good great excellent"),
+          ("frequency", "Which happens more often", "never rarely sometimes often usually always"),
+          ("likelihood", "Which is more likely", "impossible unlikely possible likely certain")]
+RANKS = "private corporal sergeant lieutenant captain major colonel general".split()
+LIFE_STAGES = "newborn infant toddler child teenager adult elderly".split()
+ZODIAC = "Aries Taurus Gemini Cancer Leo Virgo Libra Scorpio Sagittarius Capricorn Aquarius Pisces".split()
+CHINESE_ZODIAC = "Rat Ox Tiger Rabbit Dragon Snake Horse Goat Monkey Rooster Dog Pig".split()
+COMPASS = "north northeast east southeast south southwest west northwest".split()
+# units: (unit, dimension, comparison question, value in SI base units)
+UNITS = [(u, "time", "Which lasts longer", v) for u, v in (
+    ("second", 1), ("minute", 60), ("hour", 3600), ("day", 86400), ("week", 604800), ("month", 2.63e6), ("year", 3.156e7),
+    ("decade", 3.156e8), ("century", 3.156e9), ("millennium", 3.156e10))] + [
+    (u, "length", "Which is longer", v) for u, v in (
+    ("millimeter", 1e-3), ("centimeter", 1e-2), ("inch", 0.0254), ("foot", 0.3048), ("yard", 0.9144), ("meter", 1),
+    ("kilometer", 1e3), ("mile", 1609))] + [
+    (u, "mass", "Which is heavier", v) for u, v in (
+    ("milligram", 1e-6), ("gram", 1e-3), ("ounce", 0.02835), ("pound", 0.4536), ("kilogram", 1), ("ton", 1000))]
+PREFIXES = [("pico", -12), ("nano", -9), ("micro", -6), ("milli", -3), ("centi", -2), ("deci", -1), ("kilo", 3), ("mega", 6),
+            ("giga", 9), ("tera", 12), ("peta", 15)]
+# group (1..18) of elements 1..36, for the periodic-table targets of the existing elements domain
+ELEMENT_GROUPS = [1, 18, 1, 2, 13, 14, 15, 16, 17, 18, 1, 2, 13, 14, 15, 16, 17, 18, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+                  13, 14, 15, 16, 17, 18]
+
 
 # ------------------------------------------------------------------------------------------------ target features
 
@@ -147,6 +240,88 @@ def _emotions():
     return [(w, *va[w]) for w in EMOTIONS if w in va]
 
 
+def onehot(labels, min_count=2):
+    """Centred one-hot code; categories with fewer than min_count items are dropped (a held-out singleton can never
+    be predicted, so its column would only add a constant penalty to the LOO R^2)."""
+    labels = list(labels)
+    cats = [c for c in dict.fromkeys(labels) if labels.count(c) >= min_count]
+    F = np.array([[float(l == c) for c in cats] for l in labels])
+    return F - F.mean(0)
+
+
+def tree(levels, weights=(1.0, 0.7), min_count=2):
+    """Hierarchy as features: weighted one-hot codes per level (e.g. class, order). Squared distances are then
+    ultrametric-like: same order < same class < different class. Targets drop singleton categories (see onehot);
+    the test sets use min_count=1 so that two singletons (Japanese, Korean) are not counted as related."""
+    return np.concatenate([w * onehot(l, min_count) for l, w in zip(levels, weights)], 1)
+
+
+def within(groups, values):
+    """One column per group: the value z-scored within that group, 0 for items of other groups (separate scales)."""
+    groups, values = np.asarray(groups), np.asarray(values, dtype=np.float64)
+    cols = []
+    for g in dict.fromkeys(groups):
+        m = groups == g
+        c = np.zeros(len(values))
+        c[m] = (values[m] - values[m].mean()) / (values[m].std() or 1)
+        cols.append(c)
+    return np.stack(cols, 1)
+
+
+def lab(rgb):
+    """sRGB (0..1) -> CIELAB (D65)."""
+    c = np.asarray(rgb, dtype=np.float64)
+    c = np.where(c > 0.04045, ((c + 0.055) / 1.055) ** 2.4, c / 12.92)
+    xyz = c @ np.array([[0.4124, 0.2126, 0.0193], [0.3576, 0.7152, 0.1192], [0.1805, 0.0722, 0.9505]])
+    xyz = xyz / np.array([0.95047, 1.0, 1.08883])
+    f = np.where(xyz > (6 / 29) ** 3, np.cbrt(xyz), xyz / (3 * (6 / 29) ** 2) + 4 / 29)
+    return np.stack([116 * f[:, 1] - 16, 500 * (f[:, 0] - f[:, 1]), 200 * (f[:, 1] - f[:, 2])], 1)
+
+
+def _countries(n=70):
+    """The n most populous countries with an ASCII name and a capital found among geonamescache's cities:
+    (name, capital lat, capital lon, population, area km2, continent)."""
+    import geonamescache
+    gc = geonamescache.GeonamesCache()
+    cap = {}
+    for c in gc.get_cities().values():
+        cap.setdefault((c["countrycode"], c["name"]), (float(c["latitude"]), float(c["longitude"])))
+    out = []
+    for c in sorted(gc.get_countries().values(), key=lambda c: -c["population"]):
+        if not c["name"].isascii() or (c["iso"], c["capital"]) not in cap or not c["areakm2"]:
+            continue
+        out.append((c["name"], *cap[(c["iso"], c["capital"])], float(c["population"]), float(c["areakm2"]), c["continentcode"]))
+        if len(out) == n:
+            break
+    return out
+
+
+def _us_cities(n=45):
+    """The largest city of each state (Gurnee & Tegmark us_place table), one per name, DC left out: (name, lat, lon)."""
+    seen_state, seen_name, out = set(), set(), []
+    rows = sorted(csv.DictReader(open(DATA / "gurnee_us_place.csv")), key=lambda r: -float(r["population"] or 0))
+    for r in rows:
+        if r["entity_type"] != "city" or r["state_id"] in seen_state or r["state_id"] == "DC" or r["name"] in seen_name:
+            continue
+        seen_state.add(r["state_id"]); seen_name.add(r["name"])
+        out.append((r["name"], float(r["latitude"]), float(r["longitude"])))
+        if len(out) == n:
+            break
+    return out
+
+
+def _landmarks():
+    return [(r["name"], float(r["lat"]), float(r["lon"])) for r in csv.DictReader(open(DATA / "landmarks.csv"))]
+
+
+def _people():
+    born = {}
+    for r in csv.DictReader(open(DATA / "gurnee_historical_figure.csv")):
+        if r["name"] in PEOPLE:   # first row per name in Wikidata-id order (the table is sorted that way)
+            born.setdefault(r["name"], int(float(r["birth_year"])))
+    return [(p, born[p]) for p in PEOPLE if p in born]
+
+
 # ------------------------------------------------------------------------------------------------ domains
 
 def domains() -> dict:
@@ -204,6 +379,66 @@ def domains() -> dict:
     add("emotions", "plane", [e[0] for e in em], "I feel {}",
         {"plane": _std(np.stack([V, A], 1)), "valence": line(V), "arousal": line(A),
          "circumplex": _std(np.stack([np.cos(ang), np.sin(ang)], 1))}, np.stack([V, A], 1))
+    # extra targets for two v1 domains (primary unchanged): the periodic table (Lei & Cooper 2502.10871 report a 3-D
+    # spiral) and perceptual colour space
+    Z = np.arange(1, len(ELEMENTS) + 1); g = np.array(ELEMENT_GROUPS); per = np.searchsorted([2, 10, 18, 36], Z) + 1
+    D["elements"]["targets"].update({"table": _std(np.stack([per, g], 1)),
+                                     "spiral": _std(np.stack([Z, np.cos(2 * np.pi * (g - 1) / 18), np.sin(2 * np.pi * (g - 1) / 18)], 1))})
+    from matplotlib.colors import CSS4_COLORS, to_rgb
+    D["colours"]["targets"]["lab"] = _std(lab([to_rgb(CSS4_COLORS[c]) for c in D["colours"]["items"]]))
+
+    # ---- atlas v2 domains (appended, so the v1 domains' test sets are drawn exactly as before)
+    co = _countries(); lat, lon = np.array([c[1] for c in co]), np.array([c[2] for c in co])
+    pop, area = np.log10([c[3] for c in co]), np.log10([c[4] for c in co])
+    add("countries", "sphere", [c[0] for c in co], "The country of {}",
+        {"sphere": _std(unit_vec(lat, lon)), "harmonics": harmonics(lat, lon), "plane": _std(np.stack([lat, lon], 1)),
+         "continent": onehot([c[5] for c in co])}, np.stack([lat, lon], 1))
+    add("country_size", "magnitude", [c[0] for c in co], "The population of {}",
+        {"log": line(pop), "logarea": line(area), "harmonics": harmonics(lat, lon)}, pop)
+    lm = _landmarks(); lat, lon = np.array([c[1] for c in lm]), np.array([c[2] for c in lm])
+    add("landmarks", "sphere", [c[0] for c in lm], "The famous landmark {}",
+        {"sphere": _std(unit_vec(lat, lon)), "harmonics": harmonics(lat, lon), "plane": _std(np.stack([lat, lon], 1))},
+        np.stack([lat, lon], 1))
+    us = _us_cities(); lat, lon = np.array([c[1] for c in us]), np.array([c[2] for c in us])
+    add("us_cities", "plane", [c[0] for c in us], "The American city of {}",
+        {"plane": _std(np.stack([lat, lon], 1)), "sphere": _std(unit_vec(lat, lon))}, np.stack([lat, lon], 1))
+    pe = _people(); yb = np.array([p[1] for p in pe], dtype=np.float64)
+    add("people", "linear", [p[0] for p in pe], "The historical figure {}",
+        {"line": line(yb), "curve": curve(yb), "logtime": line(np.log10(2030 - yb))}, yb)
+    i = np.arange(len(GEO_PERIODS))
+    add("geo_periods", "linear", GEO_PERIODS, "The geologic period {}", {"line": line(i), "curve": curve(i)}, i)
+    cls, order, mass = [a[1] for a in ANIMALS], [a[2] for a in ANIMALS], np.log10([a[3] for a in ANIMALS])
+    add("animals", "tree", [a[0] for a in ANIMALS], "The animal {}",
+        {"tree": tree([cls, order]), "class": onehot(cls), "logmass": line(mass)}, tree([cls, order], min_count=1))
+    D["animals"]["label"] = np.array(cls)
+    add("animal_size", "magnitude", [a[0] for a in ANIMALS], "The weight of a {}",
+        {"log": line(mass), "tree": tree([cls, order])}, mass)
+    fam, br = [l[1] for l in LANGUAGES], [l[2] for l in LANGUAGES]
+    add("languages", "tree", [l[0] for l in LANGUAGES], "The language {}",
+        {"tree": tree([fam, br]), "family": onehot(fam)}, tree([fam, br], min_count=1))
+    D["languages"]["label"] = np.array(fam)
+    gen, sex, lin = (np.array([k[j] for k in KINSHIP], dtype=np.float64) for j in (1, 2, 3))
+    add("kinship", "kin", [k[0] for k in KINSHIP], "My {}",
+        {"generation": line(gen), "plane": _std(np.stack([gen, sex], 1)), "full": _std(np.stack([gen, sex, lin], 1))}, gen)
+    sw = [(w, s, r) for s, _, ws in SCALES for r, w in enumerate(ws.split())]
+    sg, sr = [w[1] for w in sw], np.array([w[2] for w in sw], dtype=np.float64)
+    add("scalar_adj", "scalar", [w[0] for w in sw], "It was {}",
+        {"within": within(sg, sr), "intensity": line(within(sg, sr).sum(1)), "scale": onehot(sg)}, sr)
+    D["scalar_adj"]["group"] = np.array(sg); D["scalar_adj"]["question"] = {s: q for s, q, _ in SCALES}
+    for name, items, cued in (("ranks", RANKS, "The military rank of {}"), ("life_stages", LIFE_STAGES, "The life stage {}")):
+        i = np.arange(len(items))
+        add(name, "linear", items, cued, {"line": line(i), "curve": curve(i)}, i)
+    for name, items, cued in (("zodiac", ZODIAC, "The zodiac sign {}"), ("chinese_zodiac", CHINESE_ZODIAC, "The Year of the {}"),
+                              ("compass", COMPASS, "The wind blew from the {}")):
+        n = len(items); i = np.arange(n)
+        add(name, "cyclic", items, cued, {"circle": fourier(i, n, (1,)), "fourier": fourier(i, n, range(1, n // 2 + 1)),
+                                          "line": line(i)}, i)
+    ug, uv = [u[1] for u in UNITS], np.log10([u[3] for u in UNITS])
+    add("units", "scalar", [u[0] for u in UNITS], "One {}",
+        {"within": within(ug, uv), "scale": onehot(ug), "logsi": line(uv)}, uv)
+    D["units"]["group"] = np.array(ug); D["units"]["question"] = {u[1]: u[2] for u in UNITS}
+    ex = np.array([p[1] for p in PREFIXES], dtype=np.float64)
+    add("prefixes", "linear", [p[0] for p in PREFIXES], "The metric prefix {}", {"line": line(ex), "curve": curve(ex)}, ex)
     return D
 
 
@@ -230,6 +465,30 @@ OFFSET = {
     "elements": ("in the periodic table, {k} elements after {x} is", "linear", range(1, 4)),
     "pitch": ("{k} semitones above {x} is", "cyclic", range(1, 12)),
     "keys": ("{k} semitones above the key of {x} is the key of", "cyclic", range(1, 12)),
+    # atlas v2
+    "geo_periods": ("in the geologic time scale, {k} periods after the {x} comes the", "linear", range(1, 4)),
+    "zodiac": ("{k} signs after {x} in the zodiac is", "cyclic", range(1, 12)),
+    "chinese_zodiac": ("in the Chinese zodiac, {k} years after the Year of the {x} comes the Year of the", "cyclic", range(1, 12)),
+}
+# atlas v2 comparisons: (template, rule, margin). Rules: sphere = b or c closer to a (great-circle degrees on coord =
+# (lat, lon)); tree = closer to a in the hierarchy features; angle = closer to a on the cycle (degrees); less / more =
+# smaller / larger coord; within = larger coord within the same group (template filled with the group's question)
+PAIR2 = {
+    "countries": ("Which country is closer to {a}, {b} or {c}? Answer:", "sphere", 25),
+    "country_size": ("Which country has more people, {b} or {c}? Answer:", "more", math.log10(3)),
+    "landmarks": ("Which landmark is closer to {a}, {b} or {c}? Answer:", "sphere", 25),
+    "us_cities": ("Which city is closer to {a}, {b} or {c}? Answer:", "sphere", 5),
+    "people": ("Who was born earlier, {b} or {c}? Answer:", "less", 50),
+    "animals": ("Which animal is more closely related to {a}, {b} or {c}? Answer:", "tree", 0.5),
+    "animal_size": ("Which animal is heavier, {b} or {c}? Answer:", "more", 1.0),
+    "languages": ("Which language is more closely related to {a}, {b} or {c}? Answer:", "tree", 0.5),
+    "kinship": ("Who belongs to an older generation, my {b} or my {c}? Answer:", "more", 1),
+    "scalar_adj": ("{q}, {b} or {c}? Answer:", "within", 2),
+    "ranks": ("Which military rank is higher, {b} or {c}? Answer:", "more", 2),
+    "life_stages": ("Which stage of life comes later, {b} or {c}? Answer:", "more", 2),
+    "compass": ("Which direction is closer to {a}, {b} or {c}? Answer:", "angle", 45),
+    "units": ("{q}: one {b} or one {c}? Answer:", "within", math.log10(3)),
+    "prefixes": ("Which metric prefix stands for a larger amount, {b} or {c}? Answer:", "more", 2),
 }
 PAIR = {
     "presidents": "Who was US president earlier, {b} or {c}? Answer:",
@@ -281,6 +540,38 @@ def tasks(D: dict, n: int = 60, shots: int = 3, seed: int = 0) -> dict:
                 gen.append((q, j))
             cands = items
             make = lambda g: (g[0], cands, g[1])
+        elif name in PAIR2:
+            tmpl, rule, margin = PAIR2[name]
+            c = np.asarray(d["coord"], dtype=np.float64)
+            tries = 0
+            while len(gen) < n + shots:
+                tries += 1
+                assert tries < 100000, f"{name}: cannot draw {n + shots} comparisons with margin {margin}"
+                a, b, e = (int(t) for t in rng.choice(nI, 3, replace=False))
+                q = ""
+                if rule in ("sphere", "tree", "angle"):
+                    if rule == "sphere":
+                        db, de = _sphere_dist(c[a], c[b]), _sphere_dist(c[a], c[e])
+                    elif rule == "tree":
+                        db, de = float(((c[a] - c[b]) ** 2).sum()), float(((c[a] - c[e]) ** 2).sum())
+                    else:
+                        cyc = lambda u, v: 360 / nI * min(abs(c[u] - c[v]), nI - abs(c[u] - c[v]))
+                        db, de = cyc(a, b), cyc(a, e)
+                    if abs(db - de) < margin:
+                        continue
+                    ans = 0 if db < de else 1
+                elif rule == "within":
+                    grp = d["group"]
+                    if grp[b] != grp[e] or abs(c[b] - c[e]) < margin:
+                        continue
+                    q = d["question"][grp[b]]
+                    ans = 0 if c[b] > c[e] else 1
+                else:
+                    if abs(c[b] - c[e]) < margin:
+                        continue
+                    ans = 0 if (c[b] < c[e]) == (rule == "less") else 1
+                gen.append((tmpl.format(a=items[a], b=items[b], c=items[e], q=q), (items[b], items[e]), ans))
+            make = lambda g: (g[0], list(g[1]), g[2])
         else:
             tmpl = PAIR[name]
             c = d["coord"]
