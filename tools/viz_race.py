@@ -19,8 +19,9 @@ import numpy as np
 from matplotlib.animation import FFMpegWriter, FuncAnimation, PillowWriter
 
 SURFACE, INK, INK2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e5e1"
-COLOR = {"helix": "#2a78d6", "none": "#eb6834"}          # categorical slots 1 and 2 (validated default palette)
-LABEL = {"helix": "helix prior", "none": "no prior"}
+COLOR = {"helix": "#2a78d6", "none": "#eb6834", "helix_shuf": "#8f8e89"}   # slots 1, 2 and a neutral grey for the control
+LABEL = {"helix": "helix prior", "none": "no prior", "helix_shuf": "shuffled helix"}
+ARMS = ("none", "helix_shuf", "helix")
 
 
 def load(dirs):
@@ -75,7 +76,8 @@ def main() -> None:
     fig.text(0.07, 0.895, f"OLMo-2-7B after 9B pretraining tokens, LoRA fine-tuning on 7000 sums; mean of {data['helix'][2]} seeds",
              fontsize=13, color=INK2)
     lines, dots, tags = {}, {}, {}
-    for G in ("none", "helix"):
+    arms = [G for G in ARMS if G in data]
+    for G in arms:
         lines[G], = ax.plot([], [], color=COLOR[G], linewidth=2.5, solid_capstyle="round")
         dots[G], = ax.plot([], [], "o", color=COLOR[G], markersize=9, markeredgecolor=SURFACE, markeredgewidth=2)
         tags[G] = ax.text(0, 0, "", color=INK, fontsize=14, va="center")
@@ -85,7 +87,7 @@ def main() -> None:
 
     def frame(i):
         k = min(i, n - 1)
-        for G in ("none", "helix"):
+        for G in arms:
             s, a, _ = data[G]
             lines[G].set_data(s[:k + 1], a[:k + 1]); dots[G].set_data([s[k]], [a[k]])
             tags[G].set_position((s[k] + steps[-1] * 0.015, a[k])); tags[G].set_text(f"{LABEL[G]}  {a[k]:.0f}%")
