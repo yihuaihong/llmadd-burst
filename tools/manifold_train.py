@@ -56,13 +56,14 @@ import numlib as nl
 GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse", "sep_ce")
 MULT_GEOMS = ("log", "factor", "factor_shuf", "helix_factor")   # coordinates in which multiplication is a translation
 NOISY_GEOMS = ("helix_n25", "helix_n50", "helix_n100", "helix_n200")   # the helix with fixed per-number noise (std k/100)
+DIGIT_GEOMS = ("digit_fourier", "digit_fourier_shuf", "fone", "fone_shuf", "helix_digitf")   # lookup-friendly per-place codes / FoNE circles
 # three-digit geometries over 10..999 (sampled per step, see --geo_sample)
 GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
 # learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
 TEACHER = {"main": ("main", False, 2), "main_shuf": ("main", True, 2), "self": ("self", False, 2),
            "main3": ("main", False, 3), "main3_shuf": ("main", True, 3), "self3": ("self", False, 3)}
 STAGED = ("sep_then_helix",)   # sep_ce for the first half of the steps, then helix (causal test of the kappa gate)
-ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED + MULT_GEOMS + NOISY_GEOMS
+ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED + MULT_GEOMS + NOISY_GEOMS + DIGIT_GEOMS
 
 
 def geom_range(G: str) -> np.ndarray:
@@ -180,6 +181,15 @@ def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
         F = (F - F[10:100].mean(0)) / F[10:100].std(0)
         F = F + int(G[len("helix_n"):]) / 100 * np.random.default_rng(99).normal(size=F.shape)
         return F[x]
+    if G == "digit_fourier":
+        code = lambda d: np.stack([np.cos(2 * np.pi * d / 10), np.sin(2 * np.pi * d / 10), np.cos(2 * np.pi * d / 5),
+                                   np.sin(2 * np.pi * d / 5), (-1.0) ** d], 1)
+        return np.concatenate([code(x // 10), code(x % 10)], 1)
+    if G == "helix_digitf":
+        return np.concatenate([nl.features(x)[0], geom_features("digit_fourier", x, perm)], 1)
+    if G == "fone":
+        return np.stack([np.cos(2 * np.pi * x / 10), np.sin(2 * np.pi * x / 10), np.cos(2 * np.pi * x / 100),
+                         np.sin(2 * np.pi * x / 100)], 1)
     if G == "log":
         return np.log(x)[:, None]
     if G == "factor":
@@ -205,7 +215,7 @@ def cka(H: torch.Tensor, K_F: torch.Tensor) -> torch.Tensor:
 def target_grams(perm: np.ndarray, dev) -> dict:
     """Centred Gram matrices of the ideal coordinates of 10..99 for every two-digit geometry."""
     out = {}
-    for G in ("helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse") + MULT_GEOMS + NOISY_GEOMS:
+    for G in ("helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse") + MULT_GEOMS + NOISY_GEOMS + DIGIT_GEOMS:
         F = geom_features(G, np.arange(10, 100), perm)
         F = F[:, F.std(0) > 1e-9]
         F = (F - F.mean(0)) / F.std(0)
@@ -350,6 +360,7 @@ def main() -> None:
                     help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
     ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
+    ap.add_argument("--lm_val", default=None, help="uint32 token file (OLMo-2 tokenizer): report LM loss on 32 x 512 tokens")
     ap.add_argument("--save_states_every", type=int, default=0, help="snapshot the number states (last layer of --layers) every K steps")
     ap.add_argument("--mixed_formats", action="store_true", help="add / sub: training batches rotate over FORMATS (GPT-3 and word formats held out)")
     ap.add_argument("--split", choices=("random", "holdout_operand", "carry"), default="random")
@@ -597,6 +608,26 @@ def main() -> None:
     num_of = torch.full((model.config.vocab_size,), -1, dtype=torch.long, device=dev)
     num_of[num_ids[:1000]] = torch.arange(1000, device=dev)
 
+    lm_val_ids = None
+    if args.lm_val:
+        vt = np.memmap(args.lm_val, dtype=np.uint32, mode="r")
+        offs = np.random.default_rng(7).integers(0, len(vt) - 513, size=32)
+        lm_val_ids = torch.tensor(np.stack([vt[o:o + 513].astype(np.int64) for o in offs]), device=dev)
+
+    @torch.no_grad()
+    def lm_val_loss() -> float | None:
+        """Mean next-token loss on held-out FineWeb-Edu text (general ability)."""
+        if lm_val_ids is None:
+            return None
+        model.eval()
+        tot = 0.0
+        for i in range(0, len(lm_val_ids), 8):
+            x = lm_val_ids[i:i + 8]
+            with torch.autocast("cuda" if dev.startswith("cuda") else "cpu", dtype=torch.bfloat16):
+                lg = model(input_ids=x[:, :-1]).logits
+            tot += float(Fn.cross_entropy(lg.float().flatten(0, 1), x[:, 1:].flatten())) * len(x)
+        return tot / len(lm_val_ids)
+
     @torch.no_grad()
     def test_acc(reft: bool) -> float:
         model.eval()
@@ -701,6 +732,8 @@ def main() -> None:
 
     base_preds = {} if args.save_preds else None
     base_eval = evaluate(reft=False, preds=base_preds)
+    if lm_val_ids is not None:
+        base_eval["lm_val_loss"] = lm_val_loss()
     base_means = number_means(reft=False)
     (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, None, slot_pos),
                                                "geometry": geometry_report(reft=False), "task": args.task, "split": args.split,
@@ -768,6 +801,8 @@ def main() -> None:
                                     layer=man_layers[-1], numbers=np.arange(10, 100))
             preds = {} if args.save_preds else None
             ev = evaluate(reft=True, preds=preds)
+            if lm_val_ids is not None:
+                ev["lm_val_loss"] = lm_val_loss()
             diag = diagnostics(number_means(reft=True), None, slot_pos)
             path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geo_site": args.geo_site, "emb_delta": args.emb_delta,
                                         "task": args.task, "split": args.split, "geo_numbers": args.geo_numbers, "preds": preds,
