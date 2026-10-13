@@ -202,6 +202,9 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window", "helix_acc", "helix_cka", "helix_gate", "helix_shuf_window"), required=True)
     ap.add_argument("--geo_site", choices=("prefix", "ctx", "ans"), default="prefix", help="where the geometry loss acts (see top)")
+    ap.add_argument("--target_file", default=None, help="npz with a 90 x k feature table for x = 10..99 that replaces the "
+                    "helix as the target (e.g. a teacher model's number geometry, tools/teacher_targets.py)")
+    ap.add_argument("--target_key", default="feat_k8", help="array in --target_file")
     ap.add_argument("--split", choices=("ordered", "unordered"), default="ordered",
                     help="held-out pairs: ordered (swap may be trained, original) or unordered (both orders held out)")
     ap.add_argument("--ans_layers", default=None, help="--geo_site ans: default 3/4 and 7/8 of the depth")
@@ -251,8 +254,35 @@ def main() -> None:
         return
     num_prefix = enc([f"Q: {x}" for x in range(10, 100)])
     xs = np.arange(10, 100)
-    K = {"helix": centred_gram(nl.features(xs)[0], dev),
-         "helix_shuf": centred_gram(nl.features(xs[np.random.default_rng(124 + args.seed).permutation(90)])[0], dev)}
+    if args.target_file:   # a learned target (e.g. teacher geometry) replaces the helix everywhere it is used
+        T90 = np.load(args.target_file)[args.target_key].astype(np.float64)
+        assert T90.shape[0] == 90, T90.shape
+        def target_feats(vals):
+            return T90[np.asarray(vals) - 10]
+    else:
+        def target_feats(vals):
+            return nl.features(np.asarray(vals))[0]
+    def far_perm(seed):   # permutation of 10..99 whose target is far from the true one: first with CKA < 0.15, else
+        r = np.random.default_rng(seed)   # the farthest of 3000 (a high-rank target keeps CKA ~0.15-0.35 under any shuffle)
+        G0 = centred_gram(target_feats(xs), "cpu")
+        best = (2.0, None)
+        for _ in range(3000):
+            q = r.permutation(90)
+            G1 = centred_gram(target_feats(xs[q]), "cpu")
+            c = float((G0 * G1).sum() / (G0.norm() * G1.norm()))
+            if c < best[0]:
+                best = (c, q)
+            if c < 0.15:
+                break
+        return best
+    if args.target_file:
+        shuf_cka, shuf_perm = far_perm(124 + args.seed)
+        print(f"target {args.target_file}:{args.target_key} {T90.shape}; shuffled-target CKA to the true target = {shuf_cka:.3f}")
+    else:
+        shuf_cka, shuf_perm = None, np.random.default_rng(124 + args.seed).permutation(90)
+    K = {"helix": centred_gram(target_feats(xs), dev), "helix_shuf": centred_gram(target_feats(xs[shuf_perm]), dev),
+         "hand": centred_gram(nl.features(xs)[0], dev)}   # "helix" = the target in use; "hand" = the hand helix
+    assert not (args.target_file and args.geo_site == "ans"), "--target_file covers operands 10..99 only, not sums"
 
     # ------------------------------------------------------------ model
     model = build_model(args, tok, dev)
@@ -271,7 +301,7 @@ def main() -> None:
     dyn = {"released": None, "ema": 0.0, "low": 0, "ema1": 0.0, "ema_all": 0.0, "gate_on": 0}
     # value -> helix features (rows: operand values 10..99, sums 20..198); the shuffled arm permutes the values
     shuf = args.arm in ("helix_shuf", "helix_shuf_window")
-    F_op = nl.features(xs[np.random.default_rng(124 + args.seed).permutation(90)] if shuf else xs)[0]
+    F_op = target_feats(xs[shuf_perm] if shuf else xs)
     sums = np.arange(20, 199)
     # sums span 20..198: the longest period is 200 (one turn over the range, as T = 100 is for operands 10..99); with
     # T = 100, s and s + 100 would share every periodic feature (cos 0.77 vs 0.52 for s, s + 1 after z-scoring)
@@ -351,6 +381,9 @@ def main() -> None:
                                                             len(ids) + np.arange(i, min(i + 250, len(ids)))]) for i in range(0, len(ids), 250)])
                     Kv = Kv[order][:, order]
                     res["cka_ops_in_context"] = {f"L{L}": float(cka(torch.cat(ops_states[L]), Kv)) for L in geo_layers}
+                    if args.target_file:   # the same, against the learned target
+                        Kt = centred_gram(target_feats(vals), dev)[order][:, order]
+                        res["cka_ops_in_context_target"] = {f"L{L}": float(cka(torch.cat(ops_states[L]), Kt)) for L in geo_layers}
             vr = np.random.default_rng(7)
             vl = []
             for _ in range(8):
@@ -359,7 +392,9 @@ def main() -> None:
                 vl.append(float(Fn.cross_entropy(model(input_ids=x[:, :-1]).logits.float().flatten(0, 1), x[:, 1:].flatten())))
             res["val_loss"] = float(np.mean(vl))
             model(input_ids=num_prefix)
-            res["cka_helix"] = {f"L{L}": float(cka(store[L][:, -1, :], K["helix"])) for L in geo_layers}
+            res["cka_helix"] = {f"L{L}": float(cka(store[L][:, -1, :], K["hand"])) for L in geo_layers}
+            if args.target_file:
+                res["cka_target"] = {f"L{L}": float(cka(store[L][:, -1, :], K["helix"])) for L in geo_layers}
         model.train()
         return res
 
@@ -413,7 +448,7 @@ def main() -> None:
                 r[f"cka_{args.geo_site}"] = site_cka
             curve.append(r)
             print(json.dumps(r), flush=True)
-            path.write_text(json.dumps({"args": vars(args), "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
+            path.write_text(json.dumps({"args": vars(args), "shuf_target_cka": shuf_cka, "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
                                         "curve": curve}, indent=1))
     if args.save_model:
         torch.save(model.state_dict(), out / f"model_{args.arm}_seed{args.seed}{args.tag}.pt")
