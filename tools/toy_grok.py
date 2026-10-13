@@ -72,6 +72,7 @@ def main() -> None:
     ap.add_argument("--width", type=int, default=2000)
     ap.add_argument("--arms", default="none,always,w0,w1000,w2000,w4000,w6000,w8000,w12000,always_shuf,w2000_shuf,w6000_shuf")
     ap.add_argument("--eval_every", type=int, default=100)
+    ap.add_argument("--freqs", default="1", help="target frequencies k: cos/sin(2 pi k a / p) for each (1 = the rank-2 circle)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -79,8 +80,9 @@ def main() -> None:
     a, b = np.meshgrid(np.arange(p), np.arange(p), indexing="ij")
     X_all = torch.tensor(np.stack([a.ravel(), b.ravel(), np.full(p * p, p)], 1), device=dev)
     Y_all = (X_all[:, 0] + X_all[:, 1]) % p
+    ks = [int(k) for k in args.freqs.split(",")]
     ang = 2 * np.pi * np.arange(p) / p
-    circ = torch.tensor(np.stack([np.cos(ang), np.sin(ang)], 1), dtype=torch.float32, device=dev)
+    circ = torch.tensor(np.concatenate([np.stack([np.cos(k * ang), np.sin(k * ang)], 1) for k in ks], 1), dtype=torch.float32, device=dev)
     K = {"circle": centred_gram(circ),
          "circle_shuf": centred_gram(circ[torch.tensor(np.random.default_rng(5).permutation(p), device=dev)])}
     t_start = time.time()
@@ -114,7 +116,7 @@ def main() -> None:
                         curve.append({"step": s, "ce": float(ce), "train": acc(tr), "test": acc(te),
                                       "cka_circle": float(cka(model.W_E[:p], K["circle"])), "fourier_top5": fourier_top(model.W_E[:p])})
             first = lambda key, thr: next((c["step"] for c in curve if c[key] >= thr), None)
-            res = {"arm": arm, "seed": seed, "lam": args.lam, "width": args.width, "p": p, "frac": args.frac,
+            res = {"arm": arm, "seed": seed, "lam": args.lam, "width": args.width, "p": p, "frac": args.frac, "freqs": ks,
                    "t_mem": first("train", 0.99), "t_grok": first("test", 0.95), "final_test": curve[-1]["test"], "curve": curve}
             path.write_text(json.dumps(res))
             print(f"{arm} seed{seed}: t_mem {res['t_mem']} t_grok {res['t_grok']} final test {res['final_test']:.3f} ({time.time() - t_start:.0f}s)", flush=True)
