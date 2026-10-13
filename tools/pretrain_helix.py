@@ -9,6 +9,7 @@ Arms (--arm):
   helix        + lam * (1 - CKA) between the last-token states of "Q: x" (x = 10..99) at --geo_layers and the helix
   helix_shuf   the same with the numbers permuted (wrong geometry, same strength)
   helix_window helix only for the steps in [--window start, end) (fractions of training)
+  helix_shuf_window  the shuffled helix in the same window (wrong-geometry control for the timing effect)
   helix_gate   helix while the EMA of in-batch accuracy on the first arithmetic line of each row (the one right after
                text, as in the *_ctx evals) is below --gate_thr (self-timed, can switch back on), from --gate_start
 Where the geometry loss acts (--geo_site):
@@ -69,13 +70,35 @@ def build_model(args, tok, dev):
 
 
 def arithmetic_sets(args, tok, val, dev):
-    """Held-out split and eval sets. test = 1000 ordered pairs never trained on; strict = the test pairs whose swap
-    (b, a) is not trained on either (otherwise a + b can be recalled from b + a: 870 of the 1000 test pairs);
-    *_ctx = the same prompts after a held-out FineWeb chunk, ending at the index where training prompts end."""
-    pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100)])
-    pairs = pairs[np.random.default_rng(0).permutation(len(pairs))]
-    test, trainp = pairs[:1000], pairs[1000:]
-    tr = set(map(tuple, trainp.tolist()))
+    """Held-out split and eval sets; *_ctx = the same prompts after a held-out FineWeb chunk, ending at the index where
+    training prompts end.
+    --split ordered (original): test = 1000 ordered pairs never trained on, but 870 of them have their swap (b, a) in
+      training, so a + b can be recalled from b + a; strict = the 130 test pairs whose swap is not trained either.
+    --split unordered: uheld = both orders of 500 unordered pairs, none trained (~990 pairs, all truly unseen);
+      uswap = 300 pairs held out in one order only (the other order is trained: measures commutative transfer)."""
+    split = getattr(args, "split", "ordered")
+    swap = None
+    if split == "unordered":
+        U = np.array([(a, b) for a in range(10, 100) for b in range(a, 100)])
+        U = U[np.random.default_rng(0).permutation(len(U))]
+        held_u = U[:500]
+        swap_u = np.array([q for q in U[500:].tolist() if q[0] != q[1]][:300])
+        test = np.array([(a, b) for a, b in held_u.tolist()] + [(b, a) for a, b in held_u.tolist() if a != b])
+        sr = np.random.default_rng(1)
+        swap = np.array([(a, b) if sr.random() < 0.5 else (b, a) for a, b in swap_u.tolist()])
+        held = set(map(tuple, test.tolist())) | set(map(tuple, swap.tolist()))
+        trainp = np.array([(a, b) for a in range(10, 100) for b in range(10, 100) if (a, b) not in held])
+        trainp = trainp[np.random.default_rng(2).permutation(len(trainp))]
+        tr = set(map(tuple, trainp.tolist()))
+        assert not ({frozenset(q) for q in test.tolist()} & {frozenset(q) for q in trainp.tolist()}), "uheld leaks (either order)"
+        assert all((b, a) in tr and (a, b) not in tr for a, b in swap.tolist()), "uswap must have exactly its other order trained"
+        T = "uheld"
+    else:
+        pairs = np.array([(a, b) for a in range(10, 100) for b in range(10, 100)])
+        pairs = pairs[np.random.default_rng(0).permutation(len(pairs))]
+        test, trainp = pairs[:1000], pairs[1000:]
+        tr = set(map(tuple, trainp.tolist()))
+        T = "test"
     assert not (set(map(tuple, test.tolist())) & tr), "held-out pairs leak into training"
     strict = np.array([(b, a) not in tr for a, b in test.tolist()])
     lines = [[tok(f.format(a=a, b=b) + f"{a + b}\n", add_special_tokens=False)["input_ids"] for f in FORMATS] for a, b in trainp]
@@ -92,10 +115,13 @@ def arithmetic_sets(args, tok, val, dev):
         lpos.append(row)
     enc = lambda ps: nl.encode(tok, ps, dev)
     ans_tok = lambda P: torch.tensor([tok(str(a + b), add_special_tokens=False)["input_ids"][0] for a, b in P], device=dev)
-    evalsets = {"test": (enc([FORMATS[0].format(a=a, b=b) for a, b in test]), ans_tok(test)),
-                "test_plus": (enc([FORMATS[1].format(a=a, b=b) for a, b in test]), ans_tok(test)),
-                "train": (enc([FORMATS[0].format(a=a, b=b) for a, b in trainp[:500]]), ans_tok(trainp[:500])),
-                "strict": (enc([FORMATS[0].format(a=a, b=b) for a, b in test[strict]]), ans_tok(test[strict]))}
+    evalsets = {T: (enc([FORMATS[0].format(a=a, b=b) for a, b in test]), ans_tok(test)),
+                f"{T}_plus": (enc([FORMATS[1].format(a=a, b=b) for a, b in test]), ans_tok(test)),
+                "train": (enc([FORMATS[0].format(a=a, b=b) for a, b in trainp[:500]]), ans_tok(trainp[:500]))}
+    if split == "unordered":
+        evalsets["uswap"] = (enc([FORMATS[0].format(a=a, b=b) for a, b in swap]), ans_tok(swap))
+    else:
+        evalsets["strict"] = (enc([FORMATS[0].format(a=a, b=b) for a, b in test[strict]]), ans_tok(test[strict]))
     hr = np.random.default_rng(5)   # harder end-point tests (never trained)
     add3 = hr.integers(100, 500, size=(500, 2))
     add1 = np.stack([hr.integers(10, 100, 500), hr.integers(1, 10, 500)], 1)
@@ -105,11 +131,11 @@ def arithmetic_sets(args, tok, val, dev):
         "add1": (enc([FORMATS[0].format(a=a, b=b) for a, b in add1]), ans_tok(add1)),
         "sub": (enc([f"Q: {a} - {b} = " for a, b in sub]),
                 torch.tensor([num_id[a - b] for a, b in sub.tolist()], device=dev)),
-        "test_f2": (enc([FORMATS[2].format(a=a, b=b) for a, b in test]), ans_tok(test)),
-        "test_f3": (enc([FORMATS[3].format(a=a, b=b) for a, b in test]), ans_tok(test))})
+        f"{T}_f2": (enc([FORMATS[2].format(a=a, b=b) for a, b in test]), ans_tok(test)),
+        f"{T}_f3": (enc([FORMATS[3].format(a=a, b=b) for a, b in test]), ans_tok(test))})
     assert all(int(ids[0, -1]) == lines[0][0][-3] for ids, _ in evalsets.values()), "every eval prompt must end like a training prompt"
     # the prompt's last token must be the token that precedes the answer in a training line of the same format
-    assert int(evalsets["test"][0][0, -1]) == lines[0][0][-3], "eval prompt does not end like a training prompt"
+    assert int(evalsets[T][0][0, -1]) == lines[0][0][-3], "eval prompt does not end like a training prompt"
     if args.ctx_eval:
         cr = np.random.default_rng(11)
         def in_context(ids):   # held-out text in front, so the prompt ends where it ends in training (answer at -2)
@@ -117,8 +143,24 @@ def arithmetic_sets(args, tok, val, dev):
             o = cr.integers(0, len(val) - n, size=ids.shape[0])
             return torch.cat([torch.tensor(np.stack([val[i:i + n].astype(np.int64) for i in o]), device=dev), ids], 1)
         evalsets.update({f"{k}_ctx": (in_context(ids), ans) for k, (ids, ans) in list(evalsets.items())})
-        assert all(evalsets[f"{k}_ctx"][0].shape[1] == args.seq - 2 for k in ("test", "train", "strict", "add3", "sub"))
-    return test, trainp, lines, evalsets, lpos
+        assert all(evalsets[f"{k}_ctx"][0].shape[1] == args.seq - 2 for k in (T, "train", "add3", "sub"))
+        # the held-out prompts after 3 solved training lines (the condition of the in-batch accuracy of the last line)
+        fr = np.random.default_rng(12)
+        P = evalsets[T][0]
+        rows = []
+        for i in range(P.shape[0]):
+            shots = sum((lines[int(fr.integers(len(lines)))][int(fr.integers(len(FORMATS)))] for _ in range(3)), [])
+            n = args.seq - 2 - P.shape[1] - len(shots)
+            o = int(fr.integers(0, len(val) - n))
+            rows.append(np.concatenate([val[o:o + n].astype(np.int64), np.asarray(shots, dtype=np.int64), P[i].cpu().numpy()]))
+        evalsets[f"{T}_fs_ctx"] = (torch.tensor(np.stack(rows), device=dev), evalsets[T][1])
+    # operand positions of the main held-out ctx prompts ("Q: a + b = ": a is token 3, b token 6 of 9), checked below
+    info = dict(main=T, sums=test.sum(1), ops=test, prompt_len=int(evalsets[T][0].shape[1]))
+    if args.ctx_eval:
+        ids = evalsets[f"{T}_ctx"][0]; st = ids.shape[1] - info["prompt_len"]
+        info.update(pos_a=st + 3, pos_b=st + 6)
+        assert all(int(ids[i, st + 3]) == num_id[a] and int(ids[i, st + 6]) == num_id[b] for i, (a, b) in enumerate(test.tolist()[:50]))
+    return test, trainp, lines, evalsets, lpos, info
 
 
 def show_inputs(args, tok, train, lines, evalsets, lpos, k=3):
@@ -140,7 +182,8 @@ def show_inputs(args, tok, train, lines, evalsets, lpos, k=3):
         L = len(lines[picks[-1][0]][picks[-1][1]])
         print(f"  len {len(row)}  last line: operands, answer marked (ctx / ans sites read these and the token before the answer): "
               f"...{tail(row, ia - L, ib - L, ians - L)}")
-    for name in ("test", "test_ctx", "strict_ctx", "add3_ctx", "add1_ctx", "sub_ctx", "test_f3_ctx"):
+    for name in ("test", "test_ctx", "strict_ctx", "uheld", "uheld_ctx", "uheld_fs_ctx", "uswap_ctx", "add3_ctx", "add1_ctx",
+                 "sub_ctx", "test_f3_ctx", "uheld_f3_ctx"):
         if name not in evalsets:
             continue
         ids, ans = evalsets[name]
@@ -155,8 +198,10 @@ def main() -> None:
     ap.add_argument("--data", required=True)
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window", "helix_acc", "helix_cka", "helix_gate"), required=True)
+    ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window", "helix_acc", "helix_cka", "helix_gate", "helix_shuf_window"), required=True)
     ap.add_argument("--geo_site", choices=("prefix", "ctx", "ans"), default="prefix", help="where the geometry loss acts (see top)")
+    ap.add_argument("--split", choices=("ordered", "unordered"), default="ordered",
+                    help="held-out pairs: ordered (swap may be trained, original) or unordered (both orders held out)")
     ap.add_argument("--ans_layers", default=None, help="--geo_site ans: default 3/4 and 7/8 of the depth")
     ap.add_argument("--window", default="0.1,0.4", help="helix_window: start,end as fractions of the steps")
     ap.add_argument("--seed", type=int, default=0)
@@ -197,7 +242,7 @@ def main() -> None:
     val = np.memmap(Path(args.data) / "val.bin", dtype=np.uint32, mode="r")
 
     # ------------------------------------------------------------ arithmetic (held-out pairs never appear)
-    test, trainp, lines, evalsets, lpos = arithmetic_sets(args, tok, val, dev)
+    test, trainp, lines, evalsets, lpos, info = arithmetic_sets(args, tok, val, dev)
     enc = lambda ps: nl.encode(tok, ps, dev)
     if args.dry_inputs:
         show_inputs(args, tok, train, lines, evalsets, lpos)
@@ -223,7 +268,7 @@ def main() -> None:
     w0, w1 = (float(v) for v in args.window.split(","))
     dyn = {"released": None, "ema": 0.0, "low": 0, "ema1": 0.0, "ema_all": 0.0, "gate_on": 0}
     # value -> helix features (rows: operand values 10..99, sums 20..198); the shuffled arm permutes the values
-    shuf = args.arm == "helix_shuf"
+    shuf = args.arm in ("helix_shuf", "helix_shuf_window")
     F_op = nl.features(xs[np.random.default_rng(124).permutation(90)] if shuf else xs)[0]
     sums = np.arange(20, 199)
     F_ans = nl.features(sums[np.random.default_rng(125).permutation(len(sums))] if shuf else sums)[0]
@@ -233,12 +278,12 @@ def main() -> None:
             return 0.0
         if args.arm in ("helix_acc", "helix_cka"):
             return args.lam if (s >= args.gate_start * steps and dyn["released"] is None) else 0.0
-        if args.arm == "helix_window":
+        if args.arm in ("helix_window", "helix_shuf_window"):
             return args.lam if w0 * steps <= s < w1 * steps else (args.lam_after if s >= w1 * steps else 0.0)
         if args.arm == "helix_gate":
             return args.lam if (s >= args.gate_start * steps and dyn["ema1"] < args.gate_thr) else 0.0
         return args.lam
-    target = K["helix_shuf" if args.arm == "helix_shuf" else "helix"]
+    target = K["helix_shuf" if args.arm in ("helix_shuf", "helix_shuf_window") else "helix"]
     rng = np.random.default_rng(1000 + data_seed)
 
     def batch():
@@ -277,10 +322,26 @@ def main() -> None:
         model.eval()
         res = {"step": step, "tokens": step * args.bs * args.seq}
         with torch.autocast(dev, dtype=torch.bfloat16):
+            main_ctx = f"{info['main']}_ctx"
             for name, (ids, ans) in evalsets.items():
-                hit = [model(input_ids=ids[i:i + 250], logits_to_keep=1).logits[:, -1].argmax(-1) == ans[i:i + 250]
-                       for i in range(0, len(ids), 250)]
-                res[name] = float(torch.cat(hit).float().mean())
+                hit, ops_states = [], {L: [] for L in geo_layers}
+                for i in range(0, len(ids), 250):
+                    hit.append(model(input_ids=ids[i:i + 250], logits_to_keep=1).logits[:, -1].argmax(-1) == ans[i:i + 250])
+                    if name == main_ctx:
+                        for L in geo_layers:
+                            ops_states[L].append(torch.cat([store[L][:, info["pos_a"]], store[L][:, info["pos_b"]]]).float())
+                hit = torch.cat(hit).float()
+                res[name] = float(hit.mean())
+                if name == main_ctx:   # sums < 100 share their output rows with operand embeddings (tied); split them
+                    lo = torch.tensor(info["sums"] < 100, device=dev)
+                    res[f"{name}_lo"], res[f"{name}_hi"] = float(hit[lo].mean()), float(hit[~lo].mean())
+                    vals = np.concatenate([info["ops"][:, 0], info["ops"][:, 1]])
+                    Kv = centred_gram(nl.features(vals)[0], dev)
+                    # states are gathered per chunk as [a-chunk, b-chunk]; reorder values the same way
+                    order = np.concatenate([np.concatenate([np.arange(i, min(i + 250, len(ids))),
+                                                            len(ids) + np.arange(i, min(i + 250, len(ids)))]) for i in range(0, len(ids), 250)])
+                    Kv = Kv[order][:, order]
+                    res["cka_ops_in_context"] = {f"L{L}": float(cka(torch.cat(ops_states[L]), Kv)) for L in geo_layers}
             vr = np.random.default_rng(7)
             vl = []
             for _ in range(8):
