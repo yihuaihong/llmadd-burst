@@ -5,14 +5,23 @@ Background: one shared helix on "Q: x" helps add / sub but hurts mul (F52: 42B +
 geometry tried for mul hurt it (log, factor, digit, FoNE: F53, F57). Here each operation can get its own prior on the
 operand states INSIDE its own prompts ("Q: a * b = ": the states of the tokens a and b, from the training forward
 itself), so the add context can be a helix while the mul context is logarithmic.
+ONLY the second operand b is shaped: with causal attention the state of a (position 3) has not seen the operator
+(position 4), so it is identical in add / sub / mul prompts and equal to the shared "Q: a" state (audit 2026-10-13).
 
 Tasks (identical to manifold_train.py --task mixed): add 1500 / 1000, sub 1500 / 1000, mul (a * b <= 999) 900 / 500
 train / test pairs, a, b in 10..99, permuted by one rng(0) in the order add, sub, mul; prompt "Q: a <op> b = ".
 Priors (comma-free names joined by "+" in an arm):
   prefix_helix        helix on the last-token states of "Q: x", x = 10..99, at --layers (the original shared prior)
-  <op>_<geom>         CKA on the operand states (a and b) inside the batch of operation <op> (add / sub / mul), target
-                      = manifold_train.geom_features(<geom>) of the operand values in the batch (with repeats), e.g.
-                      add_helix, sub_helix, mul_log, mul_factor, mul_helix; "<op>_<geom>_shuf" permutes the values
+  <op>_<geom>         CKA on the state of the operand b (position 6, after the operator) in prompts of operation <op>
+                      (add / sub / mul), on a separate draw of --prior_bs training prompts of that operation every
+                      step; target = manifold_train.geom_features(<geom>) of b, standardised over all values 10..99
+                      (not per batch) and centred in the batch; e.g. add_helix, sub_helix, mul_log, mul_factor;
+                      "<op>_<geom>_shuf" permutes the values 10..99 (fixed per seed)
+A suffix "@norm" on an arm divides lambda by the number of active priors. Step 0 of every run logs the gradient norm
+of every CE and prior term on the LoRA parameters and their pairwise cosines.
+Main metrics: mul/test_strict (58% of the mul test pairs have their swap trained: mul/test is mostly recall), and
+mul/train next to it. Only paired comparisons within this script are valid: training differs from F52 (per-operation
+batches, summed CEs, 280 steps; mul sees ~5 epochs).
 Each step: one batch of --bs per operation; loss = sum of the CEs + lam * sum of the active priors.
 Eval: test accuracy per operation, and test_strict (pairs whose swap is not trained) for add and mul.
 
@@ -58,6 +67,7 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--bs", type=int, default=16)
+    ap.add_argument("--prior_bs", type=int, default=64, help="prompts of an operation drawn for its in-context prior each step")
     ap.add_argument("--steps", type=int, default=280)
     ap.add_argument("--eval_bs", type=int, default=256)
     ap.add_argument("--tiny", action="store_true", help="CPU smoke test: a small random OLMo-2 with the given tokenizer")
@@ -65,7 +75,7 @@ def main() -> None:
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     arms = args.arms.split(",")
     for a in arms:
-        for p in ([] if a == "none" else a.split("+")):
+        for p in ([] if a == "none" else a.removesuffix("@norm").split("+")):
             assert p == "prefix_helix" or (p.split("_")[0] in TASKS and len(p.split("_")) >= 2), p
     seeds = [int(s) for s in args.seeds.split(",")]
     layers_geo = [int(v) for v in args.layers.split(",")]
@@ -134,16 +144,28 @@ def main() -> None:
         pm[10:100] = 10 + np.random.default_rng(124 + seed).permutation(90)
         return pm
 
-    def in_context_loss(prior, P_batch, perm):
-        """Prior on the operand states of the batch just forwarded (store holds that forward's states)."""
-        geom = prior.split("_", 1)[1]
-        vals = np.concatenate([P_batch[:, 0], P_batch[:, 1]])
-        K = centred_gram(geom_features(geom, vals, perm), dev)
-        Ls = []
-        for L in layers_geo:
-            H = torch.cat([store[L][:, 3], store[L][:, 6]])
-            Ls.append(1 - cka(H, K))
-        return sum(Ls) / len(Ls)
+    feat_cache = {}
+
+    def b_features(geom, vals, perm):
+        """geom_features of the values, z-scored over ALL values 10..99 (not per batch), so a batch does not rescale
+        rare columns; the batch Gram is then only centred."""
+        key = (geom, id(perm))
+        if key not in feat_cache:
+            F = geom_features(geom, np.arange(10, 100), perm).astype(np.float64)
+            keep = F.std(0) > 1e-9
+            feat_cache[key] = (F[:, keep] - F[:, keep].mean(0)) / F[:, keep].std(0)
+        F = torch.tensor(feat_cache[key][np.asarray(vals) - 10], dtype=torch.float32, device=dev)
+        F = F - F.mean(0)
+        return F @ F.T
+
+    def in_context_loss(prior, perm, rng):
+        """Prior on the state of operand b (position 6) in a fresh draw of --prior_bs training prompts of the operation."""
+        o, geom = prior.split("_", 1)
+        ids, _, P = sets[(o, "train")]
+        rows = rng.choice(len(ids), args.prior_bs, replace=False)
+        forward(ids[torch.tensor(rows, device=dev)])
+        K = b_features(geom, P[rows, 1], perm)
+        return sum(1 - cka(store[L][:, 6], K) for L in layers_geo) / len(layers_geo)
 
     K_prefix = centred_gram(nl.features(np.arange(10, 100))[0], dev)
 
@@ -169,10 +191,9 @@ def main() -> None:
             ids, _, P = sets[(o, "test")]
             ids, P = ids[:256], P[:256]
             forward(ids)
-            vals = np.concatenate([P[:, 0], P[:, 1]])
-            for geom in ("helix", "log"):
-                K = centred_gram(geom_features(geom, vals, None), dev)
-                rep[f"{o}/{geom}"] = {f"L{L}": float(cka(torch.cat([store[L][:, 3], store[L][:, 6]]), K)) for L in layers_geo}
+            for geom in ("helix", "log", "factor"):   # operand b only (a has not seen the operator)
+                K = b_features(geom, P[:, 1], None)
+                rep[f"{o}/b_{geom}"] = {f"L{L}": float(cka(store[L][:, 6], K)) for L in layers_geo}
         forward(prefix)
         rep["prefix/helix"] = {f"L{L}": float(cka(store[L][:, -1, :], K_prefix)) for L in layers_geo}
         return rep
@@ -193,7 +214,11 @@ def main() -> None:
             path = out / f"run_{arm}_seed{seed}.json"
             if path.exists():
                 continue
-            active = [] if arm == "none" else arm.split("+")
+            active = [] if arm == "none" else arm.removesuffix("@norm").split("+")
+            lam = args.lam / len(active) if arm.endswith("@norm") else args.lam
+            params = [p for p in model.parameters() if p.requires_grad]
+            grad_diag = None
+            prior_rng = np.random.default_rng(3000 + seed)
             reset(seed)
             opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr, weight_decay=0.0)
             rng = np.random.default_rng(1000 + seed)
@@ -210,19 +235,28 @@ def main() -> None:
                     rows = np.array([orders[o].pop() for _ in range(args.bs)])
                     bi = torch.tensor(rows, device=dev)
                     ce[o] = Fn.cross_entropy(forward(ids[bi]), ans[bi])
-                    for p in active:   # priors of THIS operation, on the states of this forward
-                        if p != "prefix_helix" and p.split("_")[0] == o:
-                            geo[p] = in_context_loss(p, P[rows], perm)
-                if "prefix_helix" in active:
-                    geo["prefix_helix"] = prefix_loss()
-                loss = sum(ce.values()) + args.lam * sum(geo.values())
+                for p in active:
+                    geo[p] = prefix_loss() if p == "prefix_helix" else in_context_loss(p, perm, prior_rng)
+                if s == 0:   # which terms pull the shared LoRA parameters in which direction
+                    terms = {f"ce_{o}": v for o, v in ce.items()}
+                    terms.update({f"prior_{p}": v for p, v in geo.items()})
+                    g = {}
+                    for name, v in terms.items():
+                        gs = torch.autograd.grad(v, params, retain_graph=True, allow_unused=True)
+                        g[name] = torch.cat([(x if x is not None else torch.zeros_like(q)).flatten().float() for x, q in zip(gs, params)])
+                    names = list(g)
+                    grad_diag = {"norm": {n: float(g[n].norm()) for n in names},
+                                 "cos": {f"{a}|{b}": float(g[a] @ g[b] / (g[a].norm() * g[b].norm() + 1e-12))
+                                         for i, a in enumerate(names) for b in names[i + 1:]}}
+                    del g
+                loss = sum(ce.values()) + lam * sum(geo.values())
                 loss.backward()
                 opt.step()
                 if s % 40 == 0 or s == args.steps - 1:
                     log.append({"step": s, **{f"ce_{o}": float(v) for o, v in ce.items()}, **{f"geo_{p}": float(v) for p, v in geo.items()}})
             del opt
             ev = evaluate()
-            path.write_text(json.dumps({"arm": arm, "active": active, "seed": seed, "lam": args.lam, "rank": args.rank, "lr": args.lr,
+            path.write_text(json.dumps({"arm": arm, "active": active, "seed": seed, "lam": lam, "grad_diag": grad_diag, "rank": args.rank, "lr": args.lr,
                                         "steps": args.steps, "eval": ev, "geometry": geometry(), "log": log}, indent=1))
             print(f"{arm} seed{seed}: " + " ".join(f"{k} {v:.3f}" for k, v in ev.items() if "test" in k) + f" ({time.time() - t0:.0f}s)", flush=True)
     summarize(out)
@@ -233,7 +267,7 @@ def summarize(out: Path) -> None:
     runs = [json.loads(p.read_text()) for p in sorted(out.glob("run_*.json"))]
     if not runs:
         return
-    keys = [k for k in runs[0]["eval"] if "test" in k]
+    keys = [k for k in runs[0]["eval"] if "test" in k or k == "mul/train"]
     none = {r["seed"]: r for r in runs if r["arm"] == "none"}
     lines = ["| arm | n | " + " | ".join(keys) + " |\n", "|---|---|" + "---|" * len(keys) + "\n"]
     for arm in dict.fromkeys(r["arm"] for r in runs):
