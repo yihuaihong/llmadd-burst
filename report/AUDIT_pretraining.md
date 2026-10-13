@@ -61,3 +61,18 @@ Written 2026-10-13 before submitting ptstart. Code: llmadd-burst tools/pretrain_
 - helix_gate: prior on while ema_first_line < gate_thr.
 - Harder end-point tests, all GENERALISATION (never trained): add3 (operands 100..499), add1 (second operand 1..9),
   sub (a - b), test_f2 / test_f3 (other training formats, held-out pairs). Reported as such, not as "accuracy".
+
+## Second adversarial review (new sites / gate / hard tests), 2026-10-13 — and what changed for ptu (commit after 2becdba)
+- Positions (ctx operands, answer predictor), gradients through store, gate signal: verified correct by the reviewer
+  (28,400 lines and 6,400 batch rows checked; store == hidden_states, requires_grad True).
+- Important 1 (accepted, partly verified): in the ORDERED split, none's strict / test_ctx errors at the end concentrate
+  on sums with little training support (192: 3 of 7 pairs trained; 21-25), whether or not the swap was trained; strict
+  happens to contain three sum-192 pairs. So "commutative recall" is not the explanation of the end-point gap; "rare
+  answers" is. Re-check running (check_edge_rerun.txt). In the unordered split only 4 of 985 held-out items have
+  support < 5 (none 0); uheld_ctx_common / _rare are logged.
+- Important 2 (fixed): the answer-site helix with T = 100 made s and s + 100 similar (after z-scoring cos 0.77 > 0.52
+  for s, s + 1), conflicting with reading out the answer; now periods (2, 5, 10, 200): cos(s, s + 100) 0.28.
+- Important 3 (fixed in pt_summary): same condition + seed in two batches = same init and data stream; deduplicated.
+- Important 4 (resolved by the unordered split): test_plus / f2 / f3 shared the commutative contamination.
+- Minor: shuffle permutation now drawn per seed; first-batch asserts on meta positions; floor tests (add3 answers never
+  trained as outputs, sub never trained, add1 duplicates) are exploratory only.
