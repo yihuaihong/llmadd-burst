@@ -1494,4 +1494,4 @@
   - pt7c：7% 算术，none / helix / helix_shuf / helix_window × seed 0–3；
   - pt2c：2% 算术，none / helix / helix_shuf × seed 0–3。
   - 共 28 个任务，已提交。
-- 在 pt7c / pt2c 出结果之前，预训练部分的所有准确率（F50、F55、F61、F62，以及动态窗口 helix_acc / helix_cka：位置 0 的留出题 area 分别为 6.3 和约 12，都不显著）**一律不进论文正文**。
+- 在 pt7c / pt2c 出结果之前，预训练部分的所有准确率（F50、F55、F61、F62，以及动态窗口 helix_acc / helix_cka：位置 0 的留出题 area 分别为 6.3 和 7.2，none 为 4.1，p = .23 和 .11，都不显著）**一律不进论文正文**。

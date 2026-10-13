@@ -27,7 +27,8 @@ def label(a: dict) -> str:
     s = a["arm"]
     if a["arm"] == "helix_window":
         s += f" {a.get('window')}"
-    for k in ("lam_after", "gate_thr", "cka_release", "arith_lines"):
+    keys = {"helix_window": ("lam_after",), "helix_acc": ("gate_thr",), "helix_cka": ("cka_release",)}.get(a["arm"], ())
+    for k in keys:
         if a.get(k) not in (None, 0, 0.0, "", False):
             s += f" {k}={a[k]}"
     return s
