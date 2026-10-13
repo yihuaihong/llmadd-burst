@@ -12,6 +12,8 @@ layer, z-scored per dimension over all items of all domains (removes the outlier
            (chance level for these anisotropic states).
   removal  LOO R^2 of domain b after projecting domain a's basis out of b's states: how much b's geometry lives in a's
            subspace (asymmetric; the diagonal is the full removal).
+  controls token_sum = the target decoded from the summed input embeddings of the item's tokens; token_sum_random
+           = the same with a fixed random vector per token id (what the tokenisation alone gives, e.g. "194"+"5")
   tasks    3-shot accuracy on each domain's test set (manifold_domains.tasks: "k steps after x" over the domain's
            items, or a two-way comparison that needs the geometry), answer chosen by summed log-prob among candidates.
 Writes <out>/atlas_<tag>.json and the states of layers 8/16/24 (fp16) as <out>/states_<tag>.npz.
@@ -31,13 +33,32 @@ import torch
 
 from manifold_domains import domains, tasks
 
-PRIMARY = {"helix": "helix", "cyclic": "fourier", "linear": "curve", "sphere": "harmonics", "plane": "plane"}
+# primary target per kind. For Z_n NOT all frequencies: with every k the centred target spans all n - 1 directions,
+# i.e. it is the one-hot code, so a held-out item can never be predicted whatever the geometry (R^2 = 0 by
+# construction). The circle (k = 1) is the geometric claim (Engels et al.); pitch / keys use the chromatic circle,
+# colours the hue circle.
+PRIMARY = {"helix": "helix", "cyclic": "circle", "linear": "curve", "sphere": "harmonics", "plane": "plane"}
+PRIMARY_OVERRIDE = {"pitch": "chromatic", "keys": "chromatic", "colours": "hue"}
 LAYERS = (0, 4, 8, 12, 16, 20, 24, 28, 32)
 N_NULL = 200
 
 
-def primary(d):
+def primary(d, name=None):
+    if name in PRIMARY_OVERRIDE:
+        return PRIMARY_OVERRIDE[name]
     return PRIMARY[d["kind"]] if PRIMARY[d["kind"]] in d["targets"] else next(iter(d["targets"]))
+
+
+def token_sum(model, tok, items, random=False, dim=1024):
+    """Controls without context or layers: the sum of the item's token embeddings. random=True uses a fixed random
+    vector per token id instead, so a target decodable from it is decodable from the TOKENISATION alone (e.g. "1945" =
+    "194" + "5", "C#" = "C" + "#"), not evidence of a learned manifold. random=False uses the model's own input
+    embeddings (single-token items: geometry already learned in the embedding matrix counts)."""
+    ids = [tok(" " + it, add_special_tokens=False)["input_ids"] for it in items]
+    if random:
+        return np.stack([sum(np.random.default_rng(t).normal(size=dim) for t in x) for x in ids])
+    E = model.get_input_embeddings().weight
+    return np.stack([E[x].float().sum(0).detach().cpu().numpy() for x in ids])
 
 
 @torch.no_grad()
@@ -95,7 +116,8 @@ class LOO:
         n = len(H)
         Hc = H - H.mean(0)
         ev, U = np.linalg.eigh(Hc @ Hc.T)
-        sc = ev.sum() / n
+        ev = np.clip(ev, 0, None)
+        sc = max(ev.sum() / n, 1e-12)   # identical states (e.g. layer 0 of "13:00" sees only "00"): S = 11^T / n
         self.S = [(U * (ev / (ev + a * sc))) @ U.T + 1.0 / n for a in alphas]
         self.n = n
 
@@ -141,6 +163,7 @@ def main() -> None:
     ap.add_argument("--out", required=True)
     ap.add_argument("--n_null", type=int, default=N_NULL)
     ap.add_argument("--tiny", action="store_true", help="smoke test: a small random OLMo-2 with the given tokenizer, on CPU")
+    ap.add_argument("--random_init", action="store_true", help="negative control: the --model architecture with random weights")
     args = ap.parse_args()
     from transformers import AutoModelForCausalLM, AutoTokenizer
     t0 = time.time()
@@ -151,13 +174,18 @@ def main() -> None:
         dev, LAYERS = "cpu", (0, 1, 2, 4)
         model = Olmo2ForCausalLM(Olmo2Config(vocab_size=len(tok), hidden_size=64, intermediate_size=128, num_hidden_layers=4,
                                              num_attention_heads=4, num_key_value_heads=4)).eval()
+    elif args.random_init:
+        from transformers import AutoConfig
+        dev = "cuda"
+        torch.manual_seed(0)
+        model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(args.model), torch_dtype=torch.bfloat16).to(dev).eval()
     else:
         dev = "cuda"
         model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.bfloat16).to(dev).eval()
     D = domains()
     names = list(D)
     rng = np.random.default_rng(0)
-    res = {"tag": args.tag, "layers": LAYERS, "domains": {k: {"n": len(d["items"]), "kind": d["kind"], "primary": primary(d),
+    res = {"tag": args.tag, "layers": LAYERS, "domains": {k: {"n": len(d["items"]), "kind": d["kind"], "primary": primary(d, k),
                                                              "targets": list(d["targets"])} for k, d in D.items()}}
     keep = {}
     for tmpl in ("neutral", "cued"):
@@ -171,6 +199,8 @@ def main() -> None:
         S = (S - S.mean(1, keepdims=True)) / (S.std(1, keepdims=True) + 1e-6)
         keep[tmpl] = S[[LAYERS.index(l) for l in (8, 16, 24) if l in LAYERS]].astype(np.float16)
         fits, overlap, overlap_null, removal = {}, [], [], []
+        perms = {(k, tn): [rng.permutation(len(T)) for _ in range(args.n_null)] for k, d in D.items() for tn, T in d["targets"].items()}
+        nulls = {key: [] for key in perms}
         for li, L in enumerate(LAYERS):
             Hs = {k: S[li, owner == k] - S[li, owner == k].mean(0) for k in names}
             B, Bnull = {}, {}
@@ -179,13 +209,13 @@ def main() -> None:
                 loo = LOO(Hs[k])
                 for tn, T in d["targets"].items():
                     r = loo(T)
-                    perms = [rng.permutation(len(T)) for _ in range(args.n_null)]
-                    nr = np.array([loo(T[p]) for p in perms])
-                    c = cka(Hs[k], T); nc = np.array([cka(Hs[k], T[p]) for p in perms[:50]])
+                    nr = np.array([loo(T[p]) for p in perms[(k, tn)]])
+                    nulls[(k, tn)].append(nr)
+                    c = cka(Hs[k], T); nc = np.array([cka(Hs[k], T[p]) for p in perms[(k, tn)][:50]])
                     fits.setdefault(k, {}).setdefault(tn, []).append(dict(
                         r2=r, null=float(nr.mean()), null95=float(np.quantile(nr, .95)), p=float((nr >= r).mean()),
                         cka=c, cka_null=float(nc.mean())))
-                T = d["targets"][primary(d)]
+                T = d["targets"][primary(d, k)]
                 B[k] = basis(Hs[k], T)
                 Bnull[k] = [basis(Hs[k], T[rng.permutation(len(T))]) for _ in range(20)]
             ov = np.array([[float((B[a].T @ B[b]) .__pow__(2).sum() / min(B[a].shape[1], B[b].shape[1])) for b in names] for a in names])
@@ -195,21 +225,35 @@ def main() -> None:
             for i, a in enumerate(names):
                 for j, b in enumerate(names):
                     P = Hs[b] - (Hs[b] @ B[a]) @ B[a].T
-                    rm[i, j] = loo_r2(P, D[b]["targets"][primary(D[b])])
+                    rm[i, j] = loo_r2(P, D[b]["targets"][primary(D[b], b)])
             overlap.append(ov.tolist()); overlap_null.append(on.tolist()); removal.append(rm.tolist())
-        res[tmpl] = dict(fits=fits, overlap=overlap, overlap_null=overlap_null, removal=removal, order=names)
+        best_layer = {}   # best layer vs the best-layer null (max over layers per permutation): no selection bonus
+        for (k, tn), arr in nulls.items():
+            obs = np.array([f["r2"] for f in fits[k][tn]])
+            nmax = np.max(np.stack(arr), 0)
+            best_layer.setdefault(k, {})[tn] = dict(r2=float(obs.max()), layer=LAYERS[int(obs.argmax())], null=float(nmax.mean()),
+                                                    null95=float(np.quantile(nmax, .95)), p=float((nmax >= obs.max()).mean()))
+        res[tmpl] = dict(fits=fits, best=best_layer, overlap=overlap, overlap_null=overlap_null, removal=removal, order=names)
         print(f"{args.tag} {tmpl} done ({time.time() - t0:.0f}s)", flush=True)
     res["tasks"] = score_tasks(model, tok, tasks(D), dev)
+    for key, rnd in (("token_sum", False), ("token_sum_random", True)):   # controls: embeddings only / tokenisation only
+        res[key] = {}
+        for k, d in D.items():
+            E = token_sum(model, tok, d["items"], random=rnd)
+            E = (E - E.mean(0)) / (E.std(0) + 1e-6)
+            loo = LOO(E - E.mean(0))
+            res[key][k] = {tn: dict(r2=loo(T), null=float(np.mean([loo(T[rng.permutation(len(T))]) for _ in range(50)])))
+                           for tn, T in d["targets"].items()}
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     (out / f"atlas_{args.tag}.json").write_text(json.dumps(res))
     np.savez_compressed(out / f"states_{args.tag}.npz", neutral=keep["neutral"], cued=keep["cued"],
                         owner=np.array([k for k, d in D.items() for _ in d["items"]]), layers=np.array([8, 16, 24]))
     for k in names:
-        f = res["cued"]["fits"][k][primary(D[k])]
-        best = max(range(len(LAYERS)), key=lambda i: f[i]["r2"] - f[i]["null"])
+        b = res["cued"]["best"][k][primary(D[k], k)]
         t = res["tasks"][k]
-        print(f"  {k:13s} {primary(D[k]):10s} best L{LAYERS[best]:2d}  R2 {f[best]['r2']:.2f}  null {f[best]['null']:.2f}  "
-              f"p {f[best]['p']:.3f} | task {t['acc']:.2f} (chance {t['chance']:.2f})")
+        ts = res["token_sum"][k][primary(D[k], k)]; tr = res["token_sum_random"][k][primary(D[k], k)]
+        print(f"  {k:13s} {primary(D[k], k):10s} best L{b['layer']:2d}  R2 {b['r2']:.2f}  best-layer null {b['null']:.2f} (p95 {b['null95']:.2f})  "
+              f"p {b['p']:.3f} | emb-sum {ts['r2']:.2f} rand-tok-sum {tr['r2']:.2f} | task {t['acc']:.2f} (chance {t['chance']:.2f})")
     print(f"done {args.tag} in {time.time() - t0:.0f}s")
 
 
