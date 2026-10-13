@@ -67,6 +67,17 @@ def style(ax):
     ax.yaxis.grid(True, color=GRID); ax.set_axisbelow(True)
 
 
+def geo_score(r, tmpl, k, prim):
+    """Best layer R^2 minus the best-layer permutation null (no layer-selection bonus)."""
+    b = r[tmpl]["best"][k][prim]
+    return b["r2"] - b["null"]
+
+
+def token_confound(r, k, prim, thr=0.3):
+    c = r.get("token_sum_random", {}).get(k, {}).get(prim)
+    return c is not None and c["r2"] - c["null"] >= thr
+
+
 def timeline(res, out, tmpl):
     tags = list(res)
     names = order(res[tags[-1]])
@@ -76,16 +87,20 @@ def timeline(res, out, tmpl):
     fig.patch.set_facecolor(SURFACE)
     for c, k in zip(cols, names):
         prim = res[tags[-1]]["domains"][k]["primary"]
-        geo = [best(res[t][tmpl]["fits"][k][prim])[0] for t in tags]
+        geo = [geo_score(res[t], tmpl, k, prim) for t in tags]
+        k_lab = k + (" *" if token_confound(res[tags[-1]], k, prim) else "")
         tk = [(res[t]["tasks"][k]["acc"] - res[t]["tasks"][k]["chance"]) / (1 - res[t]["tasks"][k]["chance"]) for t in tags]
         axs[0].plot(x, geo, "-o", color=c, linewidth=2, markersize=4)
-        axs[0].text(x[-1] * 1.15, geo[-1], k, color=c, fontsize=9, va="center")
+        axs[0].text(x[-1] * 1.15, geo[-1], k_lab, color=c, fontsize=9, va="center")
         axs[1].plot(x, tk, "-o", color=c, linewidth=2, markersize=4)
         axs[1].text(x[-1] * 1.15, tk[-1], k, color=c, fontsize=9, va="center")
-    for ax, t in zip(axs, ("geometry decodable from the states\n(LOO R² of the target − permutation null, best layer)",
+    for ax, t in zip(axs, ("geometry decodable from the states (best layer LOO R² − best-layer null)\n* = also decodable from the tokenisation alone (random-embedding control)",
                           "3-shot test set\n(accuracy rescaled: chance = 0, perfect = 1)")):
         style(ax); ax.set_xscale("log"); ax.set_xlabel("pretraining tokens (OLMo-2-7B checkpoints)", color=INK2)
         ax.set_title(t, color=INK, fontsize=11.5, loc="left"); ax.set_xlim(x[0] / 1.5, x[-1] * 4)
+        if "rand" in tags:
+            ax.axvline(x[tags.index("rand")] * 1.6, color=GRID, linewidth=1)
+            ax.text(x[tags.index("rand")], ax.get_ylim()[1] * 0.97, "random\ninit", fontsize=8, color=INK2, ha="center", va="top")
     fig.suptitle(f"When does each concept manifold form? ({tmpl} prompts)", color=INK, fontsize=15, x=0.01, ha="left", weight="bold")
     fig.tight_layout()
     fig.savefig(f"{out}_timeline.png", facecolor=SURFACE)
@@ -98,8 +113,8 @@ def overlap(res, out, tag, tmpl):
     M = np.zeros((len(show), len(show)))
     for j, b in enumerate(show):
         prim = res[tag]["domains"][b]["primary"]
-        full, li = best(r["fits"][b][prim])
-        full += r["fits"][b][prim][li]["null"]
+        li = res[tag]["layers"].index(r["best"][b][prim]["layer"])
+        full = r["best"][b][prim]["r2"]
         for i, a in enumerate(show):
             rem = np.array(r["removal"][li])[idx[a], idx[b]]
             M[i, j] = 1 - rem / full if full > 0.05 else np.nan
