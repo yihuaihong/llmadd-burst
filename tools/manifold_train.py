@@ -62,7 +62,7 @@ GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
 # learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
 TEACHER = {"main": ("main", False, 2), "main_shuf": ("main", True, 2), "self": ("self", False, 2),
            "main3": ("main", False, 3), "main3_shuf": ("main", True, 3), "self3": ("self", False, 3)}
-STAGED = ("sep_then_helix",)   # sep_ce for the first half of the steps, then helix (causal test of the kappa gate)
+STAGED = ("sep_then_helix", "helix_gated")   # sep_ce then helix (kappa gate); helix while train-batch accuracy (EMA) < --gate_thr
 ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED + MULT_GEOMS + NOISY_GEOMS + DIGIT_GEOMS
 
 
@@ -362,6 +362,7 @@ def main() -> None:
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
     ap.add_argument("--general_eval", default=None, help="dir with HellaSwag / ARC / LAMBADA files: general-ability suite")
     ap.add_argument("--general_n", type=int, default=500)
+    ap.add_argument("--gate_thr", type=float, default=0.5, help="helix_gated: prior on while the EMA of training-batch accuracy is below this")
     ap.add_argument("--lm_val", default=None, help="uint32 token file (OLMo-2 tokenizer): report LM loss on 32 x 512 tokens")
     ap.add_argument("--save_states_every", type=int, default=0, help="snapshot the number states (last layer of --layers) every K steps")
     ap.add_argument("--mixed_formats", action="store_true", help="add / sub: training batches rotate over FORMATS (GPT-3 and word formats held out)")
@@ -761,6 +762,7 @@ def main() -> None:
             log = []
             model.train()
             step, half = 0, args.epochs * math.ceil(len(train) / args.bs) // 2
+            ema_acc, gate_on_steps = 0.0, 0
             curve = []
             snaps, snap_steps = [], []
 
@@ -789,10 +791,18 @@ def main() -> None:
                             with torch.no_grad():
                                 ml = geo_loss("helix", reft=True)
                             loss = ce
+                        elif G == "helix_gated":
+                            if ema_acc < args.gate_thr:
+                                ml = geo_loss("helix", reft=True); loss = ce + args.lam * ml; gate_on_steps += 1
+                            else:
+                                ml = torch.zeros((), device=dev); loss = ce
                         else:
                             Gs = ("sep_ce" if step < half else "helix") if G == "sep_then_helix" else G
                             ml = geo_loss(Gs, reft=True)
                             loss = ce + (args.sep_lam if Gs == "sep_ce" else args.lam) * ml
+                    with torch.no_grad():
+                        bacc = float((logits.argmax(-1) == num_ids[torch.tensor(train_ans[bi], device=dev)]).float().mean())
+                        ema_acc = 0.95 * ema_acc + 0.05 * bacc
                     loss.backward()
                     opt.step(); step += 1
                     if args.save_states_every and step % args.save_states_every == 0:
@@ -802,7 +812,7 @@ def main() -> None:
                         model.train()
                     ce_s += float(ce.detach()); man_s += float(ml.detach()); nb += 1
                     del logits, loss
-                log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb})
+                log.append({"epoch": ep, "ce": ce_s / nb, "geo_loss": man_s / nb, "ema_train_acc": ema_acc, "gate_on_frac": gate_on_steps / max(step, 1)})
             del opt
             if snaps:
                 np.savez_compressed(out / f"states_{G}_seed{seed}.npz", states=np.stack(snaps), steps=np.array(snap_steps),

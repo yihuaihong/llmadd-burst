@@ -52,7 +52,7 @@ def main() -> None:
     ap.add_argument("--data", required=True)
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window"), required=True)
+    ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window", "helix_acc", "helix_cka"), required=True)
     ap.add_argument("--window", default="0.1,0.4", help="helix_window: start,end as fractions of the steps")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--init_seed", type=int, default=None, help="model initialisation seed (default --seed)")
@@ -67,6 +67,10 @@ def main() -> None:
     ap.add_argument("--tokens", type=float, default=3e8, help="training tokens")
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--lam", type=float, default=5.0)
+    ap.add_argument("--gate_start", type=float, default=0.1, help="helix_acc / helix_cka: first step of the prior (fraction)")
+    ap.add_argument("--gate_thr", type=float, default=0.1, help="helix_acc: release once the EMA of train-batch answer accuracy reaches this")
+    ap.add_argument("--cka_release", type=float, default=0.01, help="helix_cka: release once 1 - CKA stays below this ...")
+    ap.add_argument("--cka_patience", type=int, default=200, help="... for this many consecutive steps")
     ap.add_argument("--lam_after", type=float, default=0.0, help="helix_window: weight after the window ends (0 = release)")
     ap.add_argument("--geo_layers", default=None, help="default: n_layers/3 and 2 n_layers/3")
     ap.add_argument("--eval_every", type=int, default=250)
@@ -87,6 +91,8 @@ def main() -> None:
     pairs = pairs[np.random.default_rng(0).permutation(len(pairs))]
     test, trainp = pairs[:1000], pairs[1000:]
     lines = [[tok(f.format(a=a, b=b) + f"{a + b}\n", add_special_tokens=False)["input_ids"] for f in FORMATS] for a, b in trainp]
+    _l = lines[0][0]
+    assert tok.convert_ids_to_tokens(_l[-2:])[0] == str(trainp[0][0] + trainp[0][1]), tok.convert_ids_to_tokens(_l[-3:])
     enc = lambda ps: nl.encode(tok, ps, dev)
     ans_tok = lambda P: torch.tensor([tok(str(a + b), add_special_tokens=False)["input_ids"][0] for a, b in P], device=dev)
     evalsets = {"test": (enc([FORMATS[0].format(a=a, b=b) for a, b in test]), ans_tok(test)),
@@ -113,9 +119,13 @@ def main() -> None:
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.1, fused=(dev == "cuda"))
     sched = lambda s: min(1.0, (s + 1) / warm) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1.0, s / steps))))
     w0, w1 = (float(v) for v in args.window.split(","))
+    dyn = {"released": None, "ema": 0.0, "low": 0}
+
     def geo_weight(s):
         if args.arm == "none":
             return 0.0
+        if args.arm in ("helix_acc", "helix_cka"):
+            return args.lam if (s >= args.gate_start * steps and dyn["released"] is None) else 0.0
         if args.arm == "helix_window":
             return args.lam if w0 * steps <= s < w1 * steps else (args.lam_after if s >= w1 * steps else 0.0)
         return args.lam
@@ -161,7 +171,8 @@ def main() -> None:
             g["lr"] = args.lr * sched(s)
         x = batch()
         with torch.autocast(dev, dtype=torch.bfloat16):
-            lm = model(input_ids=x, labels=x).loss
+            out_m = model(input_ids=x, labels=x)
+            lm = out_m.loss
             gw = geo_weight(s)
             gl = geo_loss() if gw > 0 else torch.zeros((), device=dev)
             loss = lm + gw * gl
@@ -169,8 +180,19 @@ def main() -> None:
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
+        with torch.no_grad():
+            bacc = float((out_m.logits[:, -3].argmax(-1) == x[:, -2]).float().mean())
+        dyn["ema"] = 0.98 * dyn["ema"] + 0.02 * bacc
+        if dyn["released"] is None and gw > 0:
+            if args.arm == "helix_acc" and dyn["ema"] >= args.gate_thr:
+                dyn["released"] = s
+            if args.arm == "helix_cka":
+                dyn["low"] = dyn["low"] + 1 if float(gl) < args.cka_release else 0
+                if dyn["low"] >= args.cka_patience:
+                    dyn["released"] = s
         if s % args.eval_every == 0 or s == steps - 1:
-            r = evaluate(s); r.update(lm=float(lm), geo=float(gl), sec=time.time() - t0); curve.append(r)
+            r = evaluate(s); r.update(lm=float(lm), geo=float(gl), sec=time.time() - t0, ema_train_acc=dyn["ema"],
+                                      released=dyn["released"]); curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
                                         "curve": curve}, indent=1))
