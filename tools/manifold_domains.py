@@ -252,8 +252,21 @@ def onehot(labels, min_count=2):
 def tree(levels, weights=(1.0, 0.7), min_count=2):
     """Hierarchy as features: weighted one-hot codes per level (e.g. class, order). Squared distances are then
     ultrametric-like: same order < same class < different class. Targets drop singleton categories (see onehot);
-    the test sets use min_count=1 so that two singletons (Japanese, Korean) are not counted as related."""
-    return np.concatenate([w * onehot(l, min_count) for l, w in zip(levels, weights)], 1)
+    the test sets use min_count=1 so that two singletons (Japanese, Korean) are not counted as related. A category
+    with the same members as one of the level above (a single-branch family) is not repeated: it would add a
+    duplicate column (rank deficiency) and count that split twice.
+    Note: the atlas's per-column R^2 ignores the weights; its pooled R^2 (r2p) and CKA use them."""
+    cols, seen = [], set()
+    for lv, w in zip(levels, weights):
+        lv = list(lv)
+        for cat in dict.fromkeys(lv):
+            members = frozenset(i for i, x in enumerate(lv) if x == cat)
+            if len(members) < min_count or members in seen:
+                continue
+            seen.add(members)
+            col = np.array([float(i in members) for i in range(len(lv))])
+            cols.append(w * (col - col.mean()))
+    return np.stack(cols, 1)
 
 
 def within(groups, values):
@@ -283,14 +296,23 @@ def _countries(n=70):
     (name, capital lat, capital lon, population, area km2, continent)."""
     import geonamescache
     gc = geonamescache.GeonamesCache()
-    cap = {}
-    for c in gc.get_cities().values():
-        cap.setdefault((c["countrycode"], c["name"]), (float(c["latitude"]), float(c["longitude"])))
+    import unicodedata
+    fold = lambda s: unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower()
+    exact, folded, alt = {}, {}, {}   # capital lookup: exact name, then accent-folded name, then alternate names
+    for c in sorted(gc.get_cities().values(), key=lambda c: -c["population"]):
+        ll = (float(c["latitude"]), float(c["longitude"]))
+        exact.setdefault((c["countrycode"], c["name"]), ll)
+        folded.setdefault((c["countrycode"], fold(c["name"])), ll)
+        for nm in c.get("alternatenames") or []:
+            alt.setdefault((c["countrycode"], fold(nm)), ll)
+    def capital(iso, name):
+        return exact.get((iso, name)) or folded.get((iso, fold(name))) or alt.get((iso, fold(name)))
     out = []
     for c in sorted(gc.get_countries().values(), key=lambda c: -c["population"]):
-        if not c["name"].isascii() or (c["iso"], c["capital"]) not in cap or not c["areakm2"]:
+        ll = capital(c["iso"], c["capital"])
+        if not c["name"].isascii() or ll is None or not c["areakm2"]:
             continue
-        out.append((c["name"], *cap[(c["iso"], c["capital"])], float(c["population"]), float(c["areakm2"]), c["continentcode"]))
+        out.append((c["name"], *ll, float(c["population"]), float(c["areakm2"]), c["continentcode"]))
         if len(out) == n:
             break
     return out
@@ -319,7 +341,8 @@ def _people():
     for r in csv.DictReader(open(DATA / "gurnee_historical_figure.csv")):
         if r["name"] in PEOPLE:   # first row per name in Wikidata-id order (the table is sorted that way)
             born.setdefault(r["name"], int(float(r["birth_year"])))
-    return [(p, born[p]) for p in PEOPLE if p in born]
+    show = {"Martin Luther King Jr.": "Martin Luther King"}   # prompt name (the last token would be ".")
+    return [(show.get(p, p), born[p]) for p in PEOPLE if p in born]
 
 
 # ------------------------------------------------------------------------------------------------ domains
@@ -404,7 +427,8 @@ def domains() -> dict:
         {"plane": _std(np.stack([lat, lon], 1)), "sphere": _std(unit_vec(lat, lon))}, np.stack([lat, lon], 1))
     pe = _people(); yb = np.array([p[1] for p in pe], dtype=np.float64)
     add("people", "linear", [p[0] for p in pe], "The historical figure {}",
-        {"line": line(yb), "curve": curve(yb), "logtime": line(np.log10(2030 - yb))}, yb)
+        {"rank": line(np.argsort(np.argsort(yb, kind="stable"), kind="stable")), "line": line(yb), "curve": curve(yb),
+         "logtime": line(np.log10(2030 - yb))}, yb)
     i = np.arange(len(GEO_PERIODS))
     add("geo_periods", "linear", GEO_PERIODS, "The geologic period {}", {"line": line(i), "curve": curve(i)}, i)
     cls, order, mass = [a[1] for a in ANIMALS], [a[2] for a in ANIMALS], np.log10([a[3] for a in ANIMALS])
@@ -474,7 +498,7 @@ OFFSET = {
 # (lat, lon)); tree = closer to a in the hierarchy features; angle = closer to a on the cycle (degrees); less / more =
 # smaller / larger coord; within = larger coord within the same group (template filled with the group's question)
 PAIR2 = {
-    "countries": ("Which country is closer to {a}, {b} or {c}? Answer:", "sphere", 25),
+    "countries": ("Which country is closer to {a}, {b} or {c}? Answer:", "sphere", 35),   # capitals stand for countries
     "country_size": ("Which country has more people, {b} or {c}? Answer:", "more", math.log10(3)),
     "landmarks": ("Which landmark is closer to {a}, {b} or {c}? Answer:", "sphere", 25),
     "us_cities": ("Which city is closer to {a}, {b} or {c}? Answer:", "sphere", 5),
@@ -506,97 +530,120 @@ def _sphere_dist(p, q):
     return float(np.degrees(np.arccos(np.clip((a * b).sum(), -1, 1))))
 
 
+def _singular(q, kw, k):
+    """'one letters after' -> 'one letter after'."""
+    if k != 1:
+        return q
+    w = q.split(" ")
+    at = w.index(kw) + 1
+    if at < len(w) and w[at].endswith("s") and w[at] != "is":
+        w[at] = w[at][:-1]
+    return " ".join(w)
+
+
+def _offset_questions(name, d):
+    """Every valid (question, content-free question, answer index) of an offset domain, in a fixed order."""
+    tmpl, mode, ks = OFFSET[name]
+    items, nI = d["items"], len(d["items"])
+    out = []
+    for i in range(nI):
+        for k in ks:
+            if mode == "add":
+                a = int(d["coord"][i])
+                if a + k <= 99:
+                    out.append((tmpl.format(x=a, k=k), tmpl.format(x="N/A", k="N/A"), items.index(str(a + k))))
+                continue
+            j = (i + k) % nI if mode == "cyclic" else i + k
+            if j >= nI or (name == "number_words" and items[j] not in WORD_NUM):   # stay within one..twenty
+                continue
+            kw = str(k) if name in ("years", "hours") else list(WORD_NUM)[k - 1]
+            out.append((_singular(tmpl.format(x=items[i], k=kw), kw, k), tmpl.format(x="N/A", k="N/A"), j))
+    return out
+
+
+def _pair_answer(name, d, a, b, e):
+    """For the comparison 'a: b or e', the index (0 = b, 1 = e) of the right answer, or None if the comparison is
+    not clear enough (margin) or not allowed; also the question text for grouped domains."""
+    c = d["coord"]
+    if name in PAIR2:
+        tmpl, rule, margin = PAIR2[name]
+        c = np.asarray(c, dtype=np.float64)
+        if rule in ("sphere", "tree", "angle"):
+            if rule == "sphere":
+                db, de = _sphere_dist(c[a], c[b]), _sphere_dist(c[a], c[e])
+            elif rule == "tree":
+                db, de = float(((c[a] - c[b]) ** 2).sum()), float(((c[a] - c[e]) ** 2).sum())
+            else:
+                n = len(c)
+                cyc = lambda u, v: 360 / n * min(abs(c[u] - c[v]), n - abs(c[u] - c[v]))
+                db, de = cyc(a, b), cyc(a, e)
+            return (None, "") if abs(db - de) < margin else (0 if db < de else 1, "")
+        if rule == "within":
+            g = d["group"]
+            if g[b] != g[e] or abs(c[b] - c[e]) < margin:
+                return None, ""
+            return (0 if c[b] > c[e] else 1), d["question"][g[b]]
+        if abs(c[b] - c[e]) < margin:
+            return None, ""
+        return (0 if (c[b] < c[e]) == (rule == "less") else 1), ""
+    if name == "presidents":
+        return (None, "") if abs(c[b] - c[e]) < 4 else (0 if c[b] < c[e] else 1, "")
+    if name == "emotions":
+        return (None, "") if abs(c[b][0] - c[e][0]) < 2 else (0 if c[b][0] > c[e][0] else 1, "")
+    dist = (lambda u, v: min(abs(c[u] - c[v]), 360 - abs(c[u] - c[v]))) if name == "colours" else \
+        (lambda u, v: _sphere_dist(c[u], c[v]))
+    db, de = dist(a, b), dist(a, e)
+    return (None, "") if abs(db - de) < (30 if name == "colours" else 25) else (0 if db < de else 1, "")
+
+
 def tasks(D: dict, n: int = 60, shots: int = 3, seed: int = 0) -> dict:
-    """{domain: [(prompt, candidates, answer_index), ...]}; the shots come from the same generator."""
+    """{domain: [(prompt, candidates, answer_index, content_free_prompt), ...]}.
+
+    Atlas v2 (after the 2026-10-13 audit, runs/atlas2/AUDIT.md):
+      - every test question is unique, and the shots are separate questions (no question or comparison pair of the
+        test set appears among the shots);
+      - offset domains: questions drawn without replacement from all valid (item, k); small domains get fewer than n;
+      - comparison domains: distinct comparisons, each asked in BOTH orders ("b or c" and "c or b"), so a preference
+        for the first / second option cancels; up to n rows (n / 2 comparisons);
+      - content_free_prompt = the same shots and question with every item replaced by "N/A": scoring the candidates
+        there measures the model's prior for each candidate (used for calibrated accuracy, Zhao et al. 2021)."""
     rng = np.random.default_rng(seed)
     out = {}
     for name, d in D.items():
         items, nI = d["items"], len(d["items"])
-        gen = []
         if name in OFFSET:
-            tmpl, mode, ks = OFFSET[name]
-            ks = list(ks)
-            while len(gen) < n + shots:
-                i, k = int(rng.integers(nI)), int(rng.choice(ks))
-                if mode == "add":
-                    a = int(d["coord"][i])
-                    if a + k > 99:
-                        continue
-                    gen.append((tmpl.format(x=a, k=k), items.index(str(a + k))))
-                    continue
-                j = (i + k) % nI if mode == "cyclic" else i + k
-                if j >= nI:
-                    continue
-                if name == "number_words" and items[j] not in WORD_NUM:   # stay within one..twenty
-                    continue
-                kw = str(k) if name in ("years", "hours") else list(WORD_NUM)[k - 1]
-                q = tmpl.format(x=items[i], k=kw)
-                if k == 1:   # "one letters after" -> "one letter after"
-                    w = q.split(" ")
-                    at = w.index(kw) + 1
-                    if at < len(w) and w[at].endswith("s") and w[at] != "is":
-                        w[at] = w[at][:-1]
-                    q = " ".join(w)
-                gen.append((q, j))
-            cands = items
-            make = lambda g: (g[0], cands, g[1])
-        elif name in PAIR2:
-            tmpl, rule, margin = PAIR2[name]
-            c = np.asarray(d["coord"], dtype=np.float64)
-            tries = 0
-            while len(gen) < n + shots:
-                tries += 1
-                assert tries < 100000, f"{name}: cannot draw {n + shots} comparisons with margin {margin}"
-                a, b, e = (int(t) for t in rng.choice(nI, 3, replace=False))
-                q = ""
-                if rule in ("sphere", "tree", "angle"):
-                    if rule == "sphere":
-                        db, de = _sphere_dist(c[a], c[b]), _sphere_dist(c[a], c[e])
-                    elif rule == "tree":
-                        db, de = float(((c[a] - c[b]) ** 2).sum()), float(((c[a] - c[e]) ** 2).sum())
-                    else:
-                        cyc = lambda u, v: 360 / nI * min(abs(c[u] - c[v]), nI - abs(c[u] - c[v]))
-                        db, de = cyc(a, b), cyc(a, e)
-                    if abs(db - de) < margin:
-                        continue
-                    ans = 0 if db < de else 1
-                elif rule == "within":
-                    grp = d["group"]
-                    if grp[b] != grp[e] or abs(c[b] - c[e]) < margin:
-                        continue
-                    q = d["question"][grp[b]]
-                    ans = 0 if c[b] > c[e] else 1
-                else:
-                    if abs(c[b] - c[e]) < margin:
-                        continue
-                    ans = 0 if (c[b] < c[e]) == (rule == "less") else 1
-                gen.append((tmpl.format(a=items[a], b=items[b], c=items[e], q=q), (items[b], items[e]), ans))
-            make = lambda g: (g[0], list(g[1]), g[2])
+            qs = _offset_questions(name, d)
+            order = rng.permutation(len(qs))
+            sel = [qs[i] for i in order[:shots + n]]
+            shot_rows = [(q, items, j) for q, _, j in sel[:shots]]
+            test = [(q, list(items), j, cf) for q, cf, j in sel[shots:]]
         else:
-            tmpl = PAIR[name]
-            c = d["coord"]
-            while len(gen) < n + shots:
+            tmpl = PAIR2[name][0] if name in PAIR2 else PAIR[name]
+            uses_a = "{a}" in tmpl
+            seen, picked, tries = set(), [], 0
+            while len(picked) < shots + (n + 1) // 2 and tries < 20000:
+                tries += 1
                 a, b, e = (int(t) for t in rng.choice(nI, 3, replace=False))
-                if name == "presidents":
-                    if abs(c[b] - c[e]) < 4:
-                        continue
-                    ans = 0 if c[b] < c[e] else 1
-                elif name == "emotions":
-                    if abs(c[b][0] - c[e][0]) < 2:
-                        continue
-                    ans = 0 if c[b][0] > c[e][0] else 1
-                else:
-                    if name == "colours":
-                        dist = lambda u, v: min(abs(c[u] - c[v]), 360 - abs(c[u] - c[v]))
-                    else:
-                        dist = lambda u, v: _sphere_dist(c[u], c[v])
-                    db, de = dist(a, b), dist(a, e)
-                    if abs(db - de) < (30 if name == "colours" else 25):
-                        continue
-                    ans = 0 if db < de else 1
-                gen.append((tmpl.format(a=items[a], b=items[b], c=items[e]), (items[b], items[e]), ans))
-            make = lambda g: (g[0], list(g[1]), g[2])
-        rows = [make(g) for g in gen]
-        shot_txt = "".join(f"{p} {cs[ai]}\n" for p, cs, ai in rows[:shots])
-        out[name] = [(shot_txt + p, cs, ai) for p, cs, ai in rows[shots:]]
+                key = (a if uses_a else -1, min(b, e), max(b, e))
+                if key in seen:
+                    continue
+                ans, q = _pair_answer(name, d, a, b, e)
+                if ans is None:
+                    continue
+                seen.add(key)
+                picked.append((a, b, e, ans, q))
+            assert len(picked) > shots + 5, f"{name}: only {len(picked)} distinct comparisons"
+            fill = lambda a, b, e, q: tmpl.format(a=items[a], b=items[b], c=items[e], q=q)
+            cf = lambda q: tmpl.format(a="N/A", b="N/A", c="N/A", q=q)
+            shot_rows = [(fill(a, b, e, q), (items[b], items[e]), ans) for a, b, e, ans, q in picked[:shots]]
+            shot_pairs = {frozenset((b, e)) for _, b, e, _, _ in picked[:shots]}
+            test = []
+            for a, b, e, ans, q in picked[shots:]:
+                if frozenset((b, e)) in shot_pairs and not uses_a:
+                    continue
+                test.append((fill(a, b, e, q), [items[b], items[e]], ans, cf(q)))
+                test.append((fill(a, e, b, q), [items[e], items[b]], 1 - ans, cf(q)))
+            test = test[:n]
+        shot_txt = "".join(f"{p} {cs[ai]}\n" for p, cs, ai in shot_rows)
+        out[name] = [(shot_txt + p, cs, ai, shot_txt + cf) for p, cs, ai, cf in test]
     return out

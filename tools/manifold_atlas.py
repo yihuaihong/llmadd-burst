@@ -37,9 +37,14 @@ from manifold_domains import domains, tasks
 # i.e. it is the one-hot code, so a held-out item can never be predicted whatever the geometry (R^2 = 0 by
 # construction). The circle (k = 1) is the geometric claim (Engels et al.); pitch / keys use the chromatic circle,
 # colours the hue circle.
-PRIMARY = {"helix": "helix", "cyclic": "circle", "linear": "curve", "sphere": "harmonics", "plane": "plane",
-           "magnitude": "log", "tree": "tree", "kin": "generation", "scalar": "within"}   # last four: atlas v2
-PRIMARY_OVERRIDE = {"pitch": "chromatic", "keys": "chromatic", "colours": "hue"}
+# atlas v2 (audit 2026-10-13): ordered domains use the LINE (v1 used the cubic curve, whose degree-2/3 columns are
+# not decodable from a perfectly linear code: ceiling 0.08-0.31 depending on n) and places the unit SPHERE (v1:
+# degree-2 harmonics, ceiling ~0.4-0.6 for a perfect 3-D code); people use the rank of the birth year (the year axis
+# is dominated by the 13 people born before 1000). Tree targets are read with the pooled R^2 (r2p).
+PRIMARY = {"helix": "helix", "cyclic": "circle", "linear": "line", "sphere": "sphere", "plane": "plane",
+           "magnitude": "log", "tree": "tree", "kin": "generation", "scalar": "within"}
+PRIMARY_OVERRIDE = {"pitch": "chromatic", "keys": "chromatic", "colours": "hue", "people": "rank"}
+POOLED_KINDS = ("tree",)   # kinds whose headline score is the pooled R^2 (column weights matter)
 LAYERS = (0, 4, 8, 12, 16, 20, 24, 28, 32)   # OLMo-2-7B; other depths: 9 evenly spaced layers (set in main)
 N_NULL = 200
 
@@ -65,7 +70,7 @@ def token_sum(model, tok, items, random=False, dim=1024):
 @torch.no_grad()
 def collect(model, tok, prompts, dev):
     """Last-token states at LAYERS; prompts are run in groups of equal token length (no padding)."""
-    ids = [tok(p, add_special_tokens=False)["input_ids"] for p in prompts]
+    ids = [tok(p)["input_ids"] for p in prompts]   # default special tokens: BOS for Mistral, nothing for the others
     out = np.zeros((len(LAYERS), len(prompts), model.config.hidden_size), np.float32)
     by_len = {}
     for i, x in enumerate(ids):
@@ -80,34 +85,61 @@ def collect(model, tok, prompts, dev):
 
 
 @torch.no_grad()
-def score_tasks(model, tok, T, dev, bs=64):
-    """Accuracy per domain: the candidate with the highest summed log-prob after the prompt."""
-    seqs, meta = [], []
-    for name, rows in T.items():
-        for r, (prompt, cands, ans) in enumerate(rows):
-            pid = tok(prompt, add_special_tokens=False)["input_ids"]
-            for c, cand in enumerate(cands):
-                cid = tok(" " + cand, add_special_tokens=False)["input_ids"]
-                seqs.append((pid + cid, len(cid))); meta.append((name, r, c))
+def _cand_logprobs(model, tok, pairs, dev, bs=64):
+    """Summed log-prob of each continuation after its prompt: pairs = [(prompt, continuation)]. The prompt is
+    tokenised with the default special tokens (BOS where the model was trained with one), the continuation without."""
+    seqs = []
+    for prompt, cont in pairs:
+        pid = tok(prompt)["input_ids"]
+        cid = tok(cont, add_special_tokens=False)["input_ids"]
+        seqs.append((pid + cid, len(cid)))
     score = np.zeros(len(seqs))
     by_len = {}
     for i, (ids, _) in enumerate(seqs):
         by_len.setdefault(len(ids), []).append(i)
     for L, idx in by_len.items():
-        for s in range(0, len(idx), bs):
-            b = idx[s:s + bs]
+        for s0 in range(0, len(idx), bs):
+            b = idx[s0:s0 + bs]
             x = torch.tensor([seqs[i][0] for i in b], device=dev)
-            m = max(seqs[i][1] for i in b)          # logits only where candidate tokens are predicted
+            m = max(seqs[i][1] for i in b)          # logits only where continuation tokens are predicted
             lp = torch.log_softmax(model(input_ids=x, logits_to_keep=m + 1).logits[:, :-1].float(), -1)
             tok_lp = lp.gather(-1, x[:, L - m:, None])[..., 0]
             for j, i in enumerate(b):
                 score[i] = float(tok_lp[j, m - seqs[i][1]:].sum())
-    best = {}
-    for (name, r, c), sc in zip(meta, score):
-        if (name, r) not in best or sc > best[(name, r)][1]:
-            best[(name, r)] = (c, sc)
-    return {name: dict(acc=float(np.mean([best[(name, r)][0] == rows[r][2] for r in range(len(rows))])),
-                       chance=float(np.mean([1 / len(c) for _, c, _ in rows])), n=len(rows)) for name, rows in T.items()}
+    return score, np.array([n for _, n in seqs])
+
+
+@torch.no_grad()
+def score_tasks(model, tok, T, dev, bs=64):
+    """Per domain: accuracy of the highest summed log-prob candidate (acc), of the length-normalised log-prob
+    (acc_norm), of the calibrated score log p(c | question) - log p(c | content-free question) (acc_cal, Zhao et al.
+    2021), and of the content-free score alone (acc_prior: what the candidate prior gets without the question; far
+    from chance = the test can be passed without the domain's knowledge). Candidates are scored as " c\n" (the
+    shots' answer format; also stops a candidate that is a token prefix of another from winning by default).
+    rows = per test row [answer, [log p], [log p content-free], [n tokens]] so that any calibration can be redone."""
+    pairs, pairs_cf, meta = [], [], []
+    for name, rows in T.items():
+        for r, (prompt, cands, ans, cf) in enumerate(rows):
+            for c, cand in enumerate(cands):
+                pairs.append((prompt, " " + cand + "\n")); pairs_cf.append((cf, " " + cand + "\n")); meta.append((name, r, c))
+    lp, ntok = _cand_logprobs(model, tok, pairs, dev, bs)
+    lp_cf, _ = _cand_logprobs(model, tok, pairs_cf, dev, bs)
+    per = {}
+    for (name, r, c), a, b, n in zip(meta, lp, lp_cf, ntok):
+        per.setdefault(name, {}).setdefault(r, []).append((a, b, int(n)))
+    out = {}
+    for name, rows in T.items():
+        recs, hit = [], {"acc": [], "acc_norm": [], "acc_cal": [], "acc_prior": []}
+        for r, (_, cands, ans, _) in enumerate(rows):
+            sc = np.array(per[name][r])
+            hit["acc"].append(int(np.argmax(sc[:, 0])) == ans)
+            hit["acc_norm"].append(int(np.argmax(sc[:, 0] / sc[:, 2])) == ans)
+            hit["acc_cal"].append(int(np.argmax(sc[:, 0] - sc[:, 1])) == ans)
+            hit["acc_prior"].append(int(np.argmax(sc[:, 1])) == ans)
+            recs.append([ans, sc[:, 0].round(4).tolist(), sc[:, 1].round(4).tolist(), sc[:, 2].astype(int).tolist()])
+        out[name] = dict({k: float(np.mean(v)) for k, v in hit.items()},
+                         chance=float(np.mean([1 / len(c) for _, c, _, _ in rows])), n=len(rows), rows=recs)
+    return out
 
 
 class LOO:
@@ -123,9 +155,20 @@ class LOO:
         self.n = n
 
     def __call__(self, T):
+        return self.both(T)[0]
+
+    def both(self, T):
+        """(mean over columns, pooled 1 - sum SSE / sum SST), each at its own best alpha. The pooled version weights
+        columns by their variance (so the weights of a tree code matter; a column with two items does not count as
+        much as a class split)."""
         n = self.n
         sst = ((T - T.mean(0)) ** 2).sum(0) * (n / (n - 1)) ** 2
-        return max(float(np.mean(1 - (((T - S @ T) / (1 - np.diag(S))[:, None]) ** 2).sum(0) / sst)) for S in self.S)
+        rm, rp = -np.inf, -np.inf
+        for S in self.S:
+            sse = (((T - S @ T) / (1 - np.diag(S))[:, None]) ** 2).sum(0)
+            rm = max(rm, float(np.mean(1 - sse / sst)))
+            rp = max(rp, float(1 - sse.sum() / sst.sum()))
+        return rm, rp
 
 
 def loo_r2(H, T, alphas=(1e-2, 1e-1, 1.0, 10.0, 100.0)):
@@ -153,8 +196,10 @@ def cka(H, T):
 
 
 def basis(H, T):
-    q, _ = np.linalg.qr(H.T @ T)
-    return q
+    """Orthonormal basis of the directions that carry T (PLS: span of H^T T), rank-revealing (a rank-deficient T, e.g.
+    a centred one-hot code, must not add numerical-noise directions)."""
+    u, sv, _ = np.linalg.svd(H.T @ T, full_matrices=False)
+    return u[:, sv > 1e-6 * max(sv.max(), 1e-12)]
 
 
 def main() -> None:
@@ -195,8 +240,10 @@ def main() -> None:
         D = {k: D[k] for k in args.only.split(",")}
     names = list(D)
     rng = np.random.default_rng(0)
-    res = {"tag": args.tag, "layers": LAYERS, "domains": {k: {"n": len(d["items"]), "kind": d["kind"], "primary": primary(d, k),
-                                                             "targets": list(d["targets"])} for k, d in D.items()}}
+    res = {"tag": args.tag, "layers": LAYERS, "args": vars(args), "model_class": type(model).__name__,
+           "bos_added": tok("Q: x")["input_ids"] != tok("Q: x", add_special_tokens=False)["input_ids"],
+           "domains": {k: {"n": len(d["items"]), "kind": d["kind"], "primary": primary(d, k),
+                           "pooled": d["kind"] in POOLED_KINDS, "targets": list(d["targets"])} for k, d in D.items()}}
     keep = {}
     for tmpl in ("neutral", "cued"):
         prompts, owner = [], []
@@ -208,9 +255,10 @@ def main() -> None:
         S = collect(model, tok, prompts, dev)
         S = (S - S.mean(1, keepdims=True)) / (S.std(1, keepdims=True) + 1e-6)
         keep[tmpl] = S[[LAYERS.index(l) for l in keep_layers]].astype(np.float16)
-        fits, overlap, overlap_null, removal = {}, [], [], []
+        fits, overlap, overlap_null, removal, removal_null = {}, [], [], [], []
         perms = {(k, tn): [rng.permutation(len(T)) for _ in range(args.n_null)] for k, d in D.items() for tn, T in d["targets"].items()}
         nulls = {key: [] for key in perms}
+        nulls_p = {key: [] for key in perms}
         for li, L in enumerate(LAYERS):
             Hs = {k: S[li, owner == k] - S[li, owner == k].mean(0) for k in names}
             B, Bnull = {}, {}
@@ -218,32 +266,45 @@ def main() -> None:
                 d = D[k]
                 loo = LOO(Hs[k])
                 for tn, T in d["targets"].items():
-                    r = loo(T)
-                    nr = np.array([loo(T[p]) for p in perms[(k, tn)]])
-                    nulls[(k, tn)].append(nr)
+                    r, rp = loo.both(T)
+                    nb = np.array([loo.both(T[p]) for p in perms[(k, tn)]])
+                    nr, nrp = nb[:, 0], nb[:, 1]
+                    nulls[(k, tn)].append(nr); nulls_p[(k, tn)].append(nrp)
                     c = cka(Hs[k], T); nc = np.array([cka(Hs[k], T[p]) for p in perms[(k, tn)][:50]])
+                    N = len(nr)
                     fits.setdefault(k, {}).setdefault(tn, []).append(dict(
-                        r2=r, null=float(nr.mean()), null95=float(np.quantile(nr, .95)), p=float((nr >= r).mean()),
-                        cka=c, cka_null=float(nc.mean())))
+                        r2=r, null=float(nr.mean()), null95=float(np.quantile(nr, .95)), p=float(((nr >= r).sum() + 1) / (N + 1)),
+                        r2p=rp, null_p=float(nrp.mean()), null95_p=float(np.quantile(nrp, .95)),
+                        p_p=float(((nrp >= rp).sum() + 1) / (N + 1)), cka=c, cka_null=float(nc.mean())))
                 T = d["targets"][primary(d, k)]
                 B[k] = basis(Hs[k], T)
                 Bnull[k] = [basis(Hs[k], T[rng.permutation(len(T))]) for _ in range(20)]
             ov = np.array([[float((B[a].T @ B[b]) .__pow__(2).sum() / min(B[a].shape[1], B[b].shape[1])) for b in names] for a in names])
             on = np.array([[float(np.mean([(x.T @ y).__pow__(2).sum() / min(x.shape[1], y.shape[1])
                                            for x, y in zip(Bnull[a], Bnull[b])])) for b in names] for a in names])
-            rm = np.zeros((len(names), len(names)))
+            rm, rm_null = np.zeros((len(names), len(names))), np.zeros((len(names), len(names)))
             for i, a in enumerate(names):
                 for j, b in enumerate(names):
+                    Tb = D[b]["targets"][primary(D[b], b)]
                     P = Hs[b] - (Hs[b] @ B[a]) @ B[a].T
-                    rm[i, j] = loo_r2(P, D[b]["targets"][primary(D[b], b)])
+                    rm[i, j] = loo_r2(P, Tb)
+                    # null: remove a basis of the same kind fitted to a's PERMUTED target (same dimension, same
+                    # anisotropy of the state space) -- what removal costs b without a real shared subspace
+                    rm_null[i, j] = np.mean([loo_r2(Hs[b] - (Hs[b] @ x) @ x.T, Tb) for x in Bnull[a][:3]])
             overlap.append(ov.tolist()); overlap_null.append(on.tolist()); removal.append(rm.tolist())
+            removal_null.append(rm_null.tolist())
         best_layer = {}   # best layer vs the best-layer null (max over layers per permutation): no selection bonus
         for (k, tn), arr in nulls.items():
-            obs = np.array([f["r2"] for f in fits[k][tn]])
-            nmax = np.max(np.stack(arr), 0)
-            best_layer.setdefault(k, {})[tn] = dict(r2=float(obs.max()), layer=LAYERS[int(obs.argmax())], null=float(nmax.mean()),
-                                                    null95=float(np.quantile(nmax, .95)), p=float((nmax >= obs.max()).mean()))
-        res[tmpl] = dict(fits=fits, best=best_layer, overlap=overlap, overlap_null=overlap_null, removal=removal, order=names)
+            entry = {}
+            for key, nl_arr, sfx in (("r2", arr, ""), ("r2p", nulls_p[(k, tn)], "_p")):
+                obs = np.array([f[key] for f in fits[k][tn]])
+                nmax = np.max(np.stack(nl_arr), 0)
+                entry.update({key: float(obs.max()), "layer" + sfx: LAYERS[int(obs.argmax())], "null" + sfx: float(nmax.mean()),
+                              "null95" + sfx: float(np.quantile(nmax, .95)),
+                              "p" + sfx: float(((nmax >= obs.max()).sum() + 1) / (len(nmax) + 1))})
+            best_layer.setdefault(k, {})[tn] = entry
+        res[tmpl] = dict(fits=fits, best=best_layer, overlap=overlap, overlap_null=overlap_null, removal=removal,
+                         removal_null=removal_null, order=names)
         print(f"{args.tag} {tmpl} done ({time.time() - t0:.0f}s)", flush=True)
     res["tasks"] = score_tasks(model, tok, tasks(D), dev)
     for key, rnd in (("token_sum", False), ("token_sum_random", True)):   # controls: embeddings only / tokenisation only
@@ -262,8 +323,9 @@ def main() -> None:
         b = res["cued"]["best"][k][primary(D[k], k)]
         t = res["tasks"][k]
         ts = res["token_sum"][k][primary(D[k], k)]; tr = res["token_sum_random"][k][primary(D[k], k)]
-        print(f"  {k:13s} {primary(D[k], k):10s} best L{b['layer']:2d}  R2 {b['r2']:.2f}  best-layer null {b['null']:.2f} (p95 {b['null95']:.2f})  "
-              f"p {b['p']:.3f} | emb-sum {ts['r2']:.2f} rand-tok-sum {tr['r2']:.2f} | task {t['acc']:.2f} (chance {t['chance']:.2f})")
+        print(f"  {k:14s} {primary(D[k], k):10s} best L{b['layer']:2d}  R2 {b['r2']:.2f} (pooled {b['r2p']:.2f})  best-layer null "
+              f"{b['null']:.2f} (p95 {b['null95']:.2f}) p {b['p']:.3f} | emb-sum {ts['r2']:.2f} rand-tok-sum {tr['r2']:.2f} | "
+              f"task n={t['n']} acc {t['acc']:.2f} cal {t['acc_cal']:.2f} prior-only {t['acc_prior']:.2f} (chance {t['chance']:.2f})")
     print(f"done {args.tag} in {time.time() - t0:.0f}s")
 
 

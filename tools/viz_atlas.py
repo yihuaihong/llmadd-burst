@@ -74,9 +74,22 @@ def style(ax):
 
 
 def geo_score(r, tmpl, k, prim):
-    """Best layer R^2 minus the best-layer permutation null (no layer-selection bonus)."""
+    """Best layer R^2 minus the best-layer permutation null (no layer-selection bonus); pooled R^2 for tree kinds."""
     b = r[tmpl]["best"][k][prim]
+    if r["domains"][k].get("pooled") and "r2p" in b:
+        return b["r2p"] - b["null_p"]
     return b["r2"] - b["null"]
+
+
+def task_score(t):
+    """Test accuracy rescaled (chance 0, perfect 1). Atlas v2: the calibrated accuracy (candidate prior removed);
+    v1 results only have the raw one."""
+    a = t.get("acc_cal", t["acc"])
+    return (a - t["chance"]) / (1 - t["chance"])
+
+
+def is_rand(tag):
+    return tag == "rand" or tag.endswith("-rand") or tag.endswith("-0B")
 
 
 def token_confound(r, k, prim, thr=0.3):
@@ -95,18 +108,20 @@ def timeline(res, out, tmpl):
         prim = res[tags[-1]]["domains"][k]["primary"]
         geo = [geo_score(res[t], tmpl, k, prim) for t in tags]
         k_lab = k + (" *" if token_confound(res[tags[-1]], k, prim) else "")
-        tk = [(res[t]["tasks"][k]["acc"] - res[t]["tasks"][k]["chance"]) / (1 - res[t]["tasks"][k]["chance"]) for t in tags]
+        tk = [task_score(res[t]["tasks"][k]) for t in tags]
         axs[0].plot(x, geo, "-o", color=c, linewidth=2, markersize=4)
         axs[0].text(x[-1] * 1.15, geo[-1], k_lab, color=c, fontsize=9, va="center")
         axs[1].plot(x, tk, "-o", color=c, linewidth=2, markersize=4)
         axs[1].text(x[-1] * 1.15, tk[-1], k, color=c, fontsize=9, va="center")
+    model = tags[-1].rsplit("-", 1)[0] if "-" in tags[-1] else "OLMo-2-7B"
     for ax, t in zip(axs, ("geometry decodable from the states (best layer LOO R² − best-layer null)\n* = also decodable from the tokenisation alone (random-embedding control)",
-                          "3-shot test set\n(accuracy rescaled: chance = 0, perfect = 1)")):
-        style(ax); ax.set_xscale("log"); ax.set_xlabel("pretraining tokens (OLMo-2-7B checkpoints)", color=INK2)
+                          "3-shot test set, calibrated (candidate prior removed)\n(accuracy rescaled: chance = 0, perfect = 1)")):
+        style(ax); ax.set_xscale("log"); ax.set_xlabel(f"pretraining tokens ({model} checkpoints; last = main, incl. mid-training)", color=INK2)
         ax.set_title(t, color=INK, fontsize=11.5, loc="left"); ax.set_xlim(x[0] / 1.5, x[-1] * 4)
-        if "rand" in tags:
-            ax.axvline(x[tags.index("rand")] * 1.6, color=GRID, linewidth=1)
-            ax.text(x[tags.index("rand")], ax.get_ylim()[1] * 0.97, "random\ninit", fontsize=8, color=INK2, ha="center", va="top")
+        for i, tg in enumerate(tags):
+            if is_rand(tg):
+                ax.axvline(x[i] * 1.6, color=GRID, linewidth=1)
+                ax.text(x[i], ax.get_ylim()[1] * 0.97, "random\ninit", fontsize=8, color=INK2, ha="center", va="top")
     fig.suptitle(f"When does each concept manifold form? ({tmpl} prompts)", color=INK, fontsize=15, x=0.01, ha="left", weight="bold")
     fig.tight_layout()
     fig.savefig(f"{out}_timeline.png", facecolor=SURFACE)
@@ -210,13 +225,12 @@ def gallery(res, ddir, out, tag, tmpl):
 
 def families(res, out, tags, tmpl):
     """Domain x model: geometry score (best-layer R^2 - best-layer null) and rescaled test accuracy."""
-    names = order(res[tags[0]])
+    names = [k for k in order(res[tags[0]]) if all(k in res[t]["domains"] for t in tags)]
     G = np.array([[geo_score(res[t], tmpl, k, res[t]["domains"][k]["primary"]) for t in tags] for k in names])
-    A = np.array([[(res[t]["tasks"][k]["acc"] - res[t]["tasks"][k]["chance"]) / (1 - res[t]["tasks"][k]["chance"])
-                   for t in tags] for k in names])
+    A = np.array([[task_score(res[t]["tasks"][k]) for t in tags] for k in names])
     fig, axs = plt.subplots(1, 2, figsize=(4 + 1.3 * len(tags) * 2, 0.32 * len(names) + 2), dpi=150)
     fig.patch.set_facecolor(SURFACE)
-    for ax, M, t in zip(axs, (G, A), ("geometry (R² − null, best layer)", "3-shot test (chance 0, perfect 1)")):
+    for ax, M, t in zip(axs, (G, A), ("geometry (R² − null, best layer)", "3-shot test, calibrated (chance 0, perfect 1)")):
         im = ax.imshow(M, cmap="viridis", vmin=0, vmax=1, aspect="auto")
         ax.set_xticks(range(len(tags))); ax.set_xticklabels(tags, rotation=45, ha="right", fontsize=9, color=INK2)
         ax.set_yticks(range(len(names))); ax.set_yticklabels(names, fontsize=9, color=INK2)
