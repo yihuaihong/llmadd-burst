@@ -14,10 +14,18 @@ last token, at --geo_layers; target Gram from the operand values in the batch:
   helix3     periods 2, 5, 10, 100, 1000 + linear (x / 1000) (F18's helix3)
   digitcirc  one period-10 circle per decimal place (units, tens, hundreds) + log10(x + 1) + number of digits
              (one-hot): the base-10 positional code (Levy & Geva 2024); extends to any length by adding places
-  digitcirc_shuf  digitcirc of permuted values (wrong geometry, same form)
-Evaluation (training position, answer teacher-forced, exact match over all answer tokens): held-out pairs per
-bucket (b11 = 0..9 + 0..9, b22, b33, b13, b23, ...), trained pairs, and never-trained lengths b44 (four + four digits)
-and b41 (four + one).
+  digitcirc_shuf  digitcirc of permuted values (wrong geometry AND wrong number of digits)
+  digitcirc_lenshuf / helix3_lenshuf  the target of values permuted WITHIN 0..9, 10..99, 100..999: keeps the
+             number-of-digits grouping, destroys the per-place / helix geometry (audit 2026-10-13: ~80% of the
+             digitcirc Gram is the digit-count grouping)
+  length     number of digits (one-hot) + log10(x + 1) only
+Evaluation (training position, answer + newline teacher-forced, exact match over all of them, so an answer that is
+a prefix of the prediction does not count): held-out pairs per bucket (b11 = 0..9 + 0..9, b22, b33, b13, b23, ...),
+"seen" pairs per bucket (a fixed rehearsal pool of 100 pairs per bucket that makes up 5% of the arithmetic lines,
+so they are certainly trained), and never-trained lengths b44, b41, b42. The held-out split depends on the seed.
+Not comparable across tokenisations: OOD answers (whole: "13525" = "135" + "25", answer chunks never trained),
+per-token val loss (bits per byte is logged for that), and the arithmetic share of tokens (whole ~8.5%, digits ~11%).
+At every eval: gradient norm of the LM loss and of the prior (before clipping) and their cosine.
 
     python tools/pretrain_range.py --data <bins> --tokenizer <olmo2> --out <dir> --tokenization digits --target digitcirc --seed 0
 """
@@ -43,10 +51,15 @@ BUCKETS = ((1, 1), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3))
 RANGE = {1: (0, 10), 2: (10, 100), 3: (100, 1000), 4: (1000, 10000)}
 
 
-def features(target: str, x: np.ndarray, perm=None) -> np.ndarray:
+def features(target: str, x: np.ndarray, perm=None, perm_len=None) -> np.ndarray:
     x = np.asarray(x)
-    if target.endswith("_shuf"):
+    if target.endswith("_lenshuf"):
+        x = perm_len[x]; target = target[: -len("_lenshuf")]
+    elif target.endswith("_shuf"):
         x = perm[x]; target = target[: -len("_shuf")]
+    if target == "length":
+        nd = np.array([len(str(int(v))) for v in x])
+        return np.concatenate([np.log10(x + 1.0)[:, None], np.eye(3)[np.minimum(nd, 3) - 1]], 1)
     if target == "helix2":
         return nl.features(x)[0]
     if target == "helix3":
@@ -62,10 +75,10 @@ def features(target: str, x: np.ndarray, perm=None) -> np.ndarray:
 
 
 def held_out(rng, per_bucket=150):
-    """Unordered held-out pairs per bucket (1+1: 15 of the 55 unordered pairs)."""
+    """Unordered held-out pairs per bucket (1+1: 20 of the 55 unordered pairs)."""
     held = {}
     for la, lb in BUCKETS:
-        n = 15 if (la, lb) == (1, 1) else per_bucket
+        n = 20 if (la, lb) == (1, 1) else per_bucket
         s = set()
         while len(s) < n:
             a, b = int(rng.integers(*RANGE[la])), int(rng.integers(*RANGE[lb]))
@@ -80,7 +93,8 @@ def main() -> None:
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--tokenization", choices=("whole", "digits"), required=True)
-    ap.add_argument("--target", choices=("none", "helix2", "helix3", "digitcirc", "digitcirc_shuf"), required=True)
+    ap.add_argument("--target", choices=("none", "helix2", "helix3", "digitcirc", "digitcirc_shuf", "digitcirc_lenshuf",
+                                         "helix3_lenshuf", "length"), required=True)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default="")
     ap.add_argument("--d_model", type=int, default=384)
@@ -94,7 +108,7 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--lam", type=float, default=5.0)
     ap.add_argument("--geo_layers", default=None)
-    ap.add_argument("--eval_every", type=int, default=500)
+    ap.add_argument("--eval_every", type=int, default=250)
     ap.add_argument("--n_eval", type=int, default=150, help="held-out items per bucket in the eval sets")
     ap.add_argument("--save_model", action="store_true")
     ap.add_argument("--dry_inputs", action="store_true")
@@ -129,9 +143,18 @@ def main() -> None:
         S = enc(str(a + b)) if with_answer else []
         return ids + S + (enc("\n") if with_answer else []), ia, ib, len(S)
 
-    rng_split = np.random.default_rng(0)
+    rng_split = np.random.default_rng(args.seed)   # the held-out split is drawn per seed
     held = held_out(rng_split)
     held_set = {(min(a, b), max(a, b)) for v in held.values() for a, b in v}
+    rehearsal = {}   # fixed pairs per bucket that make up 5% of the arithmetic lines: certainly trained
+    for la, lb in BUCKETS:
+        prs = set()
+        while len(prs) < min(100, 25 if (la, lb) == (1, 1) else 100):
+            a, b = int(rng_split.integers(*RANGE[la])), int(rng_split.integers(*RANGE[lb]))
+            if (min(a, b), max(a, b)) not in held_set:
+                prs.add((a, b))
+        rehearsal[(la, lb)] = sorted(prs)
+    rehearsal_all = [q for v in rehearsal.values() for q in v]
     for _ in range(200):   # piecewise tokenisation = whole-string tokenisation
         a, b, f = int(rng_split.integers(0, 1000)), int(rng_split.integers(0, 1000)), int(rng_split.integers(4))
         ids, ia, ib, ns = line(a, b, f)
@@ -140,6 +163,8 @@ def main() -> None:
     data_rng = np.random.default_rng(1000 + args.seed)
 
     def draw_pair():
+        if data_rng.random() < 0.05:
+            return rehearsal_all[int(data_rng.integers(len(rehearsal_all)))]
         while True:
             la, lb = BUCKETS[int(data_rng.integers(len(BUCKETS)))]
             if data_rng.random() < 0.5:
@@ -153,12 +178,11 @@ def main() -> None:
     def evalset(pairs, fmt=0):
         rows, lens = [], []
         for a, b in pairs:
-            ids, _, _, ns = line(a, b, fmt)
-            ids = ids[:-1]   # drop the newline: the answer's last token ends the sequence (index seq - 2 as in training)
-            n = args.seq - 1 - len(ids)
+            ids, _, _, ns = line(a, b, fmt)   # scored span = answer tokens + the newline (seq - 1, as in training)
+            n = args.seq - len(ids)
             o = int(vr.integers(0, len(val) - n))
             rows.append(np.concatenate([np.asarray(val[o:o + n], dtype=np.int64), ids]))
-            lens.append(ns)
+            lens.append(ns + 1)
         return torch.tensor(np.stack(rows), device=dev), torch.tensor(lens, device=dev)
     er = np.random.default_rng(5)
     evalsets = {}
@@ -166,13 +190,17 @@ def main() -> None:
         both = prs + [(b, a) for a, b in prs if a != b]
         sel = [both[i] for i in er.permutation(len(both))[:args.n_eval]]
         evalsets[f"held_b{la}{lb}"] = evalset(sel)
-    evalsets["train_mix"] = evalset([draw_pair() for _ in range(300)])
+    for (la, lb), prs in rehearsal.items():
+        evalsets[f"seen_b{la}{lb}"] = evalset(prs)
     for la, lb in ((4, 4), (4, 1), (4, 2)):   # never-trained lengths
         evalsets[f"ood_b{la}{lb}"] = evalset([(int(er.integers(*RANGE[la])), int(er.integers(*RANGE[lb]))) for _ in range(args.n_eval)])
     max_ans = max(int(v[1].max()) for v in evalsets.values())
 
     xs_all = np.arange(1000)
-    perm = np.concatenate([np.random.default_rng(124 + args.seed).permutation(1000)])
+    perm = np.random.default_rng(124 + args.seed).permutation(1000)
+    perm_len = np.arange(1000)
+    for lo, hi in ((0, 10), (10, 100), (100, 1000)):
+        perm_len[lo:hi] = lo + np.random.default_rng(125 + args.seed + lo).permutation(hi - lo)
     if args.dry_inputs:
         ids, ia, ib, ns = line(7, 538, 0)
         print("line:", [tok.decode([t]) for t in ids], "a at", ia, tok.decode([ids[ia]]), "b at", ib, tok.decode([ids[ib]]), "answer tokens", ns)
@@ -181,7 +209,7 @@ def main() -> None:
             print(f"{k}: ...{tok.decode(x[-20:].tolist())!r} answer {[tok.decode([t]) for t in x[-L:].tolist()]}")
         print({k: (tuple(v[0].shape), int(v[1].max())) for k, v in evalsets.items()}, "held unordered", {k: len(v) for k, v in held.items()})
         if args.target != "none":
-            F = features(args.target, xs_all, perm); print("target features", F.shape)
+            F = features(args.target, xs_all, perm, perm_len); print("target features", F.shape)
         return
 
     # ---------------------------------------------------------------- model
@@ -195,7 +223,7 @@ def main() -> None:
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.1, fused=(dev == "cuda"))
     sched = lambda s: min(1.0, (s + 1) / warm) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * min(1.0, s / steps))))
     rng = np.random.default_rng(2000 + args.seed)
-    Ftab = features(args.target, xs_all, perm) if args.target != "none" else None
+    Ftab = features(args.target, xs_all, perm, perm_len) if args.target != "none" else None
 
     def batch():
         rows, ops = [], []
@@ -241,12 +269,15 @@ def main() -> None:
                     hits.append(ok)
                 res[name] = float(torch.cat(hits).float().mean())
             vrr = np.random.default_rng(7)
-            vl = []
+            vl, nats, nbytes = [], 0.0, 0
             for _ in range(8):
                 o = vrr.integers(0, len(val) - args.seq - 1, size=16)
                 x = torch.tensor(np.stack([val[i:i + args.seq + 1].astype(np.int64) for i in o]), device=dev)
-                vl.append(float(Fn.cross_entropy(model(input_ids=x[:, :-1]).logits.float().flatten(0, 1), x[:, 1:].flatten())))
+                ce = Fn.cross_entropy(model(input_ids=x[:, :-1]).logits.float().flatten(0, 1), x[:, 1:].flatten(), reduction="sum")
+                vl.append(float(ce) / x[:, 1:].numel()); nats += float(ce)
+                nbytes += sum(len(tok.decode(row).encode("utf-8")) for row in x[:, 1:].tolist())
             res["val_loss"] = float(np.mean(vl))
+            res["val_bits_per_byte"] = nats / math.log(2) / nbytes   # comparable across tokenisations
         model.train()
         return res
 
@@ -263,12 +294,21 @@ def main() -> None:
             out_m = model(input_ids=x, labels=x)
             gl = prior(ops) if Ftab is not None else torch.zeros((), device=dev)
             loss = out_m.loss + (args.lam * gl if Ftab is not None else 0.0)
+        grad_info = {}
+        if (s % args.eval_every == 0 or s == steps - 1) and Ftab is not None:   # LM vs prior pull, before clipping
+            params = [q for q in model.parameters() if q.requires_grad]
+            g1 = torch.autograd.grad(out_m.loss, params, retain_graph=True, allow_unused=True)
+            g2 = torch.autograd.grad(args.lam * gl, params, retain_graph=True, allow_unused=True)
+            v1 = torch.cat([(g if g is not None else torch.zeros_like(q)).flatten().float() for g, q in zip(g1, params)])
+            v2 = torch.cat([(g if g is not None else torch.zeros_like(q)).flatten().float() for g, q in zip(g2, params)])
+            grad_info = dict(grad_lm=float(v1.norm()), grad_prior=float(v2.norm()), grad_cos=float(v1 @ v2 / (v1.norm() * v2.norm() + 1e-12)))
+            del g1, g2, v1, v2
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         if s % args.eval_every == 0 or s == steps - 1:
-            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0)
+            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0, **grad_info)
             curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))
