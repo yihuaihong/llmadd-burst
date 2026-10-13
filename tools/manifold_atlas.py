@@ -211,7 +211,12 @@ def main() -> None:
     ap.add_argument("--tiny", action="store_true", help="smoke test: a small random OLMo-2 with the given tokenizer, on CPU")
     ap.add_argument("--random_init", action="store_true", help="negative control: the --model architecture with random weights")
     ap.add_argument("--only", default=None, help="smoke tests: comma-separated subset of domains")
+    ap.add_argument("--force", action="store_true", help="recompute even if <out>/atlas_<tag>.json exists")
     args = ap.parse_args()
+    done = Path(args.out) / f"atlas_{args.tag}.json"
+    if done.exists() and not args.force:   # the same job queued on two partitions: the second one exits
+        print(f"{done} exists; nothing to do (--force to recompute)")
+        return
     from transformers import AutoModelForCausalLM, AutoTokenizer
     t0 = time.time()
     tok = AutoTokenizer.from_pretrained(args.model)
