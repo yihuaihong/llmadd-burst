@@ -24,12 +24,16 @@ LABEL = {"helix": "helix prior", "none": "no prior"}
 
 
 def load(dirs):
-    out = {}
+    """Runs from all dirs pooled by geometry (several dirs may hold different seeds of one arm); mean curve over seeds."""
+    by = {}
     for d in dirs:
-        rs = [json.load(open(p)) for p in sorted(glob.glob(f"{d}/run_*_seed*.json"))]
-        G = rs[0]["geom"]
-        steps = np.array([c["step"] for c in rs[0]["curve"]])
-        acc = 100 * np.mean([[c["test"] for c in r["curve"]] for r in rs], 0)
+        for p in sorted(glob.glob(f"{d}/run_*_seed*.json")):
+            r = json.load(open(p)); by.setdefault(r["geom"], []).append(r)
+    out = {}
+    for G, rs in by.items():
+        n = min(len(r["curve"]) for r in rs)
+        steps = np.array([c["step"] for c in rs[0]["curve"][:n]])
+        acc = 100 * np.mean([[c["test"] for c in r["curve"][:n]] for r in rs], 0)
         out[G] = (np.concatenate([[0], steps]), np.concatenate([[0.0], acc]), len(rs))
     return out
 
