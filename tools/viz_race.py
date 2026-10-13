@@ -33,6 +33,19 @@ def load(dirs):
         out[G] = (np.concatenate([[0], steps]), np.concatenate([[0.0], acc]), len(rs))
     return out
 
+def save_mp4(anim, path, fps):
+    """H.264 / yuv420p / faststart MP4 at 1920x1080 (plays everywhere, incl. WeChat); needs an ffmpeg binary."""
+    import os
+    import shutil
+    import sys
+    ff = shutil.which("ffmpeg") or os.path.join(os.path.dirname(sys.executable), "ffmpeg")
+    if not os.path.exists(ff):
+        print("no ffmpeg: MP4 skipped"); return
+    matplotlib.rcParams["animation.ffmpeg_path"] = ff
+    anim.save(path, writer=FFMpegWriter(fps=fps, codec="libx264", bitrate=8000,
+                                        extra_args=["-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                                                    "-movflags", "+faststart"]), dpi=160)
+
 
 def main() -> None:
     ap = argparse.ArgumentParser()
@@ -87,8 +100,7 @@ def main() -> None:
 
     anim = FuncAnimation(fig, frame, frames=n + hold, interval=80, blit=False)
     anim.save(f"{args.out}.gif", writer=PillowWriter(fps=12))
-    if shutil.which("ffmpeg"):
-        anim.save(f"{args.out}.mp4", writer=FFMpegWriter(fps=12, bitrate=2400))
+    save_mp4(anim, f"{args.out}.mp4", 12)
     frame(n + hold - 1)
     fig.savefig(f"{args.out}.png", facecolor=SURFACE)
     print("wrote", args.out, {G: first(G, 50) for G in data})

@@ -18,7 +18,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib.animation import FFMpegWriter, FuncAnimation, PillowWriter
 from matplotlib.patches import Ellipse
 
 SURFACE, INK, INK2, LINE, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#c9c8c3", "#e6e5e1"
@@ -63,6 +63,19 @@ def load(d):
         U, _, Wt = np.linalg.svd(m.T @ V[-1][0]); R = U @ Wt
         out.append((m @ R, x @ R))
     return z["steps"], out, acc, eta
+
+def save_mp4(anim, path, fps):
+    """H.264 / yuv420p / faststart MP4 at 1920x1080 (plays everywhere, incl. WeChat); needs an ffmpeg binary."""
+    import os
+    import shutil
+    import sys
+    ff = shutil.which("ffmpeg") or os.path.join(os.path.dirname(sys.executable), "ffmpeg")
+    if not os.path.exists(ff):
+        print("no ffmpeg: MP4 skipped"); return
+    matplotlib.rcParams["animation.ffmpeg_path"] = ff
+    anim.save(path, writer=FFMpegWriter(fps=fps, codec="libx264", bitrate=8000,
+                                        extra_args=["-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+                                                    "-movflags", "+faststart"]), dpi=160)
 
 
 def main() -> None:
@@ -134,6 +147,7 @@ def main() -> None:
 
     anim = FuncAnimation(fig, frame, frames=n + hold, interval=100)
     anim.save(f"{args.out}.gif", writer=PillowWriter(fps=10))
+    save_mp4(anim, f"{args.out}.mp4", 10)
     frame(n + hold - 1)
     fig.savefig(f"{args.out}.png", facecolor=SURFACE)
     print("wrote", args.out, "frames", n)
