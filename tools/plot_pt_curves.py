@@ -58,7 +58,9 @@ def main() -> None:
         ax.spines[s].set_color(INK2)
     ax.tick_params(colors=INK2); ax.yaxis.grid(True, color=GRID); ax.set_axisbelow(True)
     ax.legend(frameon=False, loc="lower right", fontsize=11)
-    ax.set_title("From-scratch pretraining (53M params, ~7% arithmetic): held-out two-digit sums, in training position",
+    lines = next(iter(runs.values()))[0]["args"].get("arith_lines") or 1
+    share = {1: "~2%", 4: "~7%"}.get(lines, f"{lines} lines")
+    ax.set_title(f"From-scratch pretraining (53M params, {share} arithmetic): held-out two-digit sums, in training position",
                  color=INK, fontsize=12.5, loc="left")
     fig.tight_layout()
     fig.savefig(f"{args.out}.png", facecolor=SURFACE)
