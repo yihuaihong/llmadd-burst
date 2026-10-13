@@ -360,6 +360,8 @@ def main() -> None:
                     help="sub: a - b with a >= b; mul: a * b <= 999; mod: (a + b) mod 100 written with a new operator #; max: the larger operand")
     ap.add_argument("--gpt3_arith", default=None, help="EleutherAI/arithmetic data dir: also evaluate on its two-digit items")
     ap.add_argument("--curve_every", type=int, default=0, help="test accuracy every K optimizer steps (0 = off)")
+    ap.add_argument("--general_eval", default=None, help="dir with HellaSwag / ARC / LAMBADA files: general-ability suite")
+    ap.add_argument("--general_n", type=int, default=500)
     ap.add_argument("--lm_val", default=None, help="uint32 token file (OLMo-2 tokenizer): report LM loss on 32 x 512 tokens")
     ap.add_argument("--save_states_every", type=int, default=0, help="snapshot the number states (last layer of --layers) every K steps")
     ap.add_argument("--mixed_formats", action="store_true", help="add / sub: training batches rotate over FORMATS (GPT-3 and word formats held out)")
@@ -734,6 +736,12 @@ def main() -> None:
     base_eval = evaluate(reft=False, preds=base_preds)
     if lm_val_ids is not None:
         base_eval["lm_val_loss"] = lm_val_loss()
+    gsuite = None
+    if args.general_eval:
+        from general_eval import load_suite, run_suite
+        gsuite = load_suite(args.general_eval, args.general_n)
+        base_eval["general"] = run_suite(model, tok, gsuite, dev)
+        print("base general:", base_eval["general"], flush=True)
     base_means = number_means(reft=False)
     (out / "base.json").write_text(json.dumps({"eval": base_eval, "manifold": diagnostics(base_means, None, slot_pos),
                                                "geometry": geometry_report(reft=False), "task": args.task, "split": args.split,
@@ -803,6 +811,8 @@ def main() -> None:
             ev = evaluate(reft=True, preds=preds)
             if lm_val_ids is not None:
                 ev["lm_val_loss"] = lm_val_loss()
+            if gsuite is not None:
+                ev["general"] = run_suite(model, tok, gsuite, dev)
             diag = diagnostics(number_means(reft=True), None, slot_pos)
             path.write_text(json.dumps({"mode": args.mode, "loss": "v2_cka", "geo_site": args.geo_site, "emb_delta": args.emb_delta,
                                         "task": args.task, "split": args.split, "geo_numbers": args.geo_numbers, "preds": preds,
@@ -831,7 +841,7 @@ def summarize(out: Path) -> None:
     if not runs:
         return
     base = json.loads((out / "base.json").read_text())
-    keys = list(runs[0]["eval"])
+    keys = [k for k, v in runs[0]["eval"].items() if isinstance(v, (int, float))]   # nested dicts (general suite) are reported elsewhere
     ts = f", task {runs[0].get('task', 'add')}, split {runs[0].get('split', 'random')}" + (f", geo_numbers {runs[0]['geo_numbers']}" if runs[0].get("geo_numbers", "all") != "all" else "")
     lines = [f"# manifold fine-tuning ({runs[0]['mode']}, lam {runs[0]['lam']}, lr {runs[0]['lr']}, layers {runs[0]['layers']}{ts})\n\n",
              "| geom | n seeds | " + " | ".join(keys) + " | r2 helix / digit (first layer) |\n", "|---|---|" + "---|" * (len(keys) + 1) + "\n",
