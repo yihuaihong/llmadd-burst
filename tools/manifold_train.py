@@ -55,13 +55,14 @@ import numlib as nl
 
 GEOMS = ("none", "helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse", "sep_ce")
 MULT_GEOMS = ("log", "factor", "factor_shuf", "helix_factor")   # coordinates in which multiplication is a translation
+NOISY_GEOMS = ("helix_n25", "helix_n50", "helix_n100", "helix_n200")   # the helix with fixed per-number noise (std k/100)
 # three-digit geometries over 10..999 (sampled per step, see --geo_sample)
 GEOMS3 = ("helix3", "helix3_shuf", "digit3", "digit3_shuf")
 # learned targets: name -> (source model, shuffled, 2 = 10..99 / 3 = 10..999)
 TEACHER = {"main": ("main", False, 2), "main_shuf": ("main", True, 2), "self": ("self", False, 2),
            "main3": ("main", False, 3), "main3_shuf": ("main", True, 3), "self3": ("self", False, 3)}
 STAGED = ("sep_then_helix",)   # sep_ce for the first half of the steps, then helix (causal test of the kappa gate)
-ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED + MULT_GEOMS
+ALL_GEOMS = GEOMS + GEOMS3 + tuple(TEACHER) + STAGED + MULT_GEOMS + NOISY_GEOMS
 
 
 def geom_range(G: str) -> np.ndarray:
@@ -174,6 +175,11 @@ def geom_features(G: str, x: np.ndarray, perm: np.ndarray) -> np.ndarray:
         return F
     if G == "digit":
         return np.concatenate([np.eye(10)[x // 10], np.eye(10)[x % 10]], 1)
+    if G.startswith("helix_n"):
+        F = nl.features(np.arange(1000))[0]
+        F = (F - F[10:100].mean(0)) / F[10:100].std(0)
+        F = F + int(G[len("helix_n"):]) / 100 * np.random.default_rng(99).normal(size=F.shape)
+        return F[x]
     if G == "log":
         return np.log(x)[:, None]
     if G == "factor":
@@ -199,7 +205,7 @@ def cka(H: torch.Tensor, K_F: torch.Tensor) -> torch.Tensor:
 def target_grams(perm: np.ndarray, dev) -> dict:
     """Centred Gram matrices of the ideal coordinates of 10..99 for every two-digit geometry."""
     out = {}
-    for G in ("helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse") + MULT_GEOMS:
+    for G in ("helix", "helix_shuf", "digit", "digit_shuf", "helix_nonsep", "helix_coarse") + MULT_GEOMS + NOISY_GEOMS:
         F = geom_features(G, np.arange(10, 100), perm)
         F = F[:, F.std(0) > 1e-9]
         F = (F - F.mean(0)) / F.std(0)
