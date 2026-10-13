@@ -24,6 +24,12 @@ def cka_np(A, B):
     return float((G * K).sum() / (np.linalg.norm(G) * np.linalg.norm(K)))
 
 
+def zcols(F):
+    """What pretrain_helix.centred_gram does to a target: every column z-scored (so top-k PCs enter with equal weight)."""
+    F = F[:, F.std(0) > 1e-9]
+    return (F - F.mean(0)) / F.std(0)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--states", required=True)
@@ -31,6 +37,7 @@ def main() -> None:
     ap.add_argument("--template", default="neutral", choices=("neutral", "cued"))
     ap.add_argument("--ks", default="4,8,16")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--nohelix", action="store_true", help="also write feat_full_nohelix (helix span projected out)")
     a = ap.parse_args()
     z = np.load(a.states)
     layers = list(z["layers"]); owner = z["owner"]
@@ -45,10 +52,18 @@ def main() -> None:
     print(f"teacher {a.states} L{a.layer} {a.template}: CKA(full, helix) = {cka_np(H, helix):.3f}; "
           f"variance in top 4 / 8 / 16 PCs = {S[:4].__pow__(2).sum() / (S ** 2).sum():.2f} / "
           f"{S[:8].__pow__(2).sum() / (S ** 2).sum():.2f} / {S[:16].__pow__(2).sum() / (S ** 2).sum():.2f}")
+    hz = zcols(helix)
     for k in (int(v) for v in a.ks.split(",")):
         F = U[:, :k] * S[:k]
         out[f"feat_k{k}"] = F.astype(np.float32)
-        print(f"  k={k}: CKA(feat_k{k}, helix) = {cka_np(F, helix):.3f}, CKA(feat_k{k}, full) = {cka_np(F, H):.3f}")
+        print(f"  k={k}: CKA(feat_k{k}, helix) = {cka_np(F, helix):.3f}, CKA(feat_k{k}, full) = {cka_np(F, H):.3f}; "
+              f"as trained (columns z-scored): CKA to helix {cka_np(zcols(F), hz):.3f}, to the raw teacher {cka_np(zcols(F), H):.3f}")
+    print(f"  full as trained: CKA to helix {cka_np(zcols(H), hz):.3f}, to the raw teacher {cka_np(zcols(H), H):.3f}")
+    if a.nohelix:   # control: the teacher with the helix span projected out of every column (CKA to the helix = 0)
+        Q, _ = np.linalg.qr(hz - hz.mean(0))
+        R = H - Q @ (Q.T @ H)
+        out["feat_full_nohelix"] = R.astype(np.float32)
+        print(f"  full minus helix span: CKA to helix {cka_np(zcols(R), hz):.4f}, to the raw teacher {cka_np(zcols(R), H):.3f}")
     np.savez(a.out, **out)
     print("wrote", a.out)
 

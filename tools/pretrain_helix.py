@@ -257,9 +257,14 @@ def main() -> None:
     if args.target_file:   # a learned target (e.g. teacher geometry) replaces the helix everywhere it is used
         T90 = np.load(args.target_file)[args.target_key].astype(np.float64)
         assert T90.shape[0] == 90, T90.shape
+        import hashlib
+        target_sha = hashlib.sha256(Path(args.target_file).read_bytes()).hexdigest()
         def target_feats(vals):
-            return T90[np.asarray(vals) - 10]
+            vals = np.asarray(vals)
+            assert vals.min() >= 10 and vals.max() <= 99, (vals.min(), vals.max())   # rows are x = 10..99
+            return T90[vals - 10]
     else:
+        target_sha = None
         def target_feats(vals):
             return nl.features(np.asarray(vals))[0]
     def far_perm(seed):   # permutation of 10..99 whose target is far from the true one: first with CKA < 0.15, else
@@ -448,7 +453,7 @@ def main() -> None:
                 r[f"cka_{args.geo_site}"] = site_cka
             curve.append(r)
             print(json.dumps(r), flush=True)
-            path.write_text(json.dumps({"args": vars(args), "shuf_target_cka": shuf_cka, "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
+            path.write_text(json.dumps({"args": vars(args), "shuf_target_cka": shuf_cka, "target_sha256": target_sha, "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
                                         "curve": curve}, indent=1))
     if args.save_model:
         torch.save(model.state_dict(), out / f"model_{args.arm}_seed{args.seed}{args.tag}.pt")

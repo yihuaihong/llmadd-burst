@@ -36,6 +36,8 @@ def label(a: dict) -> str:
         s += f" thr={a.get('gate_thr')}" if a["arm"] == "helix_acc" else f" rel={a.get('cka_release')}"
     if a.get("geo_site", "prefix") != "prefix" and a["arm"] != "none":
         s += f" @{a['geo_site']}"
+    if a.get("target_file"):   # learned targets (ptteach): never merge with the hand helix or with each other
+        s += f" target={a['target_file'].rsplit('/', 1)[-1].removesuffix('.npz')}:{a.get('target_key')}"
     return s
 
 
@@ -70,6 +72,9 @@ def main() -> None:
             a = r["args"]
             if str(a.get("tag") or "").startswith(("_rerun", "_i")):
                 continue
+            if "steps" in r and r["curve"][-1]["step"] < r["steps"] - 1:   # requeued / unfinished run
+                print(f"note: {p}: unfinished (step {r['curve'][-1]['step']} of {r['steps']}), skipped")
+                continue
             runs[(a.get("split", "ordered"), a.get("arith_lines") or 1, label(a))].append(r)
     # the same condition and seed in two batches (e.g. pt7c and ptfinal) is the same init and data stream: keep one
     for k, rs in runs.items():
@@ -97,6 +102,11 @@ def main() -> None:
             bf = [100 * r["curve"][-1][key] for r in base]
             test = (f" | vs none: area p {stats.ttest_ind(area, ba, equal_var=False).pvalue:.3f}, "
                     f"final p {stats.ttest_ind(fin, bf, equal_var=False).pvalue:.3f}")
+            # same seed = same init and data stream in both arms: paired test on the seeds both arms have
+            bs = {r["args"]["seed"]: 100 * np.mean([e[key] for e in r["curve"]]) for r in base}
+            pr = [(100 * np.mean([e[key] for e in r["curve"]]), bs[r["args"]["seed"]]) for r in rs if r["args"]["seed"] in bs]
+            if len(pr) >= 3:
+                test += f", area paired p {stats.ttest_rel(*zip(*pr)).pvalue:.3f} (n={len(pr)})"
         ts = {f"t{int(100 * th)} {'stays' if st else 'first'}": fmt_t([t_reach(r['curve'], key, th, st) for r in rs])
               for th in (0.5, 0.9) for st in (False, True)}
         print(f"[{split}, {lines} line(s), key {key}] {lab:40s} n={len(rs)}  final {np.mean(fin):5.1f}  "
