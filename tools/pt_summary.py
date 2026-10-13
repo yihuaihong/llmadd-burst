@@ -71,6 +71,16 @@ def main() -> None:
             if str(a.get("tag") or "").startswith(("_rerun", "_i")):
                 continue
             runs[(a.get("split", "ordered"), a.get("arith_lines") or 1, label(a))].append(r)
+    # the same condition and seed in two batches (e.g. pt7c and ptfinal) is the same init and data stream: keep one
+    for k, rs in runs.items():
+        by_seed = {}
+        for r in rs:
+            sd = r["args"]["seed"]
+            if sd not in by_seed or len(r["curve"][-1]) > len(by_seed[sd]["curve"][-1]):
+                by_seed[sd] = r
+        if len(by_seed) < len(rs):
+            print(f"note: {k[2]}: {len(rs) - len(by_seed)} duplicate seed run(s) dropped (kept the one with most eval keys)")
+        runs[k] = list(by_seed.values())
     groups = sorted(runs, key=lambda k: (k[0], k[1], k[2] != "none", k[2]))
     for (split, lines, lab) in groups:
         rs = runs[(split, lines, lab)]

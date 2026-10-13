@@ -47,7 +47,9 @@ def main() -> None:
                            for i in range(0, len(ids), 250)]
                     r[name] = float(torch.cat(hit).float().mean())
             r["n"] = {k: int(v[0].shape[0]) for k, v in evalsets.items()}
-            res[f"{Path(d).name}/{Path(mp).stem}"] = dict(arm=args.arm, seed=args.seed, window=args.window, **r)
+            res[f"{Path(d).name}/{Path(mp).stem}"] = dict(arm=args.arm, seed=args.seed, window=args.window,
+                                                          geo_site=getattr(args, "geo_site", "prefix"),
+                                                          split=getattr(args, "split", "ordered"), **r)
             print(Path(mp).stem, {k: round(100 * v, 1) for k, v in r.items() if k != "n"}, flush=True)
     Path(a.out).write_text(json.dumps(res, indent=1))
 

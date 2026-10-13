@@ -155,7 +155,9 @@ def arithmetic_sets(args, tok, val, dev):
             rows.append(np.concatenate([val[o:o + n].astype(np.int64), np.asarray(shots, dtype=np.int64), P[i].cpu().numpy()]))
         evalsets[f"{T}_fs_ctx"] = (torch.tensor(np.stack(rows), device=dev), evalsets[T][1])
     # operand positions of the main held-out ctx prompts ("Q: a + b = ": a is token 3, b token 6 of 9), checked below
-    info = dict(main=T, sums=test.sum(1), ops=test, prompt_len=int(evalsets[T][0].shape[1]))
+    support = np.bincount(trainp.sum(1), minlength=200)
+    info = dict(main=T, sums=test.sum(1), ops=test, prompt_len=int(evalsets[T][0].shape[1]), num_id=num_id,
+                support=support[test.sum(1)])
     if args.ctx_eval:
         ids = evalsets[f"{T}_ctx"][0]; st = ids.shape[1] - info["prompt_len"]
         info.update(pos_a=st + 3, pos_b=st + 6)
@@ -250,7 +252,7 @@ def main() -> None:
     num_prefix = enc([f"Q: {x}" for x in range(10, 100)])
     xs = np.arange(10, 100)
     K = {"helix": centred_gram(nl.features(xs)[0], dev),
-         "helix_shuf": centred_gram(nl.features(xs[np.random.default_rng(124).permutation(90)])[0], dev)}
+         "helix_shuf": centred_gram(nl.features(xs[np.random.default_rng(124 + args.seed).permutation(90)])[0], dev)}
 
     # ------------------------------------------------------------ model
     model = build_model(args, tok, dev)
@@ -269,9 +271,12 @@ def main() -> None:
     dyn = {"released": None, "ema": 0.0, "low": 0, "ema1": 0.0, "ema_all": 0.0, "gate_on": 0}
     # value -> helix features (rows: operand values 10..99, sums 20..198); the shuffled arm permutes the values
     shuf = args.arm in ("helix_shuf", "helix_shuf_window")
-    F_op = nl.features(xs[np.random.default_rng(124).permutation(90)] if shuf else xs)[0]
+    F_op = nl.features(xs[np.random.default_rng(124 + args.seed).permutation(90)] if shuf else xs)[0]
     sums = np.arange(20, 199)
-    F_ans = nl.features(sums[np.random.default_rng(125).permutation(len(sums))] if shuf else sums)[0]
+    # sums span 20..198: the longest period is 200 (one turn over the range, as T = 100 is for operands 10..99); with
+    # T = 100, s and s + 100 would share every periodic feature (cos 0.77 vs 0.52 for s, s + 1 after z-scoring)
+    F_ans = nl.features(sums[np.random.default_rng(125 + args.seed).permutation(len(sums))] if shuf else sums,
+                        periods=(2, 5, 10, 200))[0]
 
     def geo_weight(s):
         if args.arm == "none":
@@ -335,6 +340,10 @@ def main() -> None:
                 if name == main_ctx:   # sums < 100 share their output rows with operand embeddings (tied); split them
                     lo = torch.tensor(info["sums"] < 100, device=dev)
                     res[f"{name}_lo"], res[f"{name}_hi"] = float(hit[lo].mean()), float(hit[~lo].mean())
+                    # answers with little training support (sum seen in < 5 training pairs) fail for other reasons
+                    rare = torch.tensor(info["support"] < 5, device=dev)
+                    res[f"{name}_common"] = float(hit[~rare].mean())
+                    res[f"{name}_rare"] = float(hit[rare].mean()) if bool(rare.any()) else None
                     vals = np.concatenate([info["ops"][:, 0], info["ops"][:, 1]])
                     Kv = centred_gram(nl.features(vals)[0], dev)
                     # states are gathered per chunk as [a-chunk, b-chunk]; reorder values the same way
@@ -360,6 +369,10 @@ def main() -> None:
         for g in opt.param_groups:
             g["lr"] = args.lr * sched(s)
         x, meta = batch()
+        if s == 0:   # positions in meta point at the operand and answer tokens of every line
+            nid = info["num_id"]
+            for r_, pa_, pb_, pans_, a_, b_, _ in meta.tolist():
+                assert int(x[r_, pa_]) == nid[a_] and int(x[r_, pb_]) == nid[b_] and int(x[r_, pans_]) == nid[a_ + b_], (r_, a_, b_)
         with torch.autocast(dev, dtype=torch.bfloat16):
             out_m = model(input_ids=x, labels=x)
             lm = out_m.loss
