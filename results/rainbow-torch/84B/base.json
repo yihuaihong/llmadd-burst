@@ -1,0 +1,52 @@
+{
+ "eval": {
+  "add/train": 0.09333333373069763,
+  "add/test": 0.08100000023841858,
+  "add/test_strict": 0.08578431606292725,
+  "days/train": 0.0,
+  "days/test": 0.0,
+  "days/k41to80": 0.0,
+  "days/test_k1to9": 0.0,
+  "days/test_k10plus": 0.0,
+  "months/train": 0.0,
+  "months/test": 0.0,
+  "months/k41to80": 0.0,
+  "months/test_k1to9": 0.0,
+  "months/test_k10plus": 0.0
+ },
+ "geometry": {
+  "helix": {
+   "L4": 0.7577083110809326,
+   "L8": 0.7489386200904846,
+   "L12": 0.7393784523010254,
+   "L16": 0.7195920348167419
+  },
+  "days": {
+   "L4": 0.8726947903633118,
+   "L8": 0.871830403804779,
+   "L12": 0.8598681688308716,
+   "L16": 0.8285803198814392
+  },
+  "months": {
+   "L4": 0.6340023279190063,
+   "L8": 0.6245855093002319,
+   "L12": 0.6358714699745178,
+   "L16": 0.5700651407241821
+  }
+ },
+ "n": {
+  "add/train": 1500,
+  "add/test": 1000,
+  "add/test_strict": 816,
+  "days/train": 336,
+  "days/test": 224,
+  "days/k41to80": 300,
+  "days/test_k1to9": 48,
+  "days/test_k10plus": 176,
+  "months/train": 576,
+  "months/test": 384,
+  "months/k41to80": 300,
+  "months/test_k1to9": 81,
+  "months/test_k10plus": 303
+ }
+}
