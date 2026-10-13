@@ -65,6 +65,7 @@ def main() -> None:
     ap.add_argument("--seq", type=int, default=512)
     ap.add_argument("--bs", type=int, default=32)
     ap.add_argument("--tokens", type=float, default=3e8, help="training tokens")
+    ap.add_argument("--arith_lines", type=int, default=1, help="arithmetic lines appended per sequence (1 ~ 2%% of tokens, 4 ~ 7%%)")
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--lam", type=float, default=5.0)
     ap.add_argument("--gate_start", type=float, default=0.1, help="helix_acc / helix_cka: first step of the prior (fraction)")
@@ -135,7 +136,7 @@ def main() -> None:
     def batch():
         rows = []
         for _ in range(args.bs):
-            line = lines[rng.integers(len(lines))][rng.integers(len(FORMATS))]
+            line = sum((lines[rng.integers(len(lines))][rng.integers(len(FORMATS))] for _ in range(args.arith_lines)), [])
             n = args.seq - len(line)
             o = int(rng.integers(0, len(train) - n))
             rows.append(np.concatenate([train[o:o + n].astype(np.int64), np.asarray(line, dtype=np.int64)]))
