@@ -11,6 +11,9 @@ Arms (--arm):
   helix_window helix only for the steps in [--window start, end) (fractions of training)
 Logged every --eval_every steps: held-out addition accuracy ("Q: a + b = " -> answer token; and "a plus b equals "),
 train-pair accuracy, validation LM loss on held-out FineWeb text, CKA(helix) of the number states.
+The *_ctx accuracies put the same prompts where training puts them: after a held-out FineWeb chunk, so the prompt ends
+at the same position as in a training sequence (the plain ones start the prompt at position 0, which training never
+shows; in-batch accuracy reaches ~100% while the plain held-out accuracy stays far lower).
 
     python tools/pretrain_helix.py --data <dir> --tokenizer <olmo2 dir> --out <dir> --arm helix --seed 0
 """
@@ -75,6 +78,8 @@ def main() -> None:
     ap.add_argument("--lam_after", type=float, default=0.0, help="helix_window: weight after the window ends (0 = release)")
     ap.add_argument("--geo_layers", default=None, help="default: n_layers/3 and 2 n_layers/3")
     ap.add_argument("--eval_every", type=int, default=250)
+    ap.add_argument("--ctx_eval", action="store_true", help="also evaluate every prompt in training position (*_ctx keys)")
+    ap.add_argument("--save_model", action="store_true", help="save the final weights next to the run file")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     init_seed = args.seed if args.init_seed is None else args.init_seed
@@ -99,6 +104,13 @@ def main() -> None:
     evalsets = {"test": (enc([FORMATS[0].format(a=a, b=b) for a, b in test]), ans_tok(test)),
                 "test_plus": (enc([FORMATS[1].format(a=a, b=b) for a, b in test]), ans_tok(test)),
                 "train": (enc([FORMATS[0].format(a=a, b=b) for a, b in trainp[:500]]), ans_tok(trainp[:500]))}
+    if args.ctx_eval:
+        cr = np.random.default_rng(11)
+        def in_context(ids):   # held-out text in front, so the prompt ends where it ends in training (answer at -2)
+            n = args.seq - ids.shape[1] - 2
+            o = cr.integers(0, len(val) - n, size=ids.shape[0])
+            return torch.cat([torch.tensor(np.stack([val[i:i + n].astype(np.int64) for i in o]), device=dev), ids], 1)
+        evalsets.update({f"{k}_ctx": (in_context(ids), ans) for k, (ids, ans) in list(evalsets.items())})
     num_prefix = enc([f"Q: {x}" for x in range(10, 100)])
     xs = np.arange(10, 100)
     K = {"helix": centred_gram(nl.features(xs)[0], dev),
@@ -152,7 +164,9 @@ def main() -> None:
         res = {"step": step, "tokens": step * args.bs * args.seq}
         with torch.autocast(dev, dtype=torch.bfloat16):
             for name, (ids, ans) in evalsets.items():
-                res[name] = float((model(input_ids=ids).logits[:, -1].argmax(-1) == ans).float().mean())
+                hit = [model(input_ids=ids[i:i + 250], logits_to_keep=1).logits[:, -1].argmax(-1) == ans[i:i + 250]
+                       for i in range(0, len(ids), 250)]
+                res[name] = float(torch.cat(hit).float().mean())
             vr = np.random.default_rng(7)
             vl = []
             for _ in range(8):
@@ -197,6 +211,8 @@ def main() -> None:
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
                                         "curve": curve}, indent=1))
+    if args.save_model:
+        torch.save(model.state_dict(), out / f"model_{args.arm}_seed{args.seed}{args.tag}.pt")
     print(f"done {args.arm} seed{args.seed} in {time.time() - t0:.0f}s")
 
 
