@@ -55,6 +55,9 @@ def main() -> None:
     ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window"), required=True)
     ap.add_argument("--window", default="0.1,0.4", help="helix_window: start,end as fractions of the steps")
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--init_seed", type=int, default=None, help="model initialisation seed (default --seed)")
+    ap.add_argument("--data_seed", type=int, default=None, help="data order seed (default --seed)")
+    ap.add_argument("--tag", default="", help="suffix of the run file name")
     ap.add_argument("--d_model", type=int, default=384)
     ap.add_argument("--n_layers", type=int, default=6)
     ap.add_argument("--n_heads", type=int, default=6)
@@ -68,8 +71,10 @@ def main() -> None:
     ap.add_argument("--eval_every", type=int, default=250)
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
-    path = out / f"run_{args.arm}_seed{args.seed}.json"
-    torch.manual_seed(args.seed); np.random.seed(args.seed)
+    init_seed = args.seed if args.init_seed is None else args.init_seed
+    data_seed = args.seed if args.data_seed is None else args.data_seed
+    path = out / f"run_{args.arm}_seed{args.seed}{args.tag}.json"
+    torch.manual_seed(init_seed); np.random.seed(init_seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     from transformers import AutoTokenizer, Olmo2Config, Olmo2ForCausalLM
     tok = AutoTokenizer.from_pretrained(args.tokenizer)
@@ -110,7 +115,7 @@ def main() -> None:
     geo_on = {"none": lambda s: False, "helix": lambda s: True, "helix_shuf": lambda s: True,
               "helix_window": lambda s: w0 * steps <= s < w1 * steps}[args.arm]
     target = K["helix_shuf" if args.arm == "helix_shuf" else "helix"]
-    rng = np.random.default_rng(1000 + args.seed)
+    rng = np.random.default_rng(1000 + data_seed)
 
     def batch():
         rows = []
