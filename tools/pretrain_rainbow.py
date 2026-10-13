@@ -3,11 +3,20 @@ synthetic tasks, each with its own geometry prior on its own tokens inside the t
 best for addition in pretraining: F69):
   add     "Q: a + b = c"            a, b in 10..99; unordered held-out split (as pretrain_helix --split unordered)
           prior "helix": the operand tokens a and b -> helix features of their values (periods 2, 5, 10, 100 + linear)
-  days    "Q: Friday plus 3 days is Monday"     shifts k in 1..20, plus / minus; 30% of the (item, k, op) combos held out
+  days    "Q: Friday plus 3 days is Monday"     shifts k in 1..20, plus / minus. Held out by EQUIVALENCE CLASS
+          (item, effective shift e = +-k mod 7): every combo of a held (item, e) is never trained, so a held-out
+          problem needs the shift learned on OTHER items (audit 2026-10-13: a per-combo split left an equivalent
+          trained combo, e.g. Fri + 2 for Fri + 9, for 100% of the held-out days problems); e = 0 is not held out
           prior "days": the day token -> circle (k = 1) over the 7 days
   months  "Q: March minus 5 months is October"  as days, 12 months; prior "months": the month token -> circle
-Arms (--priors): "none" or priors joined by "+", e.g. helix+days+months; "_shuf" = values permuted (fixed per seed);
-suffix "@norm" divides lam by the number of priors. Each sequence ends with --lines lines, each of a random task.
+Arms (--priors): "none" or priors joined by "+", e.g. helix+days+months; "_shuf" = values permuted (per seed, re-drawn
+until CKA(shuffled, true) < 0.15); suffix "@norm" divides lam by the number of priors; suffix "@bal" rescales each
+prior's lam at step 0 so that every prior's gradient norm equals the smallest one's (the days / months priors pull
+3-4x harder than the helix at the same lam). Each sequence ends with --lines lines, each of a random task.
+Logged at every eval, for EVERY arm: the gradient norm of the LM loss and of each of the three true priors (active or
+not) and their cosines on the current batch, and the CKA of the item / operand states in the eval prompts to all
+three true geometries; held-out accuracy split by k <= 9 / k >= 10 (the numbers 10..20 are the add operand tokens the
+helix shapes) and add by sum < 100 / >= 100 (tied embeddings: those answers share rows with operand tokens).
 Evaluation every --eval_every steps, in training position (held-out FineWeb chunk, then the prompt; the answer is one
 token): held-out combos per task, trained combos per task, and validation LM loss.
 
@@ -46,12 +55,16 @@ def unordered_split():
 
 
 def cyclic_split(items, kmax=20, frac=0.3, seed=0):
-    combos = [(i, k, op) for i in range(len(items)) for k in range(1, kmax + 1) for op in ("plus", "minus")]
+    """Hold out (item, effective shift) classes, e != 0; all (k, op) combos of a held class go to test."""
+    n = len(items)
+    eff = lambda k, op: (k if op == "plus" else -k) % n
+    classes = [(i, e) for i in range(n) for e in range(1, n)]
     rng = np.random.default_rng(seed)
-    order = rng.permutation(len(combos))
-    nt = int(frac * len(combos))
-    test = [combos[j] for j in order[:nt]]
-    train = [combos[j] for j in order[nt:]]
+    held = {classes[j] for j in rng.permutation(len(classes))[:int(round(frac * len(classes)))]}
+    combos = [(i, k, op) for i in range(n) for k in range(1, kmax + 1) for op in ("plus", "minus")]
+    test = [c for c in combos if (c[0], eff(c[1], c[2])) in held]
+    train = [c for c in combos if (c[0], eff(c[1], c[2])) not in held]
+    assert not ({(i, eff(k, op)) for i, k, op in test} & {(i, eff(k, op)) for i, k, op in train})
     return train, test
 
 
@@ -78,10 +91,13 @@ def main() -> None:
     ap.add_argument("--dry_inputs", action="store_true")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
-    norm = args.priors.endswith("@norm")
-    active = [] if args.priors == "none" else args.priors.removesuffix("@norm").split("+")
+    norm, bal = args.priors.endswith("@norm"), args.priors.endswith("@bal")
+    active = [] if args.priors == "none" else args.priors.removesuffix("@norm").removesuffix("@bal").split("+")
     assert all(p.removesuffix("_shuf") in PRIOR_TASK for p in active), active
     lam = args.lam / max(1, len(active)) if norm else args.lam
+    lam_p = {p: lam for p in active}   # per prior; @bal rescales at step 0
+    import hashlib
+    code_sha = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
     path = out / f"run_{args.priors}_seed{args.seed}.json"
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
@@ -93,7 +109,7 @@ def main() -> None:
 
     # ---------------------------------------------------------------- task lines (+ positions of the shaped tokens)
     test_add, train_add = unordered_split()
-    cyc = {"days": (DAYS, *cyclic_split(DAYS, seed=1)), "months": (MONTHS, *cyclic_split(MONTHS, seed=2))}
+    cyc = {"days": (DAYS, *cyclic_split(DAYS, seed=10 + args.seed)), "months": (MONTHS, *cyclic_split(MONTHS, seed=20 + args.seed))}
 
     def add_line(a, b):
         ids = enc(f"Q: {a} + {b} = {a + b}\n")
@@ -120,39 +136,57 @@ def main() -> None:
 
     # ---------------------------------------------------------------- eval sets (training position)
     vr = np.random.default_rng(11)
-    def evalset(specs):
-        rows, ans = [], []
-        for sp in specs:
-            ids, _, ai = line_of(sp) if sp in cache else make(sp)
+    shaped_eval = {}
+    def evalset(specs, name=None):
+        rows, ans, sh = [], [], []
+        for r, sp in enumerate(specs):
+            ids, pos, ai = line_of(sp) if sp in cache else make(sp)
             prompt = ids[:ai]
             n = args.seq - 2 - len(prompt)   # the answer would sit at seq - 2, as in training
             o = int(vr.integers(0, len(val) - n))
             rows.append(np.concatenate([np.asarray(val[o:o + n], dtype=np.int64), prompt]))
             ans.append(ids[ai])
+            sh += [(r, n + p, v) for p, v in pos]
+        if name:
+            shaped_eval[name] = np.array(sh)
         return torch.tensor(np.stack(rows), device=dev), torch.tensor(ans, device=dev)
     er = np.random.default_rng(5)
-    evalsets = {"add_held": evalset([("add", int(a), int(b)) for a, b in test_add[er.permutation(len(test_add))[:600]].tolist()]),
+    add_held_specs = [("add", int(a), int(b)) for a, b in test_add[er.permutation(len(test_add))[:600]].tolist()]
+    evalsets = {"add_held": evalset(add_held_specs, "add_held"),
                 "add_train": evalset([pools["add"][j] for j in er.permutation(len(pools["add"]))[:300]])}
+    sub_masks = {"add_held": {"lo": np.array([a + b < 100 for _, a, b in add_held_specs])}}
     for t in ("days", "months"):
-        evalsets[f"{t}_held"] = evalset([(t, *c) for c in cyc[t][2]])
+        held_specs = [(t, *c) for c in cyc[t][2]]
+        evalsets[f"{t}_held"] = evalset(held_specs, f"{t}_held")
         evalsets[f"{t}_train"] = evalset([pools[t][j] for j in er.permutation(len(pools[t]))[:150]])
+        sub_masks[f"{t}_held"] = {"k1to9": np.array([sp[2] <= 9 for sp in held_specs])}
 
     # ---------------------------------------------------------------- targets (value -> features), shuffled per seed
     rs = np.random.default_rng(124 + args.seed)
     tab = {"helix": nl.features(np.arange(100))[0],
            "days": np.stack([np.cos(2 * np.pi * np.arange(7) / 7), np.sin(2 * np.pi * np.arange(7) / 7)], 1),
            "months": np.stack([np.cos(2 * np.pi * np.arange(12) / 12), np.sin(2 * np.pi * np.arange(12) / 12)], 1)}
-    pm = np.arange(100); pm[10:] = 10 + rs.permutation(90)
-    tab["helix_shuf"] = tab["helix"][pm]
-    tab["days_shuf"] = tab["days"][rs.permutation(7)]
-    tab["months_shuf"] = tab["months"][rs.permutation(12)]
+    def gram_np(F):
+        F = (F - F.mean(0)) / (F.std(0) + 1e-9); G = F @ F.T; return G - G.mean(0) - G.mean(1)[:, None] + G.mean()
+    def wrong(F, lo, n):   # permutation of rows lo..lo+n-1 with CKA(shuffled, true) < 0.15
+        Gt = gram_np(F[lo:lo + n])
+        for _ in range(5000):
+            q = rs.permutation(n); Gs = gram_np(F[lo:lo + n][q])
+            if (Gs * Gt).sum() / (np.linalg.norm(Gs) * np.linalg.norm(Gt)) < 0.15:
+                out = F.copy(); out[lo:lo + n] = F[lo:lo + n][q]; return out
+        raise RuntimeError("no far permutation")
+    tab["helix_shuf"] = wrong(tab["helix"], 10, 90)
+    tab["days_shuf"] = wrong(tab["days"], 0, 7)
+    tab["months_shuf"] = wrong(tab["months"], 0, 12)
     if args.dry_inputs:
         for sp in (pools["add"][0], pools["days"][0], pools["months"][0]):
             ids, pos, ai = line_of(sp)
             print(sp, [tok.decode([t]) for t in ids], "shaped", [(p, tok.decode([ids[p]])) for p, _ in pos], "answer", tok.decode([ids[ai]]))
         for k, (x, a) in evalsets.items():
             print(f"{k}: n {len(x)}  ...{tok.decode(x[0, -12:].tolist())!r} -> {tok.decode([int(a[0])])!r}")
-        print("active", active, "lam", lam)
+        print("active", active, "lam", lam, "code", code_sha)
+        print("held classes: days", len({(i, (k if op == 'plus' else -k) % 7) for i, k, op in cyc['days'][2]}),
+              "months", len({(i, (k if op == 'plus' else -k) % 12) for i, k, op in cyc['months'][2]}))
         return
 
     # ---------------------------------------------------------------- model
@@ -200,8 +234,23 @@ def main() -> None:
         res = {"step": step, "tokens": step * args.bs * args.seq}
         with torch.autocast(dev, dtype=torch.bfloat16):
             for name, (ids, ans) in evalsets.items():
-                hit = [model(input_ids=ids[i:i + 250], logits_to_keep=1).logits[:, -1].argmax(-1) == ans[i:i + 250] for i in range(0, len(ids), 250)]
-                res[name] = float(torch.cat(hit).float().mean())
+                hit, states = [], {L: [] for L in geo_layers}
+                for i in range(0, len(ids), 250):
+                    hit.append(model(input_ids=ids[i:i + 250], logits_to_keep=1).logits[:, -1].argmax(-1) == ans[i:i + 250])
+                    if name in shaped_eval:
+                        m = shaped_eval[name]; m = m[(m[:, 0] >= i) & (m[:, 0] < i + 250)]
+                        for L in geo_layers:
+                            states[L].append((store[L][torch.tensor(m[:, 0] - i, device=dev), torch.tensor(m[:, 1], device=dev)].float(), m[:, 2]))
+                h = torch.cat(hit).float()
+                res[name] = float(h.mean())
+                for sub, mask in sub_masks.get(name, {}).items():
+                    mk = torch.tensor(mask, device=dev)
+                    res[f"{name}_{sub}"] = float(h[mk].mean()); res[f"{name}_not{sub}"] = float(h[~mk].mean())
+                if name in shaped_eval:   # geometry of the shaped tokens in held-out prompts, against the TRUE targets
+                    geo_name = {"add_held": "helix", "days_held": "days", "months_held": "months"}[name]
+                    for L in geo_layers:
+                        H = torch.cat([a for a, _ in states[L]]); v = np.concatenate([b for _, b in states[L]])
+                        res[f"cka_{geo_name}@L{L}"] = float(cka(H, centred_gram(tab[geo_name][v], dev)))
             vrr = np.random.default_rng(7)
             vl = []
             for _ in range(8):
@@ -226,16 +275,39 @@ def main() -> None:
         with torch.autocast(dev, dtype=torch.bfloat16):
             out_m = model(input_ids=x, labels=x)
             geo = {p: prior_loss(p, sh) for p in active}
-            loss = out_m.loss + lam * sum(geo.values()) if geo else out_m.loss
+        grad_info = {}
+        if s == 0 or s % args.eval_every == 0 or s == steps - 1:   # every arm: LM and all three TRUE priors
+            with torch.autocast(dev, dtype=torch.bfloat16):
+                terms = {"lm": out_m.loss, **{p: (geo[p] if p in geo else prior_loss(p, sh)) for p in ("helix", "days", "months")}}
+            params = [q for q in model.parameters() if q.requires_grad]
+            vec = {}
+            for k_, v_ in terms.items():
+                g = torch.autograd.grad(v_, params, retain_graph=True, allow_unused=True)
+                vec[k_] = torch.cat([(a if a is not None else torch.zeros_like(q)).flatten().float() for a, q in zip(g, params)])
+            names = list(vec)
+            grad_info = {f"gnorm_{k_}": float(vec[k_].norm()) for k_ in names}
+            grad_info.update({f"gcos_{a}|{b}": float(vec[a] @ vec[b] / (vec[a].norm() * vec[b].norm() + 1e-12))
+                              for i_, a in enumerate(names) for b in names[i_ + 1:]})
+            if s == 0 and bal and len(active) > 1:   # equalise the priors' pull: each lam_p * |grad p| = the smallest
+                gn = {}
+                for p_ in active:
+                    g = torch.autograd.grad(geo[p_], params, retain_graph=True, allow_unused=True)
+                    gn[p_] = float(torch.cat([(a if a is not None else torch.zeros_like(q)).flatten().float() for a, q in zip(g, params)]).norm())
+                ref = min(gn.values())
+                lam_p = {p_: lam * ref / gn[p_] for p_ in active}
+                print("balanced lambdas", lam_p, "from gradient norms", gn, flush=True)
+            del vec
+        loss = out_m.loss + sum(lam_p[p] * v for p, v in geo.items()) if geo else out_m.loss
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         if s % args.eval_every == 0 or s == steps - 1:
-            r = evaluate(s); r.update(lm=float(out_m.loss), sec=time.time() - t0, **{f"geo_{p}": float(v) for p, v in geo.items()})
+            r = evaluate(s); r.update(lm=float(out_m.loss), sec=time.time() - t0, **{f"geo_{p}": float(v) for p, v in geo.items()}, **grad_info)
             curve.append(r)
             print(json.dumps(r), flush=True)
-            path.write_text(json.dumps({"args": vars(args), "lam_effective": lam, "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))
+            path.write_text(json.dumps({"args": vars(args), "lam_effective": lam_p, "code_sha256": code_sha, "steps": steps,
+                                        "geo_layers": geo_layers, "curve": curve}, indent=1))
     if args.save_model:
         torch.save(model.state_dict(), out / f"model_{args.priors}_seed{args.seed}.pt")
     print(f"done in {time.time() - t0:.0f}s")
