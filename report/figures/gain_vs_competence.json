@@ -1,0 +1,576 @@
+[
+ {
+  "domain": "digits +",
+  "ckpt": "2k",
+  "geometry": "helix",
+  "none_acc": 5.2666667848825455,
+  "geom_acc": 9.566666930913925,
+  "gain": 4.30000014603138,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "081",
+   "081"
+  ]
+ },
+ {
+  "domain": "digits +",
+  "ckpt": "5k",
+  "geometry": "helix",
+  "none_acc": 7.833333561817805,
+  "geom_acc": 12.36666738986969,
+  "gain": 4.533333828051885,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "082b",
+   "082b"
+  ]
+ },
+ {
+  "domain": "digits +",
+  "ckpt": "10k",
+  "geometry": "helix",
+  "none_acc": 18.033334116141,
+  "geom_acc": 28.333335121472675,
+  "gain": 10.300001005331675,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "064",
+   "071"
+  ]
+ },
+ {
+  "domain": "digits +",
+  "ckpt": "20k",
+  "geometry": "helix",
+  "none_acc": 56.56666954358419,
+  "geom_acc": 66.43333633740744,
+  "gain": 9.866666793823242,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "083",
+   "083"
+  ]
+ },
+ {
+  "domain": "digits +",
+  "ckpt": "50k",
+  "geometry": "helix",
+  "none_acc": 97.60000507036844,
+  "geom_acc": 93.60000292460123,
+  "gain": -4.000002145767212,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "066",
+   "072"
+  ]
+ },
+ {
+  "domain": "digits +",
+  "ckpt": "150k",
+  "geometry": "helix",
+  "none_acc": 100.0,
+  "geom_acc": 97.66667286554971,
+  "gain": -2.3333271344502804,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "068",
+   "073"
+  ]
+ },
+ {
+  "domain": "digits −",
+  "ckpt": "5k",
+  "geometry": "helix",
+  "none_acc": 14.400000621875128,
+  "geom_acc": 18.96666785081228,
+  "gain": 4.566667228937149,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "122",
+   "122"
+  ]
+ },
+ {
+  "domain": "digits −",
+  "ckpt": "10k",
+  "geometry": "helix",
+  "none_acc": 27.300000687440235,
+  "geom_acc": 39.70000247160594,
+  "gain": 12.400001784165704,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "123",
+   "123"
+  ]
+ },
+ {
+  "domain": "digits −",
+  "ckpt": "20k",
+  "geometry": "helix",
+  "none_acc": 50.20000239213308,
+  "geom_acc": 57.16666976610819,
+  "gain": 6.966667373975111,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "124",
+   "124"
+  ]
+ },
+ {
+  "domain": "digits −",
+  "ckpt": "50k",
+  "geometry": "helix",
+  "none_acc": 96.36666973431906,
+  "geom_acc": 97.53333926200867,
+  "gain": 1.1666695276896122,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "125",
+   "125"
+  ]
+ },
+ {
+  "domain": "digits −",
+  "ckpt": "150k",
+  "geometry": "helix",
+  "none_acc": 99.9666690826416,
+  "geom_acc": 99.56667025883993,
+  "gain": -0.39999882380167273,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "126",
+   "126"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "2k",
+  "geometry": "helix",
+  "none_acc": 9.132420271635056,
+  "geom_acc": 17.12328791618347,
+  "gain": 7.990867644548416,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "127",
+   "127"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "5k",
+  "geometry": "helix",
+  "none_acc": 35.50228277842204,
+  "geom_acc": 42.35159754753113,
+  "gain": 6.849314769109088,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "128",
+   "128"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "10k",
+  "geometry": "helix",
+  "none_acc": 73.05936217308044,
+  "geom_acc": 71.68949842453003,
+  "gain": -1.369863748550415,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "129",
+   "129"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "20k",
+  "geometry": "helix",
+  "none_acc": 89.26940759023032,
+  "geom_acc": 87.44292259216309,
+  "gain": -1.8264849980672238,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "130",
+   "130"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "50k",
+  "geometry": "helix",
+  "none_acc": 94.06392772992453,
+  "geom_acc": 91.3242002328237,
+  "gain": -2.73972749710083,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "131",
+   "131"
+  ]
+ },
+ {
+  "domain": "number words",
+  "ckpt": "150k",
+  "geometry": "helix",
+  "none_acc": 99.77169036865234,
+  "geom_acc": 99.20091231664023,
+  "gain": -0.570778052012122,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "132",
+   "132"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "2k",
+  "geometry": "helix",
+  "none_acc": 5.825242772698402,
+  "geom_acc": 8.414239684740703,
+  "gain": 2.5889969120423,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "133",
+   "133"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "5k",
+  "geometry": "helix",
+  "none_acc": 1.6181229924162228,
+  "geom_acc": 2.912621386349201,
+  "gain": 1.2944983939329784,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "134",
+   "134"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "10k",
+  "geometry": "helix",
+  "none_acc": 32.36246009667714,
+  "geom_acc": 35.27508080005646,
+  "gain": 2.9126207033793152,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "135",
+   "135"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "20k",
+  "geometry": "helix",
+  "none_acc": 74.75728193918863,
+  "geom_acc": 83.49514603614807,
+  "gain": 8.737864096959436,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "136",
+   "136"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "50k",
+  "geometry": "helix",
+  "none_acc": 94.82200940450033,
+  "geom_acc": 93.20388436317444,
+  "gain": -1.6181250413258907,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "137",
+   "137"
+  ]
+ },
+ {
+  "domain": "Roman",
+  "ckpt": "150k",
+  "geometry": "helix",
+  "none_acc": 100.0,
+  "geom_acc": 100.0,
+  "gain": 0.0,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "138",
+   "138"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "2k",
+  "geometry": "circle",
+  "none_acc": 6.398809949556987,
+  "geom_acc": 9.6726194024086,
+  "gain": 3.273809452851613,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "139",
+   "139"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "5k",
+  "geometry": "circle",
+  "none_acc": 20.535715421040855,
+  "geom_acc": 15.47619104385376,
+  "gain": -5.059524377187094,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "140",
+   "140"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "10k",
+  "geometry": "circle",
+  "none_acc": 28.869048754374187,
+  "geom_acc": 24.25595372915268,
+  "gain": -4.613095025221509,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "141",
+   "141"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "20k",
+  "geometry": "circle",
+  "none_acc": 51.04166865348816,
+  "geom_acc": 62.053575118382774,
+  "gain": 11.011906464894617,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "142",
+   "142"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "50k",
+  "geometry": "circle",
+  "none_acc": 62.64881292978922,
+  "geom_acc": 86.7559552192688,
+  "gain": 24.107142289479576,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "143",
+   "143"
+  ]
+ },
+ {
+  "domain": "days",
+  "ckpt": "150k",
+  "geometry": "circle",
+  "none_acc": 79.46428855260214,
+  "geom_acc": 95.83333730697632,
+  "gain": 16.369048754374184,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "144",
+   "144"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "2k",
+  "geometry": "circle",
+  "none_acc": 3.3854166666666665,
+  "geom_acc": 6.857639054457347,
+  "gain": 3.472222387790681,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "145",
+   "145"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "5k",
+  "geometry": "circle",
+  "none_acc": 10.85069477558136,
+  "geom_acc": 9.895833333333332,
+  "gain": -0.954861442248027,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "146",
+   "146"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "10k",
+  "geometry": "circle",
+  "none_acc": 21.093750496705375,
+  "geom_acc": 41.84027810891469,
+  "gain": 20.746527612209317,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "147",
+   "147"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "20k",
+  "geometry": "circle",
+  "none_acc": 47.82986243565877,
+  "geom_acc": 55.295141537984215,
+  "gain": 7.465279102325445,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "148",
+   "148"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "50k",
+  "geometry": "circle",
+  "none_acc": 64.14930621782938,
+  "geom_acc": 86.89236442248026,
+  "gain": 22.74305820465088,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "149",
+   "149"
+  ]
+ },
+ {
+  "domain": "months",
+  "ckpt": "150k",
+  "geometry": "circle",
+  "none_acc": 78.99305820465088,
+  "geom_acc": 73.4375019868215,
+  "gain": -5.555556217829382,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "150",
+   "150"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "2k",
+  "geometry": "line",
+  "none_acc": 0.0,
+  "geom_acc": 0.3546099178493023,
+  "gain": 0.3546099178493023,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "151",
+   "151"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "5k",
+  "geometry": "line",
+  "none_acc": 0.17730495892465115,
+  "geom_acc": 1.9503545636932056,
+  "gain": 1.7730496047685544,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "152",
+   "152"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "10k",
+  "geometry": "line",
+  "none_acc": 2.8368794048825903,
+  "geom_acc": 4.432623957594236,
+  "gain": 1.5957445527116458,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "153",
+   "153"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "20k",
+  "geometry": "line",
+  "none_acc": 4.787233844399452,
+  "geom_acc": 8.510638028383255,
+  "gain": 3.723404183983803,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "154",
+   "154"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "50k",
+  "geometry": "line",
+  "none_acc": 4.787233844399452,
+  "geom_acc": 4.609928900996843,
+  "gain": -0.17730494340260847,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "155",
+   "155"
+  ]
+ },
+ {
+  "domain": "letters",
+  "ckpt": "150k",
+  "geometry": "line",
+  "none_acc": 5.319148674607277,
+  "geom_acc": 5.8510636289914455,
+  "gain": 0.5319149543841682,
+  "seeds_none": 3,
+  "seeds_geom": 3,
+  "tasks": [
+   "156",
+   "156"
+  ]
+ }
+]
