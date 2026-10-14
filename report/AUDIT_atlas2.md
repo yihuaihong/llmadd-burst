@@ -71,3 +71,4 @@ people step function (ancient vs modern) LOO R² 0.84.
 - m8 plots: random-init tags detected in v2 names; axis labels per trajectory; calibrated test score.
 - Not fixed (documented): us_cities covers 45 states (no AK, HI, ME, VT, DE; ambiguous names like Portland);
   layer spacing uneven for 12/28/36-layer models (compare relative depth only); MLK renamed "Martin Luther King".
+- 2026-10-13 (after the living-lab audit): helix-type targets had a sin(pi x) noise column (period-2 term on integers, standardised); _std now drops constant columns (commit 0201fe6). Numbers helix R2 at L16 (v1 states, cued): 9B/21B/main 0.377/0.738/0.841 -> 0.428/0.824/0.948. Snapshot refreshed before any job ran.
