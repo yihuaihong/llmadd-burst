@@ -226,7 +226,7 @@ def main() -> None:
         print({k: (tuple(v[0].shape), int(v[1].max())) for k, v in evalsets.items()}, "held unordered", {k: len(v) for k, v in held.items()})
         if args.target != "none":
             F = features(args.target, xs_all, perm, perm_len); print("target features", F.shape)
-        return
+        # continues to the training rows below (model built, no training), then returns
 
     # ---------------------------------------------------------------- model
     model = build_model(args, tok, dev)
@@ -354,6 +354,23 @@ def main() -> None:
             return float(dyn["ema_b"].min()) < args.gate_thr
         return True
 
+    if args.dry_inputs:   # decoded training rows: prior sites marked with ⟦ ⟧ (ctx: operands; text: numbers in the text)
+        x, ops, ans = batch()
+        for r in range(3):
+            row = x[r].tolist()
+            site = ops[ops[:, 0] == r][:, 1].tolist() if args.site == "ctx" else batch.tmeta[batch.tmeta[:, 0] == r][:, 1].tolist()
+            show = sorted(set(range(max(0, len(row) - 40), len(row))) | {j for i in site for j in range(i - 6, i + 7) if 0 <= j < len(row)})
+            txt, prev = "", None
+            for j in show:
+                txt += (" ... " if prev is not None and j != prev + 1 else "") + (f"⟦{tok.decode([row[j]])}⟧" if j in site else tok.decode([row[j]]))
+                prev = j
+            print(f"train row {r} (len {len(row)}, {len(site)} prior sites at {site[:12]}): {txt!r}")
+        if args.site == "text":
+            ns, ok = [], 0
+            for _ in range(50):
+                batch(); ns.append(len(batch.tmeta)); ok += text_ok()
+            print(f"text numbers per batch over 50 batches: median {int(np.median(ns))}, min {min(ns)}; prior applied on {ok}/50 batches")
+        return
     curve, t0 = [], time.time()
     model.train()
     ck = out / f"ckpt_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.pt"
