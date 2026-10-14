@@ -127,8 +127,13 @@ def prompt_targets(dom: dict, items: list, data: dict, evalsets: dict, rng_seed:
     return targets, batch, (lambda rows: grams(s_train[rows]))   # last: targets of any train rows (--presample)
 
 
-def build_data(dom: dict, items: list, vals: np.ndarray, rng) -> dict:
-    """{split: [(prompt, answer_string)]}: train / test (unseen combinations) and, for cyclic domains, ood (larger shifts)."""
+def build_data(dom: dict, items: list, vals: np.ndarray, rng, split: str = "combo") -> dict:
+    """{split: [(prompt, answer_string)]}: train / test (unseen combinations) and, for cyclic domains, ood (larger shifts).
+    split="combo" (the original F24 split): 60/40 over (item, k, op) combos -- for cyclic domains EVERY test combo then
+    has an equivalent trained combo (same item, same shift mod n, e.g. Fri + 2 for Fri + 9; checked 2026-10-14), so the
+    test measures transfer across equivalent shifts. split="class" (cyclic only): hold out 40% of the (item, effective
+    shift e = +-k mod n) classes with e != 0; every combo of a held class is a test problem, so a test problem needs the
+    shift learned on OTHER items (as pretrain_rainbow.cyclic_split)."""
     probs = []
     if dom["kind"] == "number":
         for a in vals:
@@ -152,8 +157,21 @@ def build_data(dom: dict, items: list, vals: np.ndarray, rng) -> dict:
                     out.append((f"Q: {items[i]} {op} {k} {dom['unit']} is", " " + items[j]))
         return [out[t] for t in rng.permutation(len(out))]
     probs = make(range(1, K + 1))
-    ntr = int(0.6 * len(probs))
-    data = {"train": probs[:ntr], "test": probs[ntr:]}
+    if split == "class":
+        assert dom["kind"] == "cyclic", "class split is defined for cyclic domains"
+        idx = {w: t for t, w in enumerate(items)}
+
+        def cls(prompt):
+            w = prompt.split()   # "Q: <item> <op> <k> <unit> is"
+            return idx[w[1]], (int(w[3]) if w[2] == "plus" else -int(w[3])) % n
+        classes = [(i, e) for i in range(n) for e in range(1, n)]
+        held = {classes[j] for j in rng.permutation(len(classes))[:int(round(0.4 * len(classes)))]}
+        data = {"train": [q for q in probs if cls(q[0]) not in held], "test": [q for q in probs if cls(q[0]) in held]}
+        assert not ({cls(q[0]) for q in data["train"]} & {cls(q[0]) for q in data["test"]})
+        assert {cls(q[0])[1] for q in data["train"]} >= set(range(1, n)), "every shift must still be trained on some item"
+    else:
+        ntr = int(0.6 * len(probs))
+        data = {"train": probs[:ntr], "test": probs[ntr:]}
     if dom["kind"] == "cyclic":
         data["ood"] = make(range(K + 1, 2 * K + 1))[:300]
     return data
@@ -164,6 +182,8 @@ def main() -> None:
     ap.add_argument("--model", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--domain", choices=tuple(DOMAINS), required=True)
+    ap.add_argument("--split", choices=("combo", "class"), default="combo",
+                    help="combo = original 60/40 over (item, k, op); class = equivalence-class held-out (cyclic domains)")
     ap.add_argument("--geoms", default=None, help="default: none + the domain's three targets")
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--layers", default="4,8,12,16")
@@ -199,7 +219,8 @@ def main() -> None:
     assert prefix.shape[1] == 3, f"every item must be one token: {prefix.shape}"
     SLOT = 2
     rng = np.random.default_rng(0)
-    data = build_data(dom, items, vals, rng)
+    data = build_data(dom, items, vals, rng, args.split)
+    print(f"split={args.split}: " + ", ".join(f"{k} {len(v)}" for k, v in data.items()), flush=True)
     evalsets = {}
     for name, probs in data.items():
         ids = enc([p for p, _ in probs])
@@ -396,7 +417,7 @@ def main() -> None:
             ev = evaluate(preds)
             rt = route(f"{G} seed{seed}") if G in route_arms else None
             ab = ablate_eval() if G in ablate_arms else None
-            path.write_text(json.dumps({"domain": args.domain, "geom": G, "seed": seed, "lam": args.lam, "plam": args.plam, "presample": args.presample, "lr": args.lr,
+            path.write_text(json.dumps({"domain": args.domain, "split": args.split, "geom": G, "seed": seed, "lam": args.lam, "plam": args.plam, "presample": args.presample, "lr": args.lr,
                                         "epochs": epochs, "layers": man_layers, "train_log": log, "eval": ev,
                                         "geometry": geometry_report(), "preds": preds, "route": rt, "ablate": ab}, indent=1))
             print(f"{args.domain} {G} seed{seed}: {ev} ({time.time() - t0:.0f}s)")
