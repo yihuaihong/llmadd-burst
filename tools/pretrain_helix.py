@@ -237,6 +237,9 @@ def main() -> None:
     ap.add_argument("--eval_every", type=int, default=250)
     ap.add_argument("--ctx_eval", action="store_true", help="also evaluate every prompt in training position (*_ctx keys)")
     ap.add_argument("--save_model", action="store_true", help="save the final weights next to the run file")
+    ap.add_argument("--ckpt_every", type=int, default=0, help="save a resumable checkpoint (model, optimizer, data RNG, "
+                    "gate state, curve) every N steps and resume from it on restart (preemptible nodes); 0 = off")
+    ap.add_argument("--stop_after", type=int, default=-1, help="testing only: exit after this step (simulated preemption)")
     ap.add_argument("--dry_inputs", action="store_true", help="print decoded training and eval inputs side by side, then exit")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
@@ -452,7 +455,17 @@ def main() -> None:
 
     curve, t0 = [], time.time()
     model.train()
-    for s in range(steps):
+    ck = out / f"ckpt_{args.arm}_seed{args.seed}{args.tag}.pt"
+    start = 0
+    if args.ckpt_every and ck.exists():   # resume after preemption / requeue
+        st = torch.load(ck, map_location=dev, weights_only=False)
+        model.load_state_dict(st["model"]); opt.load_state_dict(st["opt"])
+        rng.bit_generator.state = st["rng"]; dyn.update(st["dyn"]); curve = st["curve"]; start = st["step"] + 1
+        torch.set_rng_state(st["torch_rng"])
+        if dev == "cuda" and st.get("cuda_rng") is not None:
+            torch.cuda.set_rng_state(st["cuda_rng"])
+        print(f"resumed from {ck.name} at step {start} of {steps}", flush=True)
+    for s in range(start, steps):
         for g in opt.param_groups:
             g["lr"] = args.lr * sched(s)
         x, meta = batch()
@@ -513,6 +526,17 @@ def main() -> None:
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "shuf_target_cka": shuf_cka, "target_sha256": target_sha, "n_params": n_params, "steps": steps, "geo_layers": geo_layers,
                                         "curve": curve}, indent=1))
+        if args.ckpt_every and (s + 1) % args.ckpt_every == 0 and s < steps - 1:
+            tmp = ck.with_name(ck.name + ".tmp")
+            torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": rng.bit_generator.state, "dyn": dict(dyn),
+                        "curve": curve, "step": s, "torch_rng": torch.get_rng_state(),
+                        "cuda_rng": torch.cuda.get_rng_state() if dev == "cuda" else None}, tmp)
+            tmp.replace(ck)
+        if s == args.stop_after:
+            print(f"stop_after {s}: exiting (test)", flush=True)
+            return
+    if ck.exists():
+        ck.unlink()
     if args.save_model:
         torch.save(model.state_dict(), out / f"model_{args.arm}_seed{args.seed}{args.tag}.pt")
     print(f"done {args.arm} seed{args.seed} in {time.time() - t0:.0f}s")
