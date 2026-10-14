@@ -535,15 +535,15 @@ def _sphere_dist(p, q):
     return float(np.degrees(np.arccos(np.clip((a * b).sum(), -1, 1))))
 
 
-def _singular(q, kw, k):
-    """'one letters after' -> 'one letter after'."""
-    if k != 1:
-        return q
-    w = q.split(" ")
-    at = w.index(kw) + 1
-    if at < len(w) and w[at].endswith("s") and w[at] != "is":
+def _singular(tmpl, x, kw, k):
+    """Fill an offset template; for k = 1 the unit word after the {k} slot becomes singular ('one letters after' ->
+    'one letter after'). The slot is found in the template, not by searching the filled text for kw (2026-10-14: for
+    number_words the first 'one' in 'one plus one is' is the item, and the question read 'one plu one is')."""
+    w = tmpl.split(" ")
+    at = w.index("{k}") + 1
+    if k == 1 and at < len(w) and w[at].endswith("s") and w[at] != "is":
         w[at] = w[at][:-1]
-    return " ".join(w)
+    return " ".join(w).format(x=x, k=kw)
 
 
 def _offset_questions(name, d):
@@ -562,7 +562,7 @@ def _offset_questions(name, d):
             if j >= nI or (name == "number_words" and items[j] not in WORD_NUM):   # stay within one..twenty
                 continue
             kw = str(k) if name in ("years", "hours") else list(WORD_NUM)[k - 1]
-            out.append((_singular(tmpl.format(x=items[i], k=kw), kw, k), tmpl.format(x="N/A", k="N/A"), j))
+            out.append((_singular(tmpl, items[i], kw, k), tmpl.format(x="N/A", k="N/A"), j))
     return out
 
 
