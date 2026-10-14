@@ -24,12 +24,13 @@ def main() -> None:
     ap.add_argument("--tokens", type=int, default=400_000_000)
     ap.add_argument("--val_tokens", type=int, default=2_000_000)
     ap.add_argument("--files", default="sample/10BT/000_00000.parquet,sample/10BT/001_00000.parquet")
+    ap.add_argument("--repo", default="HuggingFaceFW/fineweb-edu", help="HF dataset repo (e.g. HuggingFaceTB/finemath)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     raw = out / "raw"
     for f in args.files.split(","):
         if not (raw / f).exists():
-            subprocess.run(["hf", "download", "HuggingFaceFW/fineweb-edu", "--repo-type", "dataset", "--include", f,
+            subprocess.run(["hf", "download", args.repo, "--repo-type", "dataset", "--include", f,
                             "--local-dir", str(raw)], check=True)
     import pyarrow.parquet as pq
     from transformers import AutoTokenizer
@@ -37,7 +38,7 @@ def main() -> None:
     eos = tok.eos_token_id
     need = args.tokens + args.val_tokens
     buf, n = [], 0
-    for f in sorted(glob.glob(str(raw / "sample/10BT/*.parquet"))):
+    for f in sorted(str(raw / f) for f in args.files.split(",")):   # exactly the requested files, in order
         pf = pq.ParquetFile(f)
         for batch in pf.iter_batches(batch_size=2000, columns=["text"]):
             ids = tok(batch.column(0).to_pylist(), add_special_tokens=False)["input_ids"]
@@ -53,7 +54,7 @@ def main() -> None:
     allt[: args.tokens].tofile(out / "train.bin")
     allt[args.tokens: need].tofile(out / "val.bin")
     (out / "meta.json").write_text(json.dumps({"tokenizer": args.tokenizer, "train_tokens": args.tokens, "val_tokens": args.val_tokens,
-                                               "eos": eos, "vocab": len(tok), "files": args.files}, indent=1))
+                                               "eos": eos, "vocab": len(tok), "files": args.files, "repo": args.repo}, indent=1))
     print("done", len(allt))
 
 
