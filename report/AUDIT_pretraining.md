@@ -29,8 +29,8 @@ Written 2026-10-13 before submitting ptstart. Code: llmadd-burst tools/pretrain_
   (118 with a != b, 12 with a == b) next to it.
 
 ## Metric: tokens to 50% / 90% (t50, t90)
-- First eval step at which test_ctx >= 0.5 / 0.9, in tokens (step x bs x seq); evals every 250 steps (8.2M tokens) ->
-  resolution 8.2M tokens. Reported as the median over seeds; ratio = none median / arm median.
+- First eval step at which test_ctx >= 0.5 / 0.9, in tokens (step x bs x seq); evals every 250 steps (4.1M tokens at bs 32 x seq 512; corrected 2026-10-13, was written as 8.2M) ->
+  resolution 4.1M tokens. Reported as the median over seeds; ratio = none median / arm median.
 
 ## ptstart sweep (what is varied)
 - helix_window with windows (start, end) = (0, .4), (.05, .4), (.2, .4) [vary start], (.1, .2), (.1, 1.0) [vary end];

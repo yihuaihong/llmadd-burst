@@ -152,10 +152,15 @@ ELEMENT_GROUPS = [1, 18, 1, 2, 13, 14, 15, 16, 17, 18, 1, 2, 13, 14, 15, 16, 17,
 # ------------------------------------------------------------------------------------------------ target features
 
 def _std(F):
+    """Centre and scale every column; constant columns are DROPPED. (Before 2026-10-13 a column that is zero up to
+    rounding, e.g. sin(pi x) of the period-2 helix term on integers (std ~1e-14), was scaled up into unit-variance
+    noise: an unpredictable column that lowered every helix R^2 -- found by the living-lab-page audit; the training
+    code, numlib.features / centred_gram, always dropped it.)"""
     F = np.asarray(F, dtype=np.float64)
     F = F - F.mean(0)
     s = F.std(0)
-    return F / np.where(s > 0, s, 1)
+    keep = s > 1e-9 * max(float(s.max()), 1e-300)
+    return F[:, keep] / s[keep]
 
 
 def fourier(idx, n, ks):
