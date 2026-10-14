@@ -1,0 +1,2 @@
+c2dbfce (snapshot refreshed while pending; first commit e6db9e9)
++ 2026-10-14: run_guard.py and its 4-line call added to pretrain_helix.py (skip complete / running-elsewhere runs; training unchanged)
