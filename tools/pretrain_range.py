@@ -93,8 +93,14 @@ def main() -> None:
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--tokenization", choices=("whole", "digits"), required=True)
-    ap.add_argument("--target", choices=("none", "helix2", "helix3", "digitcirc", "digitcirc_shuf", "digitcirc_lenshuf",
-                                         "helix3_lenshuf", "length"), required=True)
+    ap.add_argument("--target", choices=("none", "helix2", "helix3", "helix3_shuf", "digitcirc", "digitcirc_shuf",
+                                         "digitcirc_lenshuf", "helix3_lenshuf", "length"), required=True)
+    ap.add_argument("--site", choices=("ctx", "text"), default="ctx",
+                    help="ctx = the operands inside the training lines; text = numbers 0..999 that occur NATURALLY in the "
+                         "FineWeb text of each row (never the arithmetic lines; whole-number tokens only), 2026-10-14")
+    ap.add_argument("--text_min", type=int, default=16, help="--site text: skip the prior on batches with fewer numbers")
+    ap.add_argument("--ckpt_every", type=int, default=0, help="resumable checkpoint every N steps (0 = off)")
+    ap.add_argument("--stop_after", type=int, default=-1, help="testing only: exit after this step (simulated preemption)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default="")
     ap.add_argument("--d_model", type=int, default=384)
@@ -236,11 +242,34 @@ def main() -> None:
     Ftab = features(args.target, xs_all, perm, perm_len) if args.target != "none" else None
 
     nl_len = len(enc("\n"))
+    if args.site == "text":
+        assert args.tokenization == "whole", "--site text needs whole-number tokens (0..999 are single tokens)"
+        dec = [tok.decode([i]) for i in range(len(tok))]
+        numv = np.array([int(t) if t.isascii() and t.isdigit() and len(t) <= 3 and (t == "0" or t[0] != "0") else -1 for t in dec])
+        digit0 = np.array([len(t) > 0 and t[0].isdigit() for t in dec])
+        digit1 = np.array([len(t) > 0 and t[-1].isdigit() for t in dec])
+        # not part of a longer number, a decimal, a range / date / ratio / time / exponent, a list index or a digit group
+        tsep = np.array([t.strip() in (".", ",", "/", "-", "\u2013", "\u2014", ":", "e", "E", "x") for t in dec])
+        glued = np.array([t.endswith((".", "#", "$")) for t in dec])
+        space = np.array([len(t) > 0 and t.strip() == "" for t in dec])
+        print(f"text site: {int((numv >= 0).sum())} number tokens 0..999 in the vocabulary", flush=True)
+
+    def text_numbers(t):
+        """Positions and values of standalone numbers 0..999 in a text chunk t (whole-number tokens)."""
+        t = np.asarray(t)
+        v = numv[t]
+        nxt, nxt2 = np.append(t[1:], t[-1]), np.append(t[2:], [t[-1], t[-1]])
+        prv, prv2 = np.insert(t[:-1], 0, t[0]), np.insert(t[:-2], 0, [t[0], t[0]])
+        ok = ((v >= 0) & ~digit0[nxt] & ~((tsep[nxt] | space[nxt]) & digit0[nxt2]) & ~digit1[prv]
+              & ~((tsep[prv] | space[prv]) & digit1[prv2]) & ~glued[prv])
+        ok[:2] = False; ok[-2:] = False   # context unknown at the edges; the next token would be the arithmetic line
+        idx = np.flatnonzero(ok)
+        return idx, v[idx]
 
     def batch():
         """Rows of text + arithmetic lines; ops = (row, operand position, value); ans = (row, first answer position,
         number of answer tokens, first line of the row?)."""
-        rows, ops, ans = [], [], []
+        rows, ops, ans, tmeta = [], [], [], []
         for r in range(args.bs):
             parts, offs = [], []
             for _ in range(args.arith_lines):
@@ -251,6 +280,9 @@ def main() -> None:
             n = args.seq - L
             o = int(rng.integers(0, len(train) - n))
             row = list(np.asarray(train[o:o + n], dtype=np.int64)) + sum((p[0] for p in parts), [])
+            if args.site == "text":
+                ti, tv = text_numbers(np.asarray(train[o:o + n], dtype=np.int64))
+                tmeta += [(r, int(i), int(v)) for i, v in zip(ti, tv)]
             off = n
             for j, (ids, ia, ib, a, b) in enumerate(parts):
                 ops.append((r, off + ia, a)); ops.append((r, off + ib, b))
@@ -259,13 +291,25 @@ def main() -> None:
                 ans.append((r, off + len(ids) - nl_len - na, na, int(j == 0), bk))
                 off += len(ids)
             rows.append(row)
+        batch.tmeta = np.array(tmeta, dtype=np.int64).reshape(-1, 3)
         return torch.tensor(np.array(rows), device=dev), np.array(ops), np.array(ans)
 
-    def prior(ops):
+    def prior(ops, table=None):
+        table = Ftab if table is None else table
         r = torch.tensor(ops[:, 0], device=dev); pos = torch.tensor(ops[:, 1], device=dev)
-        Fb = Ftab[ops[:, 2]]
+        Fb = table[ops[:, 2]]
         K = centred_gram(Fb, dev)
         return sum(1 - cka(store[L][r, pos], K) for L in geo_layers) / len(geo_layers)
+
+    def text_ok():
+        tm = batch.tmeta
+        return len(tm) >= args.text_min and len(set(tm[:, 2].tolist())) >= 4
+
+    def site_prior(ops):
+        """1 - CKA at the prior's site (ctx: operands in the lines; text: numbers in the text part)."""
+        return prior(ops) if args.site == "ctx" else prior(batch.tmeta)
+
+    Fref = features("helix3", xs_all)   # transfer read-out for every arm (incl. none): operands in the lines vs helix3
 
     @torch.no_grad()
     def evaluate(step) -> dict:
@@ -312,7 +356,18 @@ def main() -> None:
 
     curve, t0 = [], time.time()
     model.train()
-    for s in range(steps):
+    ck = out / f"ckpt_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.pt"
+    start = 0
+    if args.ckpt_every and ck.exists():   # resume after preemption / requeue
+        st = torch.load(ck, map_location=dev, weights_only=False)
+        model.load_state_dict(st["model"]); opt.load_state_dict(st["opt"])
+        rng.bit_generator.state = st["rng"]; data_rng.bit_generator.state = st["data_rng"]
+        dyn.update(st["dyn"]); curve = st["curve"]; start = st["step"] + 1
+        torch.set_rng_state(st["torch_rng"].cpu())
+        if dev == "cuda" and st.get("cuda_rng") is not None:
+            torch.cuda.set_rng_state(st["cuda_rng"].cpu())
+        print(f"resumed from {ck.name} at step {start} of {steps}", flush=True)
+    for s in range(start, steps):
         for g in opt.param_groups:
             g["lr"] = args.lr * sched(s)
         x, ops, ans = batch()
@@ -321,11 +376,18 @@ def main() -> None:
                 assert tok.decode([int(x[r_, p_])]) == tok.decode(enc(str(v_))[-1:]), (r_, p_, v_)
             for (r_, p_, n_, _, _), (_, _, a_), (_, _, b_) in zip(ans[:8].tolist(), ops[0:16:2].tolist(), ops[1:16:2].tolist()):
                 assert tok.decode(x[r_, p_:p_ + n_].tolist()).strip() == str(a_ + b_), (r_, p_, n_, a_, b_)
+            if args.site == "text":   # text positions decode to their values and lie before the arithmetic lines
+                first_op = {int(r_): int(p_) for r_, p_, _ in ops[0::2 * args.arith_lines].tolist()}
+                for r_, p_, v_ in batch.tmeta[:64].tolist():
+                    assert tok.decode([int(x[r_, p_])]) == str(v_) and p_ < first_op[r_], (r_, p_, v_)
+                show = [tok.decode(x[r_, max(0, p_ - 6):p_ + 3].tolist()) for r_, p_, _ in batch.tmeta[:6].tolist()]
+                print(f"text site: {len(batch.tmeta)} numbers in the first batch, e.g. {show}", flush=True)
         on = prior_on(s)
+        usable = args.site == "ctx" or text_ok()
         with torch.autocast(dev, dtype=torch.bfloat16):
             out_m = model(input_ids=x, labels=x)
-            gl = prior(ops) if on else torch.zeros((), device=dev)
-            loss = out_m.loss + (args.lam * gl if on else 0.0)
+            gl = site_prior(ops) if (on and usable) else torch.zeros((), device=dev)
+            loss = out_m.loss + (args.lam * gl if (on and usable) else 0.0)
         with torch.no_grad():   # in-batch exact match per line (teacher forced): the gate's signal
             # answer AND the newline after it, as in the evals (a prefix of a longer prediction is not correct)
             A = torch.tensor(ans, device=dev)
@@ -343,9 +405,10 @@ def main() -> None:
                     dyn["ema_b"][bk] = 0.98 * dyn["ema_b"][bk] + 0.02 * float(ok[m].float().mean())
         dyn["ema1"] = 0.98 * dyn["ema1"] + 0.02 * first_acc
         dyn["on"] += int(on)
+        dyn["used"] = dyn.get("used", 0) + int(on and usable)
         dyn["toggles"] += int(dyn["last_on"] is not None and on != dyn["last_on"]); dyn["last_on"] = on
         grad_info = {}
-        if (s % args.eval_every == 0 or s == steps - 1) and on:   # LM vs prior pull, before clipping
+        if (s % args.eval_every == 0 or s == steps - 1) and on and usable:   # LM vs prior pull, before clipping
             params = [q for q in model.parameters() if q.requires_grad]
             g1 = torch.autograd.grad(out_m.loss, params, retain_graph=True, allow_unused=True)
             g2 = torch.autograd.grad(args.lam * gl, params, retain_graph=True, allow_unused=True)
@@ -358,10 +421,14 @@ def main() -> None:
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         if s % args.eval_every == 0 or s == steps - 1:
-            if Ftab is not None and not on:   # prior off: still log how well the operands fit the target
+            if Ftab is not None and not (on and usable) and usable:   # prior off: still log the fit at its site
                 with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):
-                    gl = prior(ops)
-            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0, prior_on=int(on),
+                    gl = site_prior(ops)
+            with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):   # comparable across arms (incl. none)
+                cka_ops_h3 = float(1 - prior(ops, Fref))
+            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl) if usable else None, sec=time.time() - t0,
+                                      prior_on=int(on), prior_used_frac=dyn["used"] / (s + 1), cka_ops_helix3=cka_ops_h3,
+                                      text_numbers=int(len(batch.tmeta)) if args.site == "text" else None,
                                       prior_on_frac=dyn["on"] / (s + 1), ema_first_line=dyn["ema1"],
                                       ema_bucket_min=float(dyn["ema_b"].min()),
                                       ema_bucket={f"b{la}{lb}": float(v) for (la, lb), v in zip(BUCKETS, dyn["ema_b"])},
@@ -369,6 +436,17 @@ def main() -> None:
             curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))
+        if args.ckpt_every and (s + 1) % args.ckpt_every == 0 and s < steps - 1:
+            tmp = ck.with_name(ck.name + ".tmp")
+            torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": rng.bit_generator.state,
+                        "data_rng": data_rng.bit_generator.state, "dyn": dict(dyn), "curve": curve, "step": s,
+                        "torch_rng": torch.get_rng_state(), "cuda_rng": torch.cuda.get_rng_state() if dev == "cuda" else None}, tmp)
+            tmp.replace(ck)
+        if s == args.stop_after:
+            print(f"stop_after {s}: exiting (test)", flush=True)
+            return
+    if ck.exists():
+        ck.unlink()
     if args.save_model:
         torch.save(model.state_dict(), out / f"model_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.pt")
     print(f"done in {time.time() - t0:.0f}s")
