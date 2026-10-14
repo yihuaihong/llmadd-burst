@@ -26,6 +26,13 @@ so they are certainly trained), and never-trained lengths b44, b41, b42. The hel
 Not comparable across tokenisations: OOD answers (whole: "13525" = "135" + "25", answer chunks never trained),
 per-token val loss (bits per byte is logged for that), and the arithmetic share of tokens (whole ~8.5%, digits ~11%).
 At every eval: gradient norm of the LM loss and of the prior (before clipping) and their cosine.
+Audit 2026-10-14 (pt999): the helix3 transfer read-out (cka_ops_helix3) at fixed layers (1/3, 2/3 of the depth) for every
+arm, whatever --geo_layers; CKA of the number tokens' input and output embedding rows (0..999) to helix3 (with tied
+embeddings the prior also moves the answer classifier rows; --untie is the control); held_b13/b23/b33 also split into
+sums < 1000 (one answer token) and >= 1000 (first chunk "1xx"); the text site skips numbers glued to a preceding letter
+("B1", "VO2") and logs how many sites fall in 0-9 / 10-99 / 100-999; evals and the gate's EMA on a token scale
+(--bs 64: every 125 steps, EMA 0.98^2; bs 32 unchanged); LM loss in chunks when the full fp32 logits would not fit;
+gradient checkpointing above 150M parameters; code_sha (sha256 of this file) in every result.
 
     python tools/pretrain_range.py --data <bins> --tokenizer <olmo2> --out <dir> --tokenization digits --target digitcirc --seed 0
 """
@@ -33,6 +40,7 @@ At every eval: gradient norm of the LM loss and of the prior (before clipping) a
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import time
@@ -41,6 +49,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as Fn
+import torch.utils.checkpoint
 
 import numlib as nl
 from digit_split_data import expand, split_table
@@ -124,6 +133,16 @@ def main() -> None:
     ap.add_argument("--n_eval", type=int, default=150, help="held-out items per bucket in the eval sets")
     ap.add_argument("--save_model", action="store_true")
     ap.add_argument("--dry_inputs", action="store_true")
+    ap.add_argument("--grad_ckpt", choices=("auto", "on", "off"), default="auto",
+                    help="gradient checkpointing of the transformer blocks (same math, less memory, ~1/3 slower); auto = on "
+                         "above 150M parameters (2026-10-14: the 505M model ran out of memory on a 48 GB L40S at bs 32)")
+    ap.add_argument("--lm_chunk_tokens", type=int, default=-1,
+                    help="LM loss over chunks of this many tokens, logits recomputed in backward (0 = off: one full logits "
+                         "tensor as before); -1 = auto: 8192 when the fp32 logits would exceed 8 GB (audit 2026-10-14: bs 64 "
+                         "x 512 needs ~45 GB for them on a 48 GB L40S)")
+    ap.add_argument("--untie", action="store_true",
+                    help="separate input and output embeddings (control: with tied embeddings the prior on the number "
+                         "tokens also moves the answer classifier rows of the same tokens)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     path = out / f"run_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.json"
@@ -199,7 +218,7 @@ def main() -> None:
             o = int(vr.integers(0, len(val) - n))
             rows.append(np.concatenate([np.asarray(val[o:o + n], dtype=np.int64), ids]))
             lens.append(ns + 1)
-        return torch.tensor(np.stack(rows), device=dev), torch.tensor(lens, device=dev)
+        return torch.tensor(np.stack(rows), device=dev), torch.tensor(lens, device=dev), np.array([a + b for a, b in pairs])
     er = np.random.default_rng(5)
     evalsets = {}
     for (la, lb), prs in held.items():
@@ -230,9 +249,15 @@ def main() -> None:
 
     # ---------------------------------------------------------------- model
     model = build_model(args, tok, dev)
+    n_params = sum(q.numel() for q in model.parameters())   # the tied embedding counts once
+    ckpt_on = args.grad_ckpt == "on" or (args.grad_ckpt == "auto" and n_params > 150e6)
+    if ckpt_on:   # train mode only (evaluate() runs in eval mode); the prior's forward hooks see the same states
+        model.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
+    print(f"model: {n_params / 1e6:.1f}M parameters; gradient checkpointing {'on' if ckpt_on else 'off'}", flush=True)
     geo_layers = [int(v) for v in args.geo_layers.split(",")] if args.geo_layers else [args.n_layers // 3, 2 * args.n_layers // 3]
+    read_layers = [args.n_layers // 3, 2 * args.n_layers // 3]   # transfer read-out: the same layers for every arm
     store = {}
-    for L in geo_layers:
+    for L in sorted(set(geo_layers) | set(read_layers)):
         model.model.layers[L - 1].register_forward_hook(lambda _m, _i, o, L=L: store.__setitem__(L, nl._hidden(o)))
     steps = int(args.tokens // (args.bs * args.seq))
     warm = max(1, steps // 100)
@@ -251,6 +276,7 @@ def main() -> None:
         # not part of a longer number, a decimal, a range / date / ratio / time / exponent, a list index or a digit group
         tsep = np.array([t.strip() in (".", ",", "/", "-", "\u2013", "\u2014", ":", "e", "E", "x") for t in dec])
         glued = np.array([t.endswith((".", "#", "$")) for t in dec])
+        alpha1 = np.array([len(t) > 0 and t[-1].isalpha() for t in dec])   # "B1", "VO2", "T64": labels, not quantities
         space = np.array([len(t) > 0 and t.strip() == "" for t in dec])
         print(f"text site: {int((numv >= 0).sum())} number tokens 0..999 in the vocabulary", flush=True)
 
@@ -261,7 +287,7 @@ def main() -> None:
         nxt, nxt2 = np.append(t[1:], t[-1]), np.append(t[2:], [t[-1], t[-1]])
         prv, prv2 = np.insert(t[:-1], 0, t[0]), np.insert(t[:-2], 0, [t[0], t[0]])
         ok = ((v >= 0) & ~digit0[nxt] & ~((tsep[nxt] | space[nxt]) & digit0[nxt2]) & ~digit1[prv]
-              & ~((tsep[prv] | space[prv]) & digit1[prv2]) & ~glued[prv])
+              & ~((tsep[prv] | space[prv]) & digit1[prv2]) & ~glued[prv] & ~alpha1[prv])
         ok[:2] = False; ok[-2:] = False   # context unknown at the edges; the next token would be the arithmetic line
         idx = np.flatnonzero(ok)
         return idx, v[idx]
@@ -294,12 +320,13 @@ def main() -> None:
         batch.tmeta = np.array(tmeta, dtype=np.int64).reshape(-1, 3)
         return torch.tensor(np.array(rows), device=dev), np.array(ops), np.array(ans)
 
-    def prior(ops, table=None):
+    def prior(ops, table=None, layers=None):
         table = Ftab if table is None else table
+        Ls = geo_layers if layers is None else layers
         r = torch.tensor(ops[:, 0], device=dev); pos = torch.tensor(ops[:, 1], device=dev)
         Fb = table[ops[:, 2]]
         K = centred_gram(Fb, dev)
-        return sum(1 - cka(store[L][r, pos], K) for L in geo_layers) / len(geo_layers)
+        return sum(1 - cka(store[L][r, pos], K) for L in Ls) / len(Ls)
 
     def text_ok():
         tm = batch.tmeta
@@ -310,13 +337,17 @@ def main() -> None:
         return prior(ops) if args.site == "ctx" else prior(batch.tmeta)
 
     Fref = features("helix3", xs_all)   # transfer read-out for every arm (incl. none): operands in the lines vs helix3
+    if args.tokenization == "whole":   # embedding read-out: the rows of the number tokens 0..999 vs helix3
+        assert all(len(enc(str(v))) == 1 for v in range(1000))
+        num_tok = torch.tensor([enc(str(v))[0] for v in range(1000)], device=dev)
+        K1000 = centred_gram(Fref, dev)
 
     @torch.no_grad()
     def evaluate(step) -> dict:
         model.eval()
         res = {"step": step, "tokens": step * args.bs * args.seq}
         with torch.autocast(dev, dtype=torch.bfloat16):
-            for name, (ids, lens) in evalsets.items():
+            for name, (ids, lens, sums) in evalsets.items():
                 hits = []
                 for i in range(0, len(ids), 250):
                     x, ln = ids[i:i + 250], lens[i:i + 250]
@@ -328,7 +359,11 @@ def main() -> None:
                         need = ln > (max_ans - 1 - k)
                         ok &= ~need | (pred[:, k] == tgt[:, k])
                     hits.append(ok)
-                res[name] = float(torch.cat(hits).float().mean())
+                hit = torch.cat(hits).cpu().numpy()
+                res[name] = float(hit.mean())
+                if name.startswith("held_b") and name.endswith("3"):   # sums < 1000: one answer token; >= 1000: "1xx" + digit
+                    for tag, m in (("lt1000", sums < 1000), ("ge1000", sums >= 1000)):
+                        res[f"{name}_{tag}"] = float(hit[m].mean()) if m.any() else None
             vrr = np.random.default_rng(7)
             vl, nats, nbytes = [], 0.0, 0
             for _ in range(8):
@@ -366,11 +401,38 @@ def main() -> None:
                 prev = j
             print(f"train row {r} (len {len(row)}, {len(site)} prior sites at {site[:12]}): {txt!r}")
         if args.site == "text":
-            ns, ok = [], 0
+            ns, ok, bins = [], 0, np.zeros(3)
             for _ in range(50):
                 batch(); ns.append(len(batch.tmeta)); ok += text_ok()
-            print(f"text numbers per batch over 50 batches: median {int(np.median(ns))}, min {min(ns)}; prior applied on {ok}/50 batches")
+                bins += np.histogram(batch.tmeta[:, 2], bins=[0, 10, 100, 1000])[0]
+            print(f"text numbers per batch over 50 batches: median {int(np.median(ns))}, min {min(ns)}; prior applied on {ok}/50 "
+                  f"batches; values 0-9 / 10-99 / 100-999: {np.round(bins / bins.sum(), 3).tolist()}")
         return
+    # evals and the gate's EMA on a token scale (audit 2026-10-14): --eval_every counts steps of 32 rows; bs 32 unchanged
+    eval_every = max(1, round(args.eval_every * 32 / args.bs))
+    ema_k, ema_w = (0.98, 0.02) if args.bs == 32 else (0.98 ** (args.bs / 32), 1 - 0.98 ** (args.bs / 32))
+    lm_chunk = args.lm_chunk_tokens if args.lm_chunk_tokens >= 0 else (8192 if args.bs * args.seq * len(tok) * 4 > 8e9 else 0)
+    code_sha = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+    print(f"code {code_sha}; eval every {eval_every} steps; EMA {ema_k:.4f}; LM loss chunks of {lm_chunk or 'all'} tokens", flush=True)
+
+    def lm_forward(x):
+        """Mean next-token CE over the batch and a function giving the logits at (rows, positions). lm_chunk > 0: the
+        logits are formed lm_chunk tokens at a time under activation checkpointing, so the full fp32 [bs, seq, vocab]
+        tensor never exists; same loss up to summation order."""
+        if not lm_chunk:
+            o = model(input_ids=x, labels=x)
+            return o.loss, (lambda rr, pp: o.logits[rr, pp])
+        h = model.model(input_ids=x, use_cache=False).last_hidden_state
+        hs, tg = h[:, :-1].reshape(-1, h.shape[-1]), x[:, 1:].reshape(-1)
+        ce = lambda a, b: Fn.cross_entropy(model.lm_head(a).float(), b, reduction="sum")
+        tot = sum(torch.utils.checkpoint.checkpoint(ce, hs[i:i + lm_chunk], tg[i:i + lm_chunk], use_reentrant=False)
+                  for i in range(0, len(tg), lm_chunk))
+
+        def at(rr, pp):
+            with torch.autocast(dev, dtype=torch.bfloat16):
+                return model.lm_head(h[rr, pp])
+        return tot / len(tg), at
+
     curve, t0 = [], time.time()
     model.train()
     ck = out / f"ckpt_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.pt"
@@ -402,9 +464,9 @@ def main() -> None:
         on = prior_on(s)
         usable = args.site == "ctx" or text_ok()
         with torch.autocast(dev, dtype=torch.bfloat16):
-            out_m = model(input_ids=x, labels=x)
+            lm_loss, logits_at = lm_forward(x)
             gl = site_prior(ops) if (on and usable) else torch.zeros((), device=dev)
-            loss = out_m.loss + (args.lam * gl if (on and usable) else 0.0)
+            loss = lm_loss + (args.lam * gl if (on and usable) else 0.0)
         with torch.no_grad():   # in-batch exact match per line (teacher forced): the gate's signal
             # answer AND the newline after it, as in the evals (a prefix of a longer prediction is not correct)
             A = torch.tensor(ans, device=dev)
@@ -413,21 +475,21 @@ def main() -> None:
             pos = (A[:, 1:2] + kk).clamp(max=x.shape[1] - 1)
             valid = kk[None] < span[:, None]
             rr = A[:, 0:1].expand_as(pos)
-            ok = ((out_m.logits[rr, pos - 1].argmax(-1) == x[rr, pos]) | ~valid).all(1)
+            ok = ((logits_at(rr, pos - 1).argmax(-1) == x[rr, pos]) | ~valid).all(1)
             first = A[:, 3] == 1
             first_acc = float(ok[first].float().mean())
             for bk in range(len(BUCKETS)):   # per-bucket EMA over first lines (the evals' position)
                 m = first & (A[:, 4] == bk)
                 if bool(m.any()):
-                    dyn["ema_b"][bk] = 0.98 * dyn["ema_b"][bk] + 0.02 * float(ok[m].float().mean())
-        dyn["ema1"] = 0.98 * dyn["ema1"] + 0.02 * first_acc
+                    dyn["ema_b"][bk] = ema_k * dyn["ema_b"][bk] + ema_w * float(ok[m].float().mean())
+        dyn["ema1"] = ema_k * dyn["ema1"] + ema_w * first_acc
         dyn["on"] += int(on)
         dyn["used"] = dyn.get("used", 0) + int(on and usable)
         dyn["toggles"] += int(dyn["last_on"] is not None and on != dyn["last_on"]); dyn["last_on"] = on
         grad_info = {}
-        if (s % args.eval_every == 0 or s == steps - 1) and on and usable:   # LM vs prior pull, before clipping
+        if (s % eval_every == 0 or s == steps - 1) and on and usable:   # LM vs prior pull, before clipping
             params = [q for q in model.parameters() if q.requires_grad]
-            g1 = torch.autograd.grad(out_m.loss, params, retain_graph=True, allow_unused=True)
+            g1 = torch.autograd.grad(lm_loss, params, retain_graph=True, allow_unused=True)
             g2 = torch.autograd.grad(args.lam * gl, params, retain_graph=True, allow_unused=True)
             v1 = torch.cat([(g if g is not None else torch.zeros_like(q)).flatten().float() for g, q in zip(g1, params)])
             v2 = torch.cat([(g if g is not None else torch.zeros_like(q)).flatten().float() for g, q in zip(g2, params)])
@@ -437,22 +499,30 @@ def main() -> None:
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
-        if s % args.eval_every == 0 or s == steps - 1:
+        if s % eval_every == 0 or s == steps - 1:
             if Ftab is not None and not (on and usable) and usable:   # prior off: still log the fit at its site
                 with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):
                     gl = site_prior(ops)
             with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):   # comparable across arms (incl. none)
-                cka_ops_h3 = float(1 - prior(ops, Fref))
-            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl) if usable else None, sec=time.time() - t0,
+                cka_ops_h3 = float(1 - prior(ops, Fref, read_layers))
+                emb = {}
+                if args.tokenization == "whole":
+                    emb = dict(cka_emb_helix3=float(cka(model.get_input_embeddings().weight[num_tok], K1000)),
+                               cka_unemb_helix3=float(cka(model.get_output_embeddings().weight[num_tok], K1000)))
+            tbins = (np.histogram(batch.tmeta[:, 2], bins=[0, 10, 100, 1000])[0].tolist()
+                     if args.site == "text" else None)   # text sites with values 0-9 / 10-99 / 100-999 in this batch
+            r = evaluate(s); r.update(lm=float(lm_loss), geo=float(gl) if usable else None, sec=time.time() - t0,
                                       prior_on=int(on), prior_used_frac=dyn["used"] / (s + 1), cka_ops_helix3=cka_ops_h3,
-                                      text_numbers=int(len(batch.tmeta)) if args.site == "text" else None,
+                                      text_numbers=int(len(batch.tmeta)) if args.site == "text" else None, text_bins=tbins, **emb,
                                       prior_on_frac=dyn["on"] / (s + 1), ema_first_line=dyn["ema1"],
                                       ema_bucket_min=float(dyn["ema_b"].min()),
                                       ema_bucket={f"b{la}{lb}": float(v) for (la, lb), v in zip(BUCKETS, dyn["ema_b"])},
                                       prior_toggles=dyn["toggles"], **grad_info)
             curve.append(r)
             print(json.dumps(r), flush=True)
-            path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))
+            path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "read_layers": read_layers,
+                                        "n_params": n_params, "grad_ckpt_on": ckpt_on, "lm_chunk": lm_chunk,
+                                        "eval_every_steps": eval_every, "code_sha": code_sha, "curve": curve}, indent=1))
         if args.ckpt_every and (s + 1) % args.ckpt_every == 0 and s < steps - 1:
             tmp = ck.with_name(ck.name + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": rng.bit_generator.state,

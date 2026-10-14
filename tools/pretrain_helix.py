@@ -67,7 +67,7 @@ def build_model(args, tok, dev):
     from transformers import Olmo2Config, Olmo2ForCausalLM
     cfg = Olmo2Config(vocab_size=len(tok), hidden_size=args.d_model, intermediate_size=args.d_ff,
                       num_hidden_layers=args.n_layers, num_attention_heads=args.n_heads, num_key_value_heads=args.n_heads,
-                      max_position_embeddings=args.seq, tie_word_embeddings=True,
+                      max_position_embeddings=args.seq, tie_word_embeddings=not getattr(args, "untie", False),
                       bos_token_id=tok.bos_token_id, eos_token_id=tok.eos_token_id, pad_token_id=tok.pad_token_id)
     return Olmo2ForCausalLM(cfg).to(dev)
 
