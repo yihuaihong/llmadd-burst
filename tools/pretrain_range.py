@@ -109,8 +109,8 @@ def main() -> None:
     ap.add_argument("--lam", type=float, default=5.0)
     ap.add_argument("--schedule", choices=("whole", "window", "gate"), default="whole",
                     help="when the prior is on: whole run; --window w0,w1 (fractions of training); or self-timed gate = on "
-                         "while the EMA of in-batch exact-match accuracy on the first arithmetic line of each row (the line "
-                         "right after the text, as in the evals) is below --gate_thr (F60 / F69 / F71)")
+                         "while the LOWEST per-bucket EMA of in-batch exact match (answer + newline) on the first arithmetic "
+                         "line of each row (the line right after the text, as in the evals) is below --gate_thr")
     ap.add_argument("--window", default="0.05,0.4")
     ap.add_argument("--gate_thr", type=float, default=0.5)
     ap.add_argument("--geo_layers", default=None)
@@ -255,7 +255,8 @@ def main() -> None:
             for j, (ids, ia, ib, a, b) in enumerate(parts):
                 ops.append((r, off + ia, a)); ops.append((r, off + ib, b))
                 na = len(enc(str(a + b)))
-                ans.append((r, off + len(ids) - nl_len - na, na, int(j == 0)))
+                bk = BUCKETS.index(tuple(sorted((len(str(a)), len(str(b))))))
+                ans.append((r, off + len(ids) - nl_len - na, na, int(j == 0), bk))
                 off += len(ids)
             rows.append(row)
         return torch.tensor(np.array(rows), device=dev), np.array(ops), np.array(ans)
@@ -298,15 +299,15 @@ def main() -> None:
         return res
 
     w0, w1 = (float(v) for v in args.window.split(","))
-    dyn = {"ema1": 0.0, "on": 0}
+    dyn = {"ema1": 0.0, "on": 0, "ema_b": np.zeros(len(BUCKETS)), "toggles": 0, "last_on": None}
 
     def prior_on(s):
         if Ftab is None:
             return False
         if args.schedule == "window":
             return w0 * steps <= s < w1 * steps
-        if args.schedule == "gate":
-            return dyn["ema1"] < args.gate_thr
+        if args.schedule == "gate":   # audit 2026-10-14: every operand-length bucket must be learned, not the average
+            return float(dyn["ema_b"].min()) < args.gate_thr
         return True
 
     curve, t0 = [], time.time()
@@ -318,7 +319,7 @@ def main() -> None:
         if s == 0:   # operand positions point at the operands' last tokens; answer spans decode to the sums
             for r_, p_, v_ in ops[:16].tolist():
                 assert tok.decode([int(x[r_, p_])]) == tok.decode(enc(str(v_))[-1:]), (r_, p_, v_)
-            for (r_, p_, n_, _), (_, _, a_), (_, _, b_) in zip(ans[:8].tolist(), ops[0:16:2].tolist(), ops[1:16:2].tolist()):
+            for (r_, p_, n_, _, _), (_, _, a_), (_, _, b_) in zip(ans[:8].tolist(), ops[0:16:2].tolist(), ops[1:16:2].tolist()):
                 assert tok.decode(x[r_, p_:p_ + n_].tolist()).strip() == str(a_ + b_), (r_, p_, n_, a_, b_)
         on = prior_on(s)
         with torch.autocast(dev, dtype=torch.bfloat16):
@@ -326,15 +327,23 @@ def main() -> None:
             gl = prior(ops) if on else torch.zeros((), device=dev)
             loss = out_m.loss + (args.lam * gl if on else 0.0)
         with torch.no_grad():   # in-batch exact match per line (teacher forced): the gate's signal
+            # answer AND the newline after it, as in the evals (a prefix of a longer prediction is not correct)
             A = torch.tensor(ans, device=dev)
-            kk = torch.arange(int(A[:, 2].max()), device=dev)
+            span = A[:, 2] + nl_len
+            kk = torch.arange(int(span.max()), device=dev)
             pos = (A[:, 1:2] + kk).clamp(max=x.shape[1] - 1)
-            valid = kk[None] < A[:, 2:3]
+            valid = kk[None] < span[:, None]
             rr = A[:, 0:1].expand_as(pos)
             ok = ((out_m.logits[rr, pos - 1].argmax(-1) == x[rr, pos]) | ~valid).all(1)
-            first_acc = float(ok[A[:, 3] == 1].float().mean())
+            first = A[:, 3] == 1
+            first_acc = float(ok[first].float().mean())
+            for bk in range(len(BUCKETS)):   # per-bucket EMA over first lines (the evals' position)
+                m = first & (A[:, 4] == bk)
+                if bool(m.any()):
+                    dyn["ema_b"][bk] = 0.98 * dyn["ema_b"][bk] + 0.02 * float(ok[m].float().mean())
         dyn["ema1"] = 0.98 * dyn["ema1"] + 0.02 * first_acc
         dyn["on"] += int(on)
+        dyn["toggles"] += int(dyn["last_on"] is not None and on != dyn["last_on"]); dyn["last_on"] = on
         grad_info = {}
         if (s % args.eval_every == 0 or s == steps - 1) and on:   # LM vs prior pull, before clipping
             params = [q for q in model.parameters() if q.requires_grad]
@@ -353,7 +362,10 @@ def main() -> None:
                 with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):
                     gl = prior(ops)
             r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0, prior_on=int(on),
-                                      prior_on_frac=dyn["on"] / (s + 1), ema_first_line=dyn["ema1"], **grad_info)
+                                      prior_on_frac=dyn["on"] / (s + 1), ema_first_line=dyn["ema1"],
+                                      ema_bucket_min=float(dyn["ema_b"].min()),
+                                      ema_bucket={f"b{la}{lb}": float(v) for (la, lb), v in zip(BUCKETS, dyn["ema_b"])},
+                                      prior_toggles=dyn["toggles"], **grad_info)
             curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))

@@ -344,7 +344,12 @@ def main() -> None:
         num2 = np.array([int(t) if len(t) == 2 and t.isdigit() and 10 <= int(t) <= 99 else -1 for t in dec])
         digit0 = np.array([len(t) > 0 and t[0].isdigit() for t in dec])
         digit1 = np.array([len(t) > 0 and t[-1].isdigit() for t in dec])
-        sep = np.array([t in (".", ",") for t in dec])
+        # audit 2026-10-14: also not part of a decimal (".45", " $.99" are merged tokens), a range / date / ratio /
+        # time / exponent ("1939-45", "10/19/13", "1/10", "10:30", "1e10"), a list index ("#45"), or a digit group
+        # ("12 34"): a separator between it and another number disqualifies it
+        sep = np.array([t.strip() in (".", ",", "/", "-", "\u2013", "\u2014", ":", "e", "E", "x") for t in dec])
+        glued = np.array([t.endswith((".", "#", "$")) for t in dec])   # " .", " $.", "#" right before the number
+        space = np.array([len(t) > 0 and t.strip() == "" for t in dec])
         print(f"text site: {int((num2 >= 0).sum())} number tokens '10'..'99' in the vocabulary", flush=True)
 
     def text_numbers(t):
@@ -353,7 +358,8 @@ def main() -> None:
         v = num2[t]
         nxt, nxt2 = np.append(t[1:], t[-1]), np.append(t[2:], [t[-1], t[-1]])
         prv, prv2 = np.insert(t[:-1], 0, t[0]), np.insert(t[:-2], 0, [t[0], t[0]])
-        ok = (v >= 0) & ~digit0[nxt] & ~(sep[nxt] & digit0[nxt2]) & ~digit1[prv] & ~(sep[prv] & digit1[prv2])
+        ok = ((v >= 0) & ~digit0[nxt] & ~((sep[nxt] | space[nxt]) & digit0[nxt2]) & ~digit1[prv]
+              & ~((sep[prv] | space[prv]) & digit1[prv2]) & ~glued[prv])
         ok[:2] = False; ok[-2:] = False   # context unknown at the edges; the next token would be the arithmetic line
         idx = np.flatnonzero(ok)
         return idx, v[idx]
