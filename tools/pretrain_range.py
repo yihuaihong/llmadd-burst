@@ -107,6 +107,12 @@ def main() -> None:
     ap.add_argument("--arith_lines", type=int, default=4)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--lam", type=float, default=5.0)
+    ap.add_argument("--schedule", choices=("whole", "window", "gate"), default="whole",
+                    help="when the prior is on: whole run; --window w0,w1 (fractions of training); or self-timed gate = on "
+                         "while the EMA of in-batch exact-match accuracy on the first arithmetic line of each row (the line "
+                         "right after the text, as in the evals) is below --gate_thr (F60 / F69 / F71)")
+    ap.add_argument("--window", default="0.05,0.4")
+    ap.add_argument("--gate_thr", type=float, default=0.5)
     ap.add_argument("--geo_layers", default=None)
     ap.add_argument("--eval_every", type=int, default=250)
     ap.add_argument("--n_eval", type=int, default=150, help="held-out items per bucket in the eval sets")
@@ -115,6 +121,10 @@ def main() -> None:
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     path = out / f"run_{args.tokenization}_{args.target}_seed{args.seed}{args.tag}.json"
+    if not args.dry_inputs:   # the same run may be queued twice (two accounts / partitions): see run_guard.py
+        import run_guard
+        if not run_guard.claim(path):
+            return
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     from transformers import AutoTokenizer
@@ -225,8 +235,12 @@ def main() -> None:
     rng = np.random.default_rng(2000 + args.seed)
     Ftab = features(args.target, xs_all, perm, perm_len) if args.target != "none" else None
 
+    nl_len = len(enc("\n"))
+
     def batch():
-        rows, ops = [], []
+        """Rows of text + arithmetic lines; ops = (row, operand position, value); ans = (row, first answer position,
+        number of answer tokens, first line of the row?)."""
+        rows, ops, ans = [], [], []
         for r in range(args.bs):
             parts, offs = [], []
             for _ in range(args.arith_lines):
@@ -238,11 +252,13 @@ def main() -> None:
             o = int(rng.integers(0, len(train) - n))
             row = list(np.asarray(train[o:o + n], dtype=np.int64)) + sum((p[0] for p in parts), [])
             off = n
-            for ids, ia, ib, a, b in parts:
+            for j, (ids, ia, ib, a, b) in enumerate(parts):
                 ops.append((r, off + ia, a)); ops.append((r, off + ib, b))
+                na = len(enc(str(a + b)))
+                ans.append((r, off + len(ids) - nl_len - na, na, int(j == 0)))
                 off += len(ids)
             rows.append(row)
-        return torch.tensor(np.array(rows), device=dev), np.array(ops)
+        return torch.tensor(np.array(rows), device=dev), np.array(ops), np.array(ans)
 
     def prior(ops):
         r = torch.tensor(ops[:, 0], device=dev); pos = torch.tensor(ops[:, 1], device=dev)
@@ -281,21 +297,46 @@ def main() -> None:
         model.train()
         return res
 
+    w0, w1 = (float(v) for v in args.window.split(","))
+    dyn = {"ema1": 0.0, "on": 0}
+
+    def prior_on(s):
+        if Ftab is None:
+            return False
+        if args.schedule == "window":
+            return w0 * steps <= s < w1 * steps
+        if args.schedule == "gate":
+            return dyn["ema1"] < args.gate_thr
+        return True
+
     curve, t0 = [], time.time()
     model.train()
     for s in range(steps):
         for g in opt.param_groups:
             g["lr"] = args.lr * sched(s)
-        x, ops = batch()
-        if s == 0:   # operand positions point at the operands' last tokens
+        x, ops, ans = batch()
+        if s == 0:   # operand positions point at the operands' last tokens; answer spans decode to the sums
             for r_, p_, v_ in ops[:16].tolist():
                 assert tok.decode([int(x[r_, p_])]) == tok.decode(enc(str(v_))[-1:]), (r_, p_, v_)
+            for (r_, p_, n_, _), (_, _, a_), (_, _, b_) in zip(ans[:8].tolist(), ops[0:16:2].tolist(), ops[1:16:2].tolist()):
+                assert tok.decode(x[r_, p_:p_ + n_].tolist()).strip() == str(a_ + b_), (r_, p_, n_, a_, b_)
+        on = prior_on(s)
         with torch.autocast(dev, dtype=torch.bfloat16):
             out_m = model(input_ids=x, labels=x)
-            gl = prior(ops) if Ftab is not None else torch.zeros((), device=dev)
-            loss = out_m.loss + (args.lam * gl if Ftab is not None else 0.0)
+            gl = prior(ops) if on else torch.zeros((), device=dev)
+            loss = out_m.loss + (args.lam * gl if on else 0.0)
+        with torch.no_grad():   # in-batch exact match per line (teacher forced): the gate's signal
+            A = torch.tensor(ans, device=dev)
+            kk = torch.arange(int(A[:, 2].max()), device=dev)
+            pos = (A[:, 1:2] + kk).clamp(max=x.shape[1] - 1)
+            valid = kk[None] < A[:, 2:3]
+            rr = A[:, 0:1].expand_as(pos)
+            ok = ((out_m.logits[rr, pos - 1].argmax(-1) == x[rr, pos]) | ~valid).all(1)
+            first_acc = float(ok[A[:, 3] == 1].float().mean())
+        dyn["ema1"] = 0.98 * dyn["ema1"] + 0.02 * first_acc
+        dyn["on"] += int(on)
         grad_info = {}
-        if (s % args.eval_every == 0 or s == steps - 1) and Ftab is not None:   # LM vs prior pull, before clipping
+        if (s % args.eval_every == 0 or s == steps - 1) and on:   # LM vs prior pull, before clipping
             params = [q for q in model.parameters() if q.requires_grad]
             g1 = torch.autograd.grad(out_m.loss, params, retain_graph=True, allow_unused=True)
             g2 = torch.autograd.grad(args.lam * gl, params, retain_graph=True, allow_unused=True)
@@ -308,7 +349,11 @@ def main() -> None:
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         opt.step()
         if s % args.eval_every == 0 or s == steps - 1:
-            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0, **grad_info)
+            if Ftab is not None and not on:   # prior off: still log how well the operands fit the target
+                with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):
+                    gl = prior(ops)
+            r = evaluate(s); r.update(lm=float(out_m.loss), geo=float(gl), sec=time.time() - t0, prior_on=int(on),
+                                      prior_on_frac=dyn["on"] / (s + 1), ema_first_line=dyn["ema1"], **grad_info)
             curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "curve": curve}, indent=1))

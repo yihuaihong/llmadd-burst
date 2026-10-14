@@ -17,6 +17,9 @@ Where the geometry loss acts (--geo_site):
   ctx     the operand tokens a and b inside the arithmetic lines of the training batch itself (same forward pass),
           target Gram = helix features of their values (with repeats), at --geo_layers
   ans     the token that predicts the answer inside the training lines, target = helix of the sum a + b, at --ans_layers
+  text    two-digit numbers 10..99 that occur NATURALLY in the FineWeb text part of each training row (a token "NN"
+          with no digit token or decimal / thousands separator on either side), never the arithmetic lines: the prior that a
+          real pretraining run could use without synthetic data (2026-10-14, P1 "natural text"); target as for ctx
 Logged every --eval_every steps: held-out addition accuracy ("Q: a + b = " -> answer token; and "a plus b equals "),
 train-pair accuracy, validation LM loss on held-out FineWeb text, CKA(helix) of the number states.
 The *_ctx accuracies put the same prompts where training puts them: after a held-out FineWeb chunk, so the prompt ends
@@ -201,7 +204,8 @@ def main() -> None:
     ap.add_argument("--tokenizer", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--arm", choices=("none", "helix", "helix_shuf", "helix_window", "helix_acc", "helix_cka", "helix_gate", "helix_shuf_window"), required=True)
-    ap.add_argument("--geo_site", choices=("prefix", "ctx", "ans"), default="prefix", help="where the geometry loss acts (see top)")
+    ap.add_argument("--geo_site", choices=("prefix", "ctx", "ans", "text"), default="prefix", help="where the geometry loss acts (see top)")
+    ap.add_argument("--text_min", type=int, default=16, help="--geo_site text: skip the prior on batches with fewer numbers")
     ap.add_argument("--target_file", default=None, help="npz with a 90 x k feature table for x = 10..99 that replaces the "
                     "helix as the target (e.g. a teacher model's number geometry, tools/teacher_targets.py)")
     ap.add_argument("--target_key", default="feat_k8", help="array in --target_file")
@@ -239,6 +243,10 @@ def main() -> None:
     init_seed = args.seed if args.init_seed is None else args.init_seed
     data_seed = args.seed if args.data_seed is None else args.data_seed
     path = out / f"run_{args.arm}_seed{args.seed}{args.tag}.json"
+    if not args.dry_inputs:   # the same run may be queued twice (two accounts / partitions): see run_guard.py
+        import run_guard
+        if not run_guard.claim(path):
+            return
     torch.manual_seed(init_seed); np.random.seed(init_seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     from transformers import AutoTokenizer, Olmo2Config, Olmo2ForCausalLM
@@ -326,25 +334,64 @@ def main() -> None:
     target = K["helix_shuf" if args.arm in ("helix_shuf", "helix_shuf_window") else "helix"]
     rng = np.random.default_rng(1000 + data_seed)
 
+    if args.geo_site == "text":   # vocabulary tables for numbers in running text
+        dec = [tok.decode([i]) for i in range(len(tok))]
+        # OLMo-2's pre-tokeniser splits digits into chunks of up to 3 WITHOUT the leading space ("1945" = "194" + "5",
+        # " 45" = " " + "45"), so a two-digit token is a whole number only if no digit token touches it
+        num2 = np.array([int(t) if len(t) == 2 and t.isdigit() and 10 <= int(t) <= 99 else -1 for t in dec])
+        digit0 = np.array([len(t) > 0 and t[0].isdigit() for t in dec])
+        digit1 = np.array([len(t) > 0 and t[-1].isdigit() for t in dec])
+        sep = np.array([t in (".", ",") for t in dec])
+        print(f"text site: {int((num2 >= 0).sum())} number tokens '10'..'99' in the vocabulary", flush=True)
+
+    def text_numbers(t):
+        """Positions p (and values) of standalone two-digit numbers in a text chunk t."""
+        t = np.asarray(t)
+        v = num2[t]
+        nxt, nxt2 = np.append(t[1:], t[-1]), np.append(t[2:], [t[-1], t[-1]])
+        prv, prv2 = np.insert(t[:-1], 0, t[0]), np.insert(t[:-2], 0, [t[0], t[0]])
+        ok = (v >= 0) & ~digit0[nxt] & ~(sep[nxt] & digit0[nxt2]) & ~digit1[prv] & ~(sep[prv] & digit1[prv2])
+        ok[:2] = False; ok[-2:] = False   # context unknown at the edges; the next token would be the arithmetic line
+        idx = np.flatnonzero(ok)
+        return idx, v[idx]
+
     def batch():
-        """Rows of text + arithmetic lines; meta = per line (row, pos a, pos b, pos answer, a, b, first line?)."""
+        """Rows of text + arithmetic lines; meta = per line (row, pos a, pos b, pos answer, a, b, first line?);
+        tmeta (geo_site text) = (row, pos, value) of the numbers in the text part."""
         rows, meta = [], []
+        tmeta = []
         for r in range(args.bs):
             picks = [(int(rng.integers(len(lines))), int(rng.integers(len(FORMATS)))) for _ in range(args.arith_lines)]
             line = sum((lines[i][f] for i, f in picks), [])
             n = args.seq - len(line)
             o = int(rng.integers(0, len(train) - n))
             rows.append(np.concatenate([train[o:o + n].astype(np.int64), np.asarray(line, dtype=np.int64)]))
+            if args.geo_site == "text":
+                ti, tv = text_numbers(train[o:o + n].astype(np.int64))
+                tmeta += [(r, int(i), int(v)) for i, v in zip(ti, tv)]
             off = n
             for k, (i, f) in enumerate(picks):
                 ia, ib, ians = lpos[i][f]
                 meta.append((r, off + ia, off + ib, off + ians, int(trainp[i][0]), int(trainp[i][1]), int(k == 0)))
                 off += len(lines[i][f])
+        batch.tmeta = np.array(tmeta, dtype=np.int64).reshape(-1, 3)
         return torch.tensor(np.stack(rows), device=dev), np.array(meta)
 
+    def text_ok():
+        """geo_site text: enough numbers in this batch's text for a stable Gram (else the prior skips the step)."""
+        tm = batch.tmeta
+        return len(tm) >= args.text_min and len(set(tm[:, 2].tolist())) >= 4
+
     def site_loss(meta, grad=True):
-        """1 - CKA on the training forward's own states (store holds them): operands (ctx) or answer-predictors (ans)."""
+        """1 - CKA on the training forward's own states (store holds them): operands (ctx), answer-predictors (ans) or
+        the numbers in the text part (text; zero when the batch has fewer than --text_min of them)."""
         r = torch.tensor(meta[:, 0], device=dev)
+        if args.geo_site == "text":
+            tm = batch.tmeta
+            assert text_ok(), "site_loss(text) called on a batch with too few numbers"
+            rr = torch.tensor(tm[:, 0], device=dev); pos = torch.tensor(tm[:, 1], device=dev)
+            Kt = centred_gram(F_op[tm[:, 2] - 10], dev)
+            return sum(1 - cka(store[L][rr, pos], Kt) for L in geo_layers) / len(geo_layers)
         if args.geo_site == "ctx":
             rr = torch.cat([r, r]); pos = torch.tensor(np.concatenate([meta[:, 1], meta[:, 2]]), device=dev)
             Kt = centred_gram(F_op[np.concatenate([meta[:, 4], meta[:, 5]]) - 10], dev); Ls = geo_layers
@@ -413,6 +460,12 @@ def main() -> None:
             nid = info["num_id"]
             for r_, pa_, pb_, pans_, a_, b_, _ in meta.tolist():
                 assert int(x[r_, pa_]) == nid[a_] and int(x[r_, pb_]) == nid[b_] and int(x[r_, pans_]) == nid[a_ + b_], (r_, a_, b_)
+            if args.geo_site == "text":   # text positions decode to their values and lie before the arithmetic lines
+                first_line = {r_: pa_ for r_, pa_, *_ in meta.tolist() if _[-1] == 1}
+                for r_, p_, v_ in batch.tmeta[:64].tolist():
+                    assert tok.decode([int(x[r_, p_])]) == f"{v_}" and p_ < first_line[r_] - 1, (r_, p_, v_)
+                ctx_show = [tok.decode(x[r_, max(0, p_ - 6):p_ + 3].tolist()) for r_, p_, _ in batch.tmeta[:6].tolist()]
+                print(f"text site: {len(batch.tmeta)} numbers in the first batch, e.g. {ctx_show}", flush=True)
         with torch.autocast(dev, dtype=torch.bfloat16):
             out_m = model(input_ids=x, labels=x)
             lm = out_m.loss
@@ -420,10 +473,11 @@ def main() -> None:
             if args.geo_site == "prefix":
                 gl = geo_loss() if gw > 0 else torch.zeros((), device=dev)
             else:
-                gl = site_loss(meta) if gw > 0 else torch.zeros((), device=dev)
+                usable = args.geo_site != "text" or text_ok()
+                gl = site_loss(meta) if (gw > 0 and usable) else torch.zeros((), device=dev)
                 if s % args.eval_every == 0 or s == steps - 1:
                     with torch.no_grad():
-                        site_cka = float(1 - site_loss(meta))
+                        site_cka = float(1 - site_loss(meta)) if usable else None
             loss = lm + gw * gl
         opt.zero_grad(set_to_none=True)
         loss.backward()
@@ -438,6 +492,8 @@ def main() -> None:
         dyn["ema_all"] = 0.98 * dyn["ema_all"] + 0.02 * float(hit.mean())
         dyn["ema1"] = 0.98 * dyn["ema1"] + 0.02 * float(hit[first].mean())
         dyn["gate_on"] += int(gw > 0)
+        if args.geo_site == "text":   # steps on which the text prior actually acted (on, and enough numbers)
+            dyn["text_used"] = dyn.get("text_used", 0) + int(gw > 0 and usable)
         if dyn["released"] is None and gw > 0:
             if args.arm == "helix_acc" and dyn["ema"] >= args.gate_thr:
                 dyn["released"] = s
@@ -451,6 +507,8 @@ def main() -> None:
                                       geo_on_frac=dyn["gate_on"] / (s + 1))
             if args.geo_site != "prefix":
                 r[f"cka_{args.geo_site}"] = site_cka
+                if args.geo_site == "text":
+                    r["text_numbers"] = int(len(batch.tmeta)); r["text_used_frac"] = dyn.get("text_used", 0) / (s + 1)
             curve.append(r)
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "shuf_target_cka": shuf_cka, "target_sha256": target_sha, "n_params": n_params, "steps": steps, "geo_layers": geo_layers,

@@ -99,6 +99,10 @@ def main() -> None:
     import hashlib
     code_sha = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
     path = out / f"run_{args.priors}_seed{args.seed}.json"
+    if not args.dry_inputs:   # the same run may be queued twice (two accounts / partitions): see run_guard.py
+        import run_guard
+        if not run_guard.claim(path):
+            return
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     from transformers import AutoTokenizer
