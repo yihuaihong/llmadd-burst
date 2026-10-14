@@ -467,9 +467,9 @@ def main() -> None:
         st = torch.load(ck, map_location=dev, weights_only=False)
         model.load_state_dict(st["model"]); opt.load_state_dict(st["opt"])
         rng.bit_generator.state = st["rng"]; dyn.update(st["dyn"]); curve = st["curve"]; start = st["step"] + 1
-        torch.set_rng_state(st["torch_rng"])
+        torch.set_rng_state(st["torch_rng"].cpu())   # RNG states must be CPU ByteTensors (map_location moved them)
         if dev == "cuda" and st.get("cuda_rng") is not None:
-            torch.cuda.set_rng_state(st["cuda_rng"])
+            torch.cuda.set_rng_state(st["cuda_rng"].cpu())
         print(f"resumed from {ck.name} at step {start} of {steps}", flush=True)
     for s in range(start, steps):
         for g in opt.param_groups:
