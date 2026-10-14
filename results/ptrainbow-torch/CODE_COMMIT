@@ -1,0 +1,2 @@
+3d03a12 (refreshed before any ptrainbow job started; audit fixes)
++ 2026-10-14: run_guard.py and its 4-line call added to pretrain_rainbow.py (skip complete / running-elsewhere runs; training unchanged)

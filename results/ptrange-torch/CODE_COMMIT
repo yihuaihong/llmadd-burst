@@ -1,0 +1,2 @@
+f5b5a8a (refreshed before any ptrange job started; audit fixes)
++ 2026-10-14: run_guard.py and its 4-line call added to pretrain_range.py (skip complete / running-elsewhere runs; training unchanged)
