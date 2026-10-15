@@ -56,9 +56,10 @@ def main() -> None:
         for f in sorted(glob.glob(f"{d}/run_*.json")):
             r = json.loads(Path(f).read_text())
             a = Namespace(**r["args"])
-            key = f"{Path(d).name}/seed{a.seed}"
-            if key in res:
-                continue
+            key = str(Path(f).resolve())   # audit 2026-10-15: the run file itself (no basename collisions)
+            old = res.get(key)
+            if old and old.get("max_windows", 0) == 0 and old.get("bpb_logged_final") == r["curve"][-1]["val_bits_per_byte"]:
+                continue   # reuse only a full-val entry computed from this very run (not a smoke test, not stale)
             mfile = Path(f).parent / f"model_{a.tokenization}_{a.target}_seed{a.seed}{a.tag}.pt"
             if not mfile.exists() or r["curve"][-1]["step"] < r["steps"] - 1:
                 print("skip (no model or unfinished):", f, flush=True)
@@ -79,7 +80,8 @@ def main() -> None:
             logged = r["curve"][-1]["val_bits_per_byte"]
             res[key] = {"run": f, "model": str(mfile), "tag": a.tag, "seed": a.seed, "code_sha": r.get("code_sha"),
                         "bpb_full": b_full, "nats_per_token_full": npt_full, "tokens_full": ntok,
-                        "bpb_orig_windows": b_orig, "bpb_logged_final": logged, "orig_minus_logged": b_orig - logged}
+                        "bpb_orig_windows": b_orig, "bpb_logged_final": logged, "orig_minus_logged": b_orig - logged,
+                        "max_windows": args.max_windows}
             print(json.dumps({k: res[key][k] for k in ("tag", "seed", "bpb_full", "bpb_orig_windows", "orig_minus_logged")}), flush=True)
             Path(args.out).write_text(json.dumps(res, indent=1))
             del model
