@@ -25,7 +25,8 @@ import numpy as np
 from scipy import stats
 
 B = ("b11", "b12", "b13", "b22", "b23", "b33")
-ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "gate-ctx", "gate-text", "shuf-ctx", "shuf-text", "none")
+ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "win-text", "gate-ctx", "gate-text", "shuf-ctx", "shuf-text",
+        "none")
 
 cells = collections.defaultdict(dict)
 for d in sys.argv[1:]:
@@ -119,7 +120,7 @@ for tag in sorted(cells):
 
 print("\n== same site, paired: gate vs shuffled target / lenshuf / whole-run (Δarea)")
 for a, b in (("gate-ctx", "shuf-ctx"), ("gate-text", "shuf-text"), ("gate-ctx", "lenshuf-ctx"), ("whole-ctx", "gate-ctx"),
-             ("gate-ctx", "gate-text")):
+             ("gate-ctx", "gate-text"), ("win-text", "gate-text")):
     for pre in sorted({split_arm(t)[0] for t in cells}):
         t1, t2 = f"{pre}-{a}", f"{pre}-{b}"
         if t1 in cells and t2 in cells:
