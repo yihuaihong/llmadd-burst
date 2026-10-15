@@ -26,6 +26,7 @@ from scipy import stats
 
 B = ("b11", "b12", "b13", "b22", "b23", "b33")
 ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "win-text", "gate-ctx", "gate-text", "shuf-ctx", "shuf-text",
+        "win-ctx", "whole-prefix", "win-prefix", "gate-prefix", "win0-text", "win10-text", "win20-text",
         "none")
 
 cells = collections.defaultdict(dict)
@@ -118,9 +119,13 @@ for tag in sorted(cells):
     rs = list(cells[tag].values())
     print(f"  {tag:24s} " + " ".join(f"{b}:{np.mean([area(r, b) for r in rs]):5.1f}" for b in B))
 
-print("\n== same site, paired: gate vs shuffled target / lenshuf / whole-run (Δarea)")
+print("\n== paired Δarea: gate vs shuffled / lenshuf / whole-run; site at the same schedule; text prior onset")
 for a, b in (("gate-ctx", "shuf-ctx"), ("gate-text", "shuf-text"), ("gate-ctx", "lenshuf-ctx"), ("whole-ctx", "gate-ctx"),
-             ("gate-ctx", "gate-text"), ("win-text", "gate-text")):
+             ("gate-ctx", "gate-text"), ("win-text", "gate-text"),
+             # site at the same schedule, and the onset of the text prior
+             ("whole-ctx", "whole-prefix"), ("win-ctx", "win-prefix"), ("gate-ctx", "gate-prefix"), ("win-ctx", "win-text"),
+             ("win-text", "win-prefix"), ("gate-text", "gate-prefix"),
+             ("win-text", "win0-text"), ("win-text", "win10-text"), ("win-text", "win20-text")):
     for pre in sorted({split_arm(t)[0] for t in cells}):
         t1, t2 = f"{pre}-{a}", f"{pre}-{b}"
         if t1 in cells and t2 in cells:

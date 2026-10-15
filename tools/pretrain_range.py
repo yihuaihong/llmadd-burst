@@ -104,9 +104,12 @@ def main() -> None:
     ap.add_argument("--tokenization", choices=("whole", "digits"), required=True)
     ap.add_argument("--target", choices=("none", "helix2", "helix3", "helix3_shuf", "digitcirc", "digitcirc_shuf",
                                          "digitcirc_lenshuf", "helix3_lenshuf", "length"), required=True)
-    ap.add_argument("--site", choices=("ctx", "text"), default="ctx",
+    ap.add_argument("--site", choices=("ctx", "text", "prefix"), default="ctx",
                     help="ctx = the operands inside the training lines; text = numbers 0..999 that occur NATURALLY in the "
-                         "FineWeb text of each row (never the arithmetic lines; whole-number tokens only), 2026-10-14")
+                         "FineWeb text of each row (never the arithmetic lines; whole-number tokens only), 2026-10-14; "
+                         "prefix = the last token of separate 'Q: x' prompts at position 0 (F69 / F71's prefix site), x "
+                         "drawn like the operands (lengths 1-3 equally often) from its own random stream")
+    ap.add_argument("--n_prefix", type=int, default=256, help="--site prefix: 'Q: x' prompts per step")
     ap.add_argument("--text_min", type=int, default=16, help="--site text: skip the prior on batches with fewer numbers")
     ap.add_argument("--ckpt_every", type=int, default=0, help="resumable checkpoint every N steps (0 = off)")
     ap.add_argument("--stop_after", type=int, default=-1, help="testing only: exit after this step (simulated preemption)")
@@ -332,9 +335,30 @@ def main() -> None:
         tm = batch.tmeta
         return len(tm) >= args.text_min and len(set(tm[:, 2].tolist())) >= 4
 
-    def site_prior(ops):
-        """1 - CKA at the prior's site (ctx: operands in the lines; text: numbers in the text part)."""
-        return prior(ops) if args.site == "ctx" else prior(batch.tmeta)
+    def prefix_vals(g):
+        lens = g.integers(1, 4, size=args.n_prefix)   # operand lengths 1-3 equally often, as in the lines
+        return np.array([int(g.integers(*RANGE[int(l)])) for l in lens])
+
+    if args.site == "prefix":   # "Q: x" = one token per number after "Q: " (whole tokens), all prompts the same length
+        PRE = {v: enc(f"Q: {v}") for v in range(1000)}
+        assert len({len(t) for t in PRE.values()}) == 1 and all(PRE[v][-1] == enc(str(v))[-1] for v in (0, 7, 42, 999))
+        prng = np.random.default_rng(3000 + args.seed)   # own stream: the training batches are those of every other site
+
+    def site_prior(ops, g=None):
+        """1 - CKA at the prior's site (ctx: operands in the lines; text: numbers in the text part; prefix: last token
+        of separate 'Q: x' prompts). The prefix forward overwrites the hooked states, so the training forward's states
+        are put back for the read-outs."""
+        if args.site == "ctx":
+            return prior(ops)
+        if args.site == "text":
+            return prior(batch.tmeta)
+        vals = prefix_vals(prng if g is None else g)
+        keep = dict(store)
+        model(input_ids=torch.tensor([PRE[int(v)] for v in vals], device=dev))
+        L_ = len(PRE[0]) - 1
+        out_ = prior(np.stack([np.arange(len(vals)), np.full(len(vals), L_), vals], 1))
+        store.update(keep)
+        return out_
 
     Fref = features("helix3", xs_all)   # transfer read-out for every arm (incl. none): operands in the lines vs helix3
     if args.tokenization == "whole":   # embedding read-out: the rows of the number tokens 0..999 vs helix3
@@ -390,6 +414,10 @@ def main() -> None:
         return True
 
     if args.dry_inputs:   # decoded training rows: prior sites marked with ⟦ ⟧ (ctx: operands; text: numbers in the text)
+        if args.site == "prefix":
+            vals = prefix_vals(np.random.default_rng(0))
+            print("prefix prompts:", [tok.decode(PRE[int(v)][:-1]) + "⟦" + tok.decode(PRE[int(v)][-1:]) + "⟧" for v in vals[:6]],
+                  "lengths 1/2/3:", np.bincount([len(str(int(v))) for v in vals], minlength=4)[1:].tolist())
         x, ops, ans = batch()
         for r in range(3):
             row = x[r].tolist()
@@ -441,6 +469,8 @@ def main() -> None:
         st = torch.load(ck, map_location=dev, weights_only=False)
         model.load_state_dict(st["model"]); opt.load_state_dict(st["opt"])
         rng.bit_generator.state = st["rng"]; data_rng.bit_generator.state = st["data_rng"]
+        if args.site == "prefix":
+            prng.bit_generator.state = st["prng"]
         dyn.update(st["dyn"]); curve = st["curve"]; start = st["step"] + 1
         torch.set_rng_state(st["torch_rng"].cpu())
         if dev == "cuda" and st.get("cuda_rng") is not None:
@@ -462,7 +492,7 @@ def main() -> None:
                 show = [tok.decode(x[r_, max(0, p_ - 6):p_ + 3].tolist()) for r_, p_, _ in batch.tmeta[:6].tolist()]
                 print(f"text site: {len(batch.tmeta)} numbers in the first batch, e.g. {show}", flush=True)
         on = prior_on(s)
-        usable = args.site == "ctx" or text_ok()
+        usable = args.site != "text" or text_ok()
         with torch.autocast(dev, dtype=torch.bfloat16):
             lm_loss, logits_at = lm_forward(x)
             gl = site_prior(ops) if (on and usable) else torch.zeros((), device=dev)
@@ -502,7 +532,7 @@ def main() -> None:
         if s % eval_every == 0 or s == steps - 1:
             if Ftab is not None and not (on and usable) and usable:   # prior off: still log the fit at its site
                 with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):
-                    gl = site_prior(ops)
+                    gl = site_prior(ops, np.random.default_rng(10 ** 6 + s))   # logging only: not the prior's stream
             with torch.no_grad(), torch.autocast(dev, dtype=torch.bfloat16):   # comparable across arms (incl. none)
                 cka_ops_h3 = float(1 - prior(ops, Fref, read_layers))
                 emb = {}
@@ -527,6 +557,7 @@ def main() -> None:
             tmp = ck.with_name(ck.name + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": rng.bit_generator.state,
                         "data_rng": data_rng.bit_generator.state, "dyn": dict(dyn), "curve": curve, "step": s,
+                        "prng": prng.bit_generator.state if args.site == "prefix" else None,
                         "torch_rng": torch.get_rng_state(), "cuda_rng": torch.cuda.get_rng_state() if dev == "cuda" else None}, tmp)
             tmp.replace(ck)
         if s == args.stop_after:

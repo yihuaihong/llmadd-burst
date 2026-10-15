@@ -27,6 +27,12 @@ def main() -> None:
     ap.add_argument("--repo", default="HuggingFaceFW/fineweb-edu", help="HF dataset repo (e.g. HuggingFaceTB/finemath)")
     args = ap.parse_args()
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
+    try:   # already built with the same request (e.g. a queued copy of the job after a local run): nothing to do
+        m = json.loads((out / "meta.json").read_text())
+        if (m["files"], m["repo"], m["train_tokens"], m["val_tokens"]) == (args.files, args.repo, args.tokens, args.val_tokens):
+            print("already built:", out); return
+    except (OSError, KeyError, ValueError):
+        pass
     raw = out / "raw"
     for f in args.files.split(","):
         if not (raw / f).exists():
@@ -51,8 +57,8 @@ def main() -> None:
             break
     allt = np.concatenate(buf)
     assert len(allt) >= need, f"only {len(allt)} tokens"
-    allt[: args.tokens].tofile(out / "train.bin")
-    allt[args.tokens: need].tofile(out / "val.bin")
+    for name, part in (("train.bin", allt[: args.tokens]), ("val.bin", allt[args.tokens: need])):   # atomic: readers
+        part.tofile(out / (name + ".tmp")); (out / (name + ".tmp")).replace(out / name)              # never see half files
     (out / "meta.json").write_text(json.dumps({"tokenizer": args.tokenizer, "train_tokens": args.tokens, "val_tokens": args.val_tokens,
                                                "eos": eos, "vocab": len(tok), "files": args.files, "repo": args.repo}, indent=1))
     print("done", len(allt))
