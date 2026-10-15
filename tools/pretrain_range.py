@@ -83,6 +83,12 @@ def features(target: str, x: np.ndarray, perm=None, perm_len=None) -> np.ndarray
     raise ValueError(target)
 
 
+def gate_step(is_open, m, thr, hyst):
+    """One step of the self-timed gate on the lowest per-bucket EMA m: an open gate stays open while m < thr; a closed
+    gate reopens only when m < thr - hyst (hysteresis against chattering). hyst = 0 is the stateless rule m < thr."""
+    return m < thr if is_open else m < thr - hyst
+
+
 def held_out(rng, per_bucket=150):
     """Unordered held-out pairs per bucket (1+1: 20 of the 55 unordered pairs)."""
     held = {}
@@ -131,6 +137,11 @@ def main() -> None:
                          "line of each row (the line right after the text, as in the evals) is below --gate_thr")
     ap.add_argument("--window", default="0.05,0.4")
     ap.add_argument("--gate_thr", type=float, default=0.5)
+    ap.add_argument("--gate_start", type=float, default=0.0,
+                    help="--schedule gate: no prior before this fraction of training (same boundary as a window's start); "
+                         "2026-10-14: delayed gate vs window")
+    ap.add_argument("--gate_hyst", type=float, default=0.0,
+                    help="--schedule gate: once closed, reopen only when the lowest bucket EMA < gate_thr - gate_hyst")
     ap.add_argument("--geo_layers", default=None)
     ap.add_argument("--eval_every", type=int, default=250)
     ap.add_argument("--n_eval", type=int, default=150, help="held-out items per bucket in the eval sets")
@@ -404,7 +415,10 @@ def main() -> None:
         return res
 
     w0, w1 = (float(v) for v in args.window.split(","))
-    dyn = {"ema1": 0.0, "on": 0, "ema_b": np.zeros(len(BUCKETS)), "toggles": 0, "last_on": None}
+    dyn = {"ema1": 0.0, "on": 0, "ema_b": np.zeros(len(BUCKETS)), "toggles": 0, "last_on": None,
+           "gate_open": True, "events": []}   # events: [step, 1 = prior switched on / 0 = off]
+    assert args.schedule == "gate" or (args.gate_start == 0 and args.gate_hyst == 0), "--gate_start / --gate_hyst need --schedule gate"
+    assert 0 <= args.gate_hyst < args.gate_thr, (args.gate_hyst, args.gate_thr)
 
     def prior_on(s):
         if Ftab is None:
@@ -412,7 +426,15 @@ def main() -> None:
         if args.schedule == "window":
             return w0 * steps <= s < w1 * steps
         if args.schedule == "gate":   # audit 2026-10-14: every operand-length bucket must be learned, not the average
-            return float(dyn["ema_b"].min()) < args.gate_thr
+            if s < args.gate_start * steps:   # delayed onset: the same boundary as a window's w0 * steps <= s
+                return False
+            m = float(dyn["ema_b"].min())
+            if s == math.ceil(args.gate_start * steps) and s > 0 and m >= args.gate_thr:
+                print(f"WARNING: at the gate's onset (step {s}) the lowest bucket EMA {m:.3f} >= {args.gate_thr}: it does not open", flush=True)
+            if not args.gate_hyst:
+                return m < args.gate_thr   # stateless (the original gate)
+            dyn["gate_open"] = gate_step(dyn["gate_open"], m, args.gate_thr, args.gate_hyst)
+            return dyn["gate_open"]
         return True
 
     if args.dry_inputs:   # decoded training rows: prior sites marked with ⟦ ⟧ (ctx: operands; text: numbers in the text)
@@ -517,6 +539,8 @@ def main() -> None:
         dyn["ema1"] = ema_k * dyn["ema1"] + ema_w * first_acc
         dyn["on"] += int(on)
         dyn["used"] = dyn.get("used", 0) + int(on and usable)
+        if dyn["last_on"] is not None and on != dyn["last_on"]:
+            dyn["events"].append([s, int(on)])
         dyn["toggles"] += int(dyn["last_on"] is not None and on != dyn["last_on"]); dyn["last_on"] = on
         grad_info = {}
         if (s % eval_every == 0 or s == steps - 1) and on and usable:   # LM vs prior pull, before clipping
@@ -554,7 +578,8 @@ def main() -> None:
             print(json.dumps(r), flush=True)
             path.write_text(json.dumps({"args": vars(args), "steps": steps, "geo_layers": geo_layers, "read_layers": read_layers,
                                         "n_params": n_params, "grad_ckpt_on": ckpt_on, "lm_chunk": lm_chunk,
-                                        "eval_every_steps": eval_every, "code_sha": code_sha, "curve": curve}, indent=1))
+                                        "eval_every_steps": eval_every, "code_sha": code_sha, "prior_events": dyn["events"],
+                                        "curve": curve}, indent=1))
         if args.ckpt_every and (s + 1) % args.ckpt_every == 0 and s < steps - 1:
             tmp = ck.with_name(ck.name + ".tmp")
             torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "rng": rng.bit_generator.state,
