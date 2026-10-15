@@ -339,6 +339,8 @@ def main() -> None:
         lens = g.integers(1, 4, size=args.n_prefix)   # operand lengths 1-3 equally often, as in the lines
         return np.array([int(g.integers(*RANGE[int(l)])) for l in lens])
 
+    # audit 2026-10-14: with gradient checkpointing the backward recomputation re-fires the hooks after the prefix forward
+    assert not (ckpt_on and args.site == "prefix"), "--site prefix with gradient checkpointing is not supported"
     if args.site == "prefix":   # "Q: x" = one token per number after "Q: " (whole tokens), all prompts the same length
         PRE = {v: enc(f"Q: {v}") for v in range(1000)}
         assert len({len(t) for t in PRE.values()}) == 1 and all(PRE[v][-1] == enc(str(v))[-1] for v in (0, 7, 42, 999))
