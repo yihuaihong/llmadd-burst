@@ -1,0 +1,179 @@
+{
+ "domain": "months",
+ "split": "class",
+ "geom": "circle",
+ "seed": 2,
+ "lam": 20.0,
+ "plam": null,
+ "presample": false,
+ "lr": 0.0001,
+ "epochs": 8,
+ "layers": [
+  4,
+  8,
+  12,
+  16
+ ],
+ "train_log": [
+  {
+   "epoch": 0,
+   "ce": 2.983708055395829,
+   "geo_loss": 0.18372616524759092
+  },
+  {
+   "epoch": 1,
+   "ce": 2.319428519198769,
+   "geo_loss": 0.007167393047558634
+  },
+  {
+   "epoch": 2,
+   "ce": 2.0902765205031946,
+   "geo_loss": 0.002844658337141338
+  },
+  {
+   "epoch": 3,
+   "ce": 1.8523630186131126,
+   "geo_loss": 0.0021355222714574715
+  },
+  {
+   "epoch": 4,
+   "ce": 1.525032595584267,
+   "geo_loss": 0.001890456990191811
+  },
+  {
+   "epoch": 5,
+   "ce": 1.3309190524251837,
+   "geo_loss": 0.002105566231827987
+  },
+  {
+   "epoch": 6,
+   "ce": 0.9111087941809705,
+   "geo_loss": 0.0021233013585994116
+  },
+  {
+   "epoch": 7,
+   "ce": 0.6179375170092833,
+   "geo_loss": 0.0019313951856211613
+  }
+ ],
+ "eval": {
+  "train": 0.8407959938049316,
+  "test": 0.2044817954301834,
+  "ood": 0.10333333909511566
+ },
+ "geometry": {
+  "L4": {
+   "cka_circle": 0.9971631765365601,
+   "cka_circle_shuf": 0.14510411024093628,
+   "cka_line": 0.449027419090271
+  },
+  "L8": {
+   "cka_circle": 0.9985073208808899,
+   "cka_circle_shuf": 0.13261255621910095,
+   "cka_line": 0.44626280665397644
+  },
+  "L12": {
+   "cka_circle": 0.9986351728439331,
+   "cka_circle_shuf": 0.12754108011722565,
+   "cka_line": 0.4430147707462311
+  },
+  "L16": {
+   "cka_circle": 0.9980726838111877,
+   "cka_circle_shuf": 0.13071829080581665,
+   "cka_line": 0.4464930295944214
+  },
+  "emb": {
+   "cka_circle": 0.5399752259254456,
+   "cka_circle_shuf": 0.40906429290771484,
+   "cka_line": 0.38764140009880066
+  },
+  "prompt": {
+   "train": {
+    "L12": {
+     "cka_sum_helix": 0.3156006634235382,
+     "cka_sum_helix_shuf": 0.08173058182001114,
+     "cka_out_circle": 0.06005145236849785,
+     "cka_out_circle_shuf": 0.038341548293828964,
+     "cka_out_onehot": 0.12081096321344376
+    },
+    "L16": {
+     "cka_sum_helix": 0.23252403736114502,
+     "cka_sum_helix_shuf": 0.08923818171024323,
+     "cka_out_circle": 0.2017529010772705,
+     "cka_out_circle_shuf": 0.08480846881866455,
+     "cka_out_onehot": 0.1868799924850464
+    },
+    "L20": {
+     "cka_sum_helix": 0.18417468667030334,
+     "cka_sum_helix_shuf": 0.09050717949867249,
+     "cka_out_circle": 0.4270126223564148,
+     "cka_out_circle_shuf": 0.1590569019317627,
+     "cka_out_onehot": 0.28888484835624695
+    },
+    "L24": {
+     "cka_sum_helix": 0.16312766075134277,
+     "cka_sum_helix_shuf": 0.09270942956209183,
+     "cka_out_circle": 0.535766065120697,
+     "cka_out_circle_shuf": 0.20727282762527466,
+     "cka_out_onehot": 0.33762481808662415
+    },
+    "L28": {
+     "cka_sum_helix": 0.1525927186012268,
+     "cka_sum_helix_shuf": 0.0954832211136818,
+     "cka_out_circle": 0.6181904673576355,
+     "cka_out_circle_shuf": 0.24172593653202057,
+     "cka_out_onehot": 0.3737312853336334
+    }
+   },
+   "test": {
+    "L12": {
+     "cka_sum_helix": 0.4419645667076111,
+     "cka_sum_helix_shuf": 0.08018284291028976,
+     "cka_out_circle": 0.06313648074865341,
+     "cka_out_circle_shuf": 0.06207306310534477,
+     "cka_out_onehot": 0.12056382745504379
+    },
+    "L16": {
+     "cka_sum_helix": 0.3169347643852234,
+     "cka_sum_helix_shuf": 0.08875191956758499,
+     "cka_out_circle": 0.22423571348190308,
+     "cka_out_circle_shuf": 0.13903266191482544,
+     "cka_out_onehot": 0.2055753469467163
+    },
+    "L20": {
+     "cka_sum_helix": 0.22777558863162994,
+     "cka_sum_helix_shuf": 0.10823124647140503,
+     "cka_out_circle": 0.4136756956577301,
+     "cka_out_circle_shuf": 0.18452037870883942,
+     "cka_out_onehot": 0.28519707918167114
+    },
+    "L24": {
+     "cka_sum_helix": 0.1835078001022339,
+     "cka_sum_helix_shuf": 0.11445100605487823,
+     "cka_out_circle": 0.48441433906555176,
+     "cka_out_circle_shuf": 0.1979600191116333,
+     "cka_out_onehot": 0.3166046738624573
+    },
+    "L28": {
+     "cka_sum_helix": 0.1752781718969345,
+     "cka_sum_helix_shuf": 0.12543843686580658,
+     "cka_out_circle": 0.5519872307777405,
+     "cka_out_circle_shuf": 0.2218146175146103,
+     "cka_out_onehot": 0.3464541435241699
+    }
+   },
+   "sum_layers": [
+    12,
+    16,
+    20
+   ],
+   "out_layers": [
+    24,
+    28
+   ]
+  }
+ },
+ "preds": null,
+ "route": null,
+ "ablate": null
+}
