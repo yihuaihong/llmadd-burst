@@ -17,6 +17,8 @@ same site. Reported: mean difference, paired t-test p, wins = seeds where the ar
     python tools/pt999_summary.py /scratch/yh6210/llmadd_torch/runs/pt999/out [/scratch/yh6210/llmadd_torch/runs/ptsize999/out]
 Burst results (2026-10-16, pt2main): a returned task dir results/<task>/ holds <tag>/run_*.json, so pass the task dirs,
 e.g. results/3[5-9][0-9]-pt2*; tools/pt2main_summary.py does that and applies the batch's pre-registered rules.
+The shared read-out rules (diverged, best lr, survives tuning, "N x") are tools/readout_rules.py; area and t90 here stay
+an independent implementation on purpose (pt2main_summary / ptscale_summary check their cell areas against this output).
 """
 import collections
 import glob

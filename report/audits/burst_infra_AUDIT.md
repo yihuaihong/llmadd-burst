@@ -250,3 +250,48 @@ and `dry_inputs.txt`.
   may still run (same out/); (b) the per-task snapshot `git archive HEAD` (202 MB) makes 12 submissions outlast
   `timeout 600`; `git archive HEAD burst tasks tools` avoids it.
 - Reaper: CPU tasks are short or busy (332 tokenises with all cores); a reaped task is retried and 332 is idempotent.
+
+## 2026-10-16 amendment: the P1 read-out is code (before any xsite53 / pt2b result)
+Written and tested before any result of 330-361 existed (no `results/` or `status/` entry for them, origin at 7672427).
+- `tools/xsite_summary.py` applies the pass rule above exactly and prints PASS / FAIL / INCOMPLETE per rule, the outcome
+  paragraph of this file, and exits 0 (P0, P1a, P1b-none and P1b-win-ctx pass), 1 (any rule fails) or 2 (incomplete /
+  withheld, none fails). Area is `tools/readout_rules.py` (the one definition set of the Batch 1 read-outs, shared with
+  `pt2main_summary.py` and `ptscale_summary.py`; = `pt999_summary.py`'s formula), and the P1b runs are chosen with its
+  Burst re-run rule (an EXTRA re-run of a pt2b lr 1e-3 task counts as in pt2main).
+- Choices fixed here (the rule text left them open): P0.2 also recomputes the `--dry_inputs` digest from the returned
+  `dry_inputs.txt` (bytes, as `grep | head -n 9 | sha256sum`; = the Torch log digests) and compares the run args with the
+  Torch cell's (only data / tokenizer / out / tag may differ; keys new in the pinned code must hold their inert
+  defaults); the task's own `p0_check.json` must agree with the recomputation (a disagreement is a P0 failure). The Torch
+  reference areas must equal the table above (exit 3 otherwise). P1b: a pt2b run whose `check.json` failed makes the
+  rule WITHHELD (= incomplete until an EXTRA re-run), a step-0 lm more than 1e-3 off Torch's fails it; the T2 SD is the
+  8-seed SD with ddof 1 (as the 1.78 of 2pct-none, recomputed: 1.785). "W - none > 0 in 4/4" is printed as SANITY, not
+  part of the verdict. Hours: per run `projected_run_h` (recomputed and compared with `p0_check.json`), the last eval's
+  `sec`, the status `elapsed_min`; factor = median projected_run_h / 0.75 h; each current limit (xsite53, pt2b,
+  pt2long, pt2s190) is printed as a multiple of its rescaled time (pt2long = 4 x 53M, 190M = 2.0 h x factor); median GPU
+  utilisation < 50% prints the 2-jobs-per-GPU rule.
+- Re-runs (after the read-out's audit, same day, still before any result): a TIMEOUT is not retried by the tick, so its
+  results come back with an unfinished run JSON. The xsite53 run of (arm, seed) is the first FINISHED run in task order
+  among `results/<n>-xsite53-<arm>-s<seed>` (the 34x task, then any re-run under a new number); an unfinished or missing
+  run keeps that seed INCOMPLETE (not a P0.2 failure) until a re-run finishes. **Choice for the user to confirm:** a
+  re-run never replaces a finished run, so a finished run that fails P0 stays a P0 failure ("stop and debug", above);
+  later finished runs are listed and ignored.
+- Reference validity (same audit): P1b compares against Torch pt999 2pct-none and T2 2pct-win-ctx, so both must pass
+  `readout_rules.check_2pct` (runs/ptlr/AUDIT.md 'Controls': code_sha 79e9b410dcc3, 18310 steps / 75 evals, the same
+  seed's 2pct-none args except target / schedule, step-0 lm vs the 2% values within 1e-3, T2 prior_on_frac 6408 / 18310,
+  2pct-none never on); an invalid reference makes the rule WITHHELD.
+- Tests on fake results (scratch `readout/fake_xsite.py`: Burst runs = copies of the Torch reference runs with the pinned
+  code's args, curves shifted by designed area deltas, `sec` x 0.8, the seed's Torch log as `dry_inputs.txt`; fake T2 =
+  2pct-gate-ctx's 8 runs with window args), designed -> printed: pass without T2 -> P1a +0.35 (max 1.00), P1b-none
+  +0.38, P1b-win-ctx INCOMPLETE, exit 2, factor 1.02; with T2 -> all PASS, tolerances 3.12 / 6.22, exit 0, util 45% ->
+  2 jobs per GPU; W deltas +1.6..+1.8 -> P1a FAIL (mean +1.62), exit 1; one seed -3.2 -> P1a FAIL (max 3.20); step-0 lm
+  +2e-3 -> P0.3 FAIL, outcome "P0 FAILS"; wrong W prior_events with a passing p0_check -> P0.4 and p0_check FAIL; one
+  changed row in dry_inputs.txt -> P0.2 FAIL; P1b none deltas +1.8..+2.5 -> FAIL (mean +2.05); a failed pt2b check ->
+  P1b-none WITHHELD, exit 2; 6 of 8 tasks (one TIMEOUT) -> INCOMPLETE, exit 2; the args of a real pinned-code run
+  (ptgw lr5e-4-W s1, lr set to 1e-3) pass P0.2 against ptrangeg's older args, with its lr 5e-4 left in -> FAIL {'lr'}.
+  After the audit (the fake T2 now carries the window's prior_on_frac; the earlier one had the gate's 0.68-1.0 and still
+  passed, which is how the missing check was found): T2 seed 5 with the gate's prior_on_frac -> P1b-win-ctx WITHHELD,
+  exit 2; a TIMEOUT that returns an unfinished run JSON -> INCOMPLETE (was P0.2 FAIL), exit 2; the same plus a finished
+  re-run 348 -> all PASS, "superseded" note, exit 0; a P0-failing 343 plus a clean re-run 349 -> P0.3 FAIL, 349
+  "ignored", exit 1; 332 FAILED rc 3 -> P0.1 FAIL; one offline_lm |orig_minus_logged| 0.01 -> P0.5 FAIL; Burst pt2b
+  none s2 step-0 lm +2e-3 -> P1b-none FAIL (pairing broken); Burst win-ctx deltas +3.5..+4.5 -> P1b-win-ctx FAIL (mean
+  +3.95 > 3.12), outcome "the 2% pooling is withdrawn", exit 1.

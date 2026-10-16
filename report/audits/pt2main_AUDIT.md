@@ -345,3 +345,58 @@ decoded training rows with the prior sites in ⟦ ⟧ and decoded eval rows (`dr
   - Shared definitions with runs/ptlr/AUDIT.md: diverged, survives tuning, N x, tie-break.
   - Rule 6 (integrity failures withhold verdicts) enforced in code.
   - Area and t90 also reported without b11, because b11 pairs occur in the natural text.
+
+## 2026-10-16 amendment 3: the read-out's open items closed in code (before any result)
+Written and tested before any pt2main result existed (no `results/` or `status/` entry for 350-361; origin at 7672427).
+`tools/readout_rules.py` is now the single definition set of the Batch 1 read-outs, imported by
+`tools/pt2main_summary.py` and `tools/ptscale_summary.py` (Torch ptlr; runs/ptlr/AUDIT.md points here too): area,
+t_theta, diverged, unstable, best lr + tie-break, open bracket, "survives tuning", "N x", the seed bootstrap and the Burst
+re-run rule. `pt999_summary.py` keeps its own area / t90 on purpose (double path); its output is byte-identical
+(checked on pt999 + ptsize999, frozen copies and live).
+Changes against rules 1-6 above (the read-out's own audit, same day, before any result, split them into what the code
+applies and what waits for the user; the code applies every rule as pre-registered):
+- Rule 2 ("survives tuning"), as pre-registered: seeds 0-3 (mean > 0, >= 3/4 wins, paired t p < .05) and the confirm
+  seeds 4-7 when both cells have them; without them a gap >= 10 prints 'SURVIVES tuning', a gap < 10 'survival pending'
+  with the EXTRA trigger. **PROPOSED, pending the user's sign-off** (printed next to the verdict as '[PROPOSED shared
+  rule ...]'): the ptlr reading, where a paper claim needs the confirm seeds 4-7 whatever the gap ('survives
+  (unconfirmed)'); with it, a gap >= 10 would need conditional cells that rule 2 does not trigger.
+- Rule 3 (headline): each arm's lr = the lowest median t90 over its grid, censored runs at the budget (ties -> the higher
+  mean area, then the lower lr); the area-best lr is printed next to it (amendment 2's open item). "N x" = median t90
+  none / median t90 win-ctx; a run that never reaches 0.9 counts as +inf; a median is censored when >= (n + 1) // 2 runs
+  are (4 seeds: 2): '>=' when the none median is censored, no ratio when the win-ctx median is (as pre-registered) or
+  both are. **PROPOSED, pending the user's sign-off** (printed as '[PROPOSED shared rule ...]'): '<=' instead of no
+  ratio when only the win-ctx median is censored (the ratio is then an upper bound). With every censored run at the
+  budget this median equals the Kaplan-Meier median (midpoint convention) whenever it is not censored; the code asserts
+  it on every call. The 90% CI (10000 paired seed bootstraps, default_rng(0)) is printed with 'n=4: indicative only'
+  and the shares of resamples with a censored median.
+- Rule 5: t90 is also printed without b11 (5-bucket mean): a t90_5 column and a descriptive headline line. The table's
+  t90* columns are pt999_summary's convention (median over the seeds that reach 0.9, k/4), labelled as such: not the
+  headline's median t90 (censored runs at the budget).
+- Rule 6 enforced: a counted run with a missing / failed check.json, a step-0 lm more than 1e-3 off its block-seed median
+  (or the same-seed Torch value), or no valid full-val offline_lm entry (|orig_minus_logged| < 0.002 unless diverged)
+  makes every verdict using its cell print 'WITHHELD: <reason>' (best lr of its arm, best-vs-best, headline, control);
+  the cell's numbers are still printed. A diverged run (first non-finite lm / val_loss / geo / grad_prior) stays data.
+- A results dir of a pt2 block that the generator does not make (a re-run not yet in EXTRA) is printed as IGNORED.
+- A best-vs-best verdict whose none or prior arm has an open bracket (rule 1) also prints 'NOT FINAL' (the conditional
+  cell beyond the edge decides); added by the read-out's audit, the verdict itself is unchanged (base test: pt2s190).
+Tests on fake results (scratch `readout/fake_pt2main.py`: all 88 tasks from real Torch run JSONs, pt999 2pct-none /
+ptsize999 190m-2pct-none seeds, held-out curves replaced by designed piecewise-linear curves; designed -> printed):
+- base: pt2b none best 2e-3 by the offline tie-break over 4e-3 (0.7 points higher), win-ctx 2e-3, +56.5 -> 'SURVIVES
+  tuning (gap >= 10)' with the proposed 'survives (unconfirmed)' next to it; pt2long area-best none 1e-3, t90-best 2e-3
+  (medians 1200 / 493 / 444M), win-ctx 1e-3; headline 3.34x (designed 3.345; the old read-out's area-best lrs gave
+  3.72x = designed 493 / 132.66), without b11 3.27x (3.270); control +19.9 4/4; win-ctx - none +8.4 -> 'survival
+  pending' + EXTRA note; win-text +1.1 3/4 p .11 -> does not survive; pt2s190 none open bracket at the upper edge,
+  win-ctx 6e-4 by the tie-break, win-text 2/4 -> does not survive. Diff against the previous read-out: only the
+  intended lines (header, t90_5 column, headline lrs / bound marks / CI text, the PROPOSED brackets).
+- cens (none censored in 2 of 4 at every lr): '>=6.23x' (designed 826.2 / 132.66 = 6.228), without b11 '>=6.09x';
+  censw (win-ctx censored in 2 of 4): 'no ratio' as pre-registered, with the proposed '<=0.66x' (0.663) next to it;
+  censboth: 'no ratio'.
+- lm0torch (every pt2b cell of seed 1 starts +0.005 off, so the block-seed median moves along): only the same-seed Torch
+  check catches it -> 7 INTEGRITY lines, pt2b best lrs and best-vs-best WITHHELD, pt2long / pt2s190 unchanged. A
+  results dir 362-pt2b-lr2e-3-none-s0 outside EXTRA -> 'IGNORED' note (was silent).
+- withheld (a failed check in pt2b none@4e-3 s2, step-0 lm +0.01 in pt2long win-ctx@5e-4 s2, no offline entry in
+  pt2s190 win-text s1): best lr pt2b none, pt2long win-ctx, pt2s190 win-text and every verdict using them WITHHELD with
+  the reason; the control and the other arms unchanged. The old read-out printed all verdicts (a NOTE / WARNING only).
+- extra (tools copy with EXTRA = confirm seeds 4-7 of pt2b none@2e-3 / win-ctx@2e-3 and a re-run of an unfinished
+  task; test-only DRY placeholders): the re-run counts (area 5.0 = design), confirm +56.6 4/4 -> 'SURVIVES tuning
+  (confirmed on seeds 4-7)'.
