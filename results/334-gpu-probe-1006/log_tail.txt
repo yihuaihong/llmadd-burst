@@ -1,0 +1,9 @@
+## task 334-gpu-probe-1006  job 7705  host b-19-17  2026-10-16T22:08:16Z
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+## gpu probe on account ds_ga_1006_001-2026fa  job 7705  b-19-17  2026-10-16T22:08:16Z
+SLURM_JOB_ACCOUNT=ds_ga_1006_001-2026fa partition=c12m85-a100-1
+name, memory.total [MiB], driver_version
+NVIDIA A100-SXM4-40GB, 40960 MiB, 610.43.02
+torch 2.10.0+cu128 cuda 12.8 device NVIDIA A100-SXM4-40GB bf16 matmul 16 TFLOP/s
+## rc=0  2026-10-16T22:08:33Z
