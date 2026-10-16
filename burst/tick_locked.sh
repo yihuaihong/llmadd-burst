@@ -24,6 +24,8 @@ done
 echo "$(hostname -s) $$ ${SLURM_JOB_ID:-manual} $(date -u +%FT%TZ)" > "$LOCK/owner"
 trap 'rm -rf "$LOCK"' EXIT
 cd "$REPO" || exit 0
+# the repo was renamed llmadd-burst -> manifolds (2026-10-11); the redirect works, but say the new name
+u=$(git remote get-url origin 2>/dev/null); [ "${u/llmadd-burst/}" = "$u" ] || git remote set-url origin "${u/llmadd-burst/manifolds}"
 timeout 120 git fetch -q origin 2>/dev/null && git reset -q --hard origin/main 2>/dev/null
 # SENTINEL=off in burst/config.env: a running sentinel chain retires itself (root cancels idle jobs after
 # ~38 min anyway, and a 1-CPU sentinel holds a whole exclusive n2c48m24 node of the course allotment).

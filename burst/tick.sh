@@ -18,6 +18,17 @@ set -a; . burst/config.env; set +a
 log() { echo "[$(date -u +%FT%TZ)] $*" >> logs/tick.log; }
 hdr() { sed -n "s/^# $2: *//p" "$1" | head -1; }
 in_queue() { squeue -h -j "$1" 2>/dev/null | grep -q .; }
+# guard: one tick after a task's job ends, however it ends. A node that never boots (2026-10-16: 331 CANCELLED+ after 12 min
+# in CONFIGURING, no slurm.out) or an outside kill skips the task's own final tick, and with SENTINEL=off nothing else
+# would tick until a human does. A 1-CPU job that waits on the dependency; every in-flight job gets one (also jobs
+# submitted before guards existed), never two.
+ensure_guard() {
+  squeue -h -n "llmadd_guard_$1" 2>/dev/null | grep -q . && return 0
+  sbatch_first "${GUARD_PARTITION:-$CPU_PARTITION}" --parsable --account="$ACCOUNT" --cpus-per-task=1 --time=00:15:00 \
+      --job-name="llmadd_guard_$1" --dependency="afterany:$2" --kill-on-invalid-dep=no \
+      --output="$RUNS/$1/guard_%j.out" --wrap "sleep 20; TICK_WAIT=300 bash $ROOT/llmadd/burst/tick_locked.sh" >/dev/null 2>&1 \
+    || log "guard tick for $1 not submitted"
+}
 changed=0
 
 # 0. cancellations requested through git: one task name per line in burst/cancel.list.
@@ -45,6 +56,7 @@ for jf in "$STATE"/*.job; do
     if squeue -h -j "$jid" -o "%r" 2>/dev/null | grep -qi 'held' && [ ! -e "$STATE/$t.cancel_sent" ]; then
       scancel "$jid" 2>/dev/null && log "$t ($jid) held on a bad node: cancelled for retry"; changed=1
     fi
+    ensure_guard "$t" "$jid"
     continue
   else
     # squeue can fail transiently: ask sacct; a job it still reports as active is not finished, and when sacct does not
@@ -202,6 +214,7 @@ if [ "${ENABLED:-0}" = 1 ]; then
     if [[ "$out" =~ ^[0-9]+ ]]; then
       echo "${out%%;*} $kind" > "$STATE/$t.job"; echo "$acct" > "$STATE/$t.acct"; rm -f "$STATE/$t.err"
       log "submitted $t as ${out%%;*} ($kind on $part, $tl, account $acct)"; changed=1
+      ensure_guard "$t" "${out%%;*}"
       [ "$kind" = gpu ] && ngpu=$((ngpu + 1))
       [ "$kind" = gpu ] && [ -n "${ACC_USED[$acct]+x}" ] && ACC_USED[$acct]=$(( ACC_USED[$acct] + need ))
     else
