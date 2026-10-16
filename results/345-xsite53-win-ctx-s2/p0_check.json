@@ -1,0 +1,72 @@
+{
+ "p0_pass": true,
+ "checks": [
+  {
+   "check": "code_sha a3bce3ab63c1",
+   "ok": true,
+   "value": "a3bce3ab63c1"
+  },
+  {
+   "check": "finished: last eval at step 18309 of 18310",
+   "ok": true,
+   "value": [
+    18309,
+    18310
+   ]
+  },
+  {
+   "check": "step-0 lm within 1e-3 of Torch",
+   "ok": true,
+   "value": 0.0
+  },
+  {
+   "check": "step-0 val_loss within 2e-3 of Torch",
+   "ok": true,
+   "value": -6.794929504394531e-06
+  },
+  {
+   "check": "prior_events == [[916, 1], [7324, 0]]",
+   "ok": true,
+   "value": [
+    [
+     916,
+     1
+    ],
+    [
+     7324,
+     0
+    ]
+   ]
+  },
+  {
+   "check": "geo > 0 at every eval with the prior on",
+   "ok": true,
+   "value": 26
+  },
+  {
+   "check": "offline_lm on the full val, |orig_minus_logged| < 0.002",
+   "ok": true,
+   "value": 1.767675894548404e-08
+  }
+ ],
+ "info": {
+  "seed": 2,
+  "arm": "W",
+  "tag": "_x53-7pct-win-ctx",
+  "area": 89.25,
+  "b33_area": 81.11,
+  "torch_area": 89.14,
+  "area_minus_torch": 0.11,
+  "final_val_bpb": 1.2209910272873663,
+  "bpb_full": 1.223360345800937,
+  "cka_ops_helix3": 0.9557291269302368,
+  "prior_used_frac": 0.3499726925177499,
+  "sec_per_step_median": 0.14224149894714355,
+  "projected_run_h": 0.7234560682561663,
+  "gpu_util_median": 97.0,
+  "gpu_mem_max_MiB": 32270,
+  "gpu_samples": 46,
+  "pinned_calls": 3,
+  "evals": 75
+ }
+}

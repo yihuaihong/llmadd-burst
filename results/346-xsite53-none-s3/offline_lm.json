@@ -1,0 +1,16 @@
+{
+ "/scratch/yh6210/llmadd_runs/346-xsite53-none-s3/out/x53-7pct-none/run_whole_none_seed3_x53-7pct-none.json": {
+  "run": "/scratch/yh6210/llmadd_runs/346-xsite53-none-s3/out/x53-7pct-none/run_whole_none_seed3_x53-7pct-none.json",
+  "model": "/scratch/yh6210/llmadd_runs/346-xsite53-none-s3/out/x53-7pct-none/model_whole_none_seed3_x53-7pct-none.pt",
+  "tag": "_x53-7pct-none",
+  "seed": 3,
+  "code_sha": "a3bce3ab63c1",
+  "bpb_full": 1.2113848173818753,
+  "nats_per_token_full": 4.043847013240097,
+  "tokens_full": 1999872,
+  "bpb_orig_windows": 1.209410522939197,
+  "bpb_logged_final": 1.2094105052624378,
+  "orig_minus_logged": 1.7676759167528644e-08,
+  "max_windows": 0
+ }
+}
