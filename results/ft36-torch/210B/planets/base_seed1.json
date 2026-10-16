@@ -1,0 +1,41 @@
+{
+ "domain": "planets",
+ "primary": "line",
+ "raw_gram": false,
+ "split_seed": 1,
+ "n_train": 12,
+ "n_test": 6,
+ "n_test_answer_trained": 6,
+ "chance": 0.125,
+ "layers": [
+  4,
+  8,
+  12,
+  16
+ ],
+ "model": "/scratch/yh6210/llmadd_torch/models/OLMo-2-1124-7B/stage1-step50000-tokens210B",
+ "test": 0.0,
+ "test_hits": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "train": 0.4166666666666667,
+ "geometry": {
+  "ctx": {
+   "L4": 0.511958122253418,
+   "L8": 0.5501011610031128,
+   "L12": 0.5473070740699768,
+   "L16": 0.5345439910888672
+  },
+  "probe": {
+   "L4": 0.4932630658149719,
+   "L8": 0.5232866406440735,
+   "L12": 0.5171853303909302,
+   "L16": 0.47452959418296814
+  }
+ }
+}

@@ -1,0 +1,421 @@
+== integrity (72 cells, 72 complete; split reconstruction rebuilt from /scratch/yh6210/llmadd_torch/runs/ft36/code/tools: 108 domain x seed splits; n_train / n_test / n_test_answer_trained / chance all equal to the JSONs)
+  no problems: every cell has 4 files x 3 seeds and nothing else, fields as launched (steps 280, lam 20, geo_bs 64, layers 4/8/12/16), prior_skipped == 0 everywhere, test_hits consistent, info fields equal over the 4 files of a seed, base probe CKA identical across seeds
+  base hits on questions held out in 2 seeds: 40848 shared question-pairs, 94 differ in 210B/animal_size 1, 210B/animals 4, 210B/cities 2, 210B/colours 6, 210B/countries 8, 210B/kinship 2, 210B/landmarks 4, 210B/languages 3, 210B/number_words 1, 210B/ordinals 1, 210B/people 3, 210B/scalar_adj 1, 210B/stars 5, 210B/units 1, 210B/us_cities 6, 42B/animals 6, 42B/cities 7, 42B/colours 5, 42B/kinship 2, 42B/landmarks 9, 42B/languages 2, 42B/people 4, 42B/stars 9, 42B/us_cities 1, 42B/zodiac 1
+
+== 42B: test accuracy x100 (mean | seeds 0/1/2), n_test per seed, chance; train x100 base/none/prior/shuf; band of none
+  domain          family       task target     n_test        ans_tr chance  base |  none (seeds)           | prior (seeds)           |  shuf (seeds)           | train b/n/p/s       band
+  number_words    numeric heli off  helix      41/43/45       96.9%    3.7   5.4 |  27.9  29.3/ 25.6/ 28.9 |  21.0  22.0/ 25.6/ 15.6 |   7.7   2.4/ 11.6/  8.9 |   5/100/100/100  middle
+  numbers         numeric heli off  helix      956/969/955    99.5%    1.1   3.3 |  22.0  21.4/ 21.6/ 23.0 |  63.6  61.4/ 63.0/ 66.4 |  14.3  14.4/ 13.7/ 14.8 |   3/ 78/ 90/ 51  middle
+  ordinals        numeric heli off  helix      33/33/33      100.0%    5.0   4.0 |  14.1   6.1/ 21.2/ 15.2 |  16.2  15.2/ 18.2/ 15.2 |   1.0   0.0/  3.0/  0.0 |   3/100/100/100  middle
+  years           numeric heli off  helix      715/716/715    99.7%    1.0   8.0 |  91.9  91.3/ 93.0/ 91.3 |  77.9  84.2/ 74.6/ 74.8 |  63.5  64.2/ 58.2/ 68.0 |   9/ 98/ 92/ 87  middle
+  colours         cyclic       cmp  hue        1240/1202/1212 100.0%   50.0  52.8 |  94.3  94.3/ 93.9/ 94.6 |  98.2  96.6/ 98.4/ 99.6 |  64.7  63.2/ 62.2/ 68.6 |  52/ 98/ 99/ 78  middle
+  compass         cyclic       cmp  circle     108/112/120   100.0%   50.0  62.4 |  94.8  95.4/ 97.3/ 91.7 |  98.0  98.1/ 99.1/ 96.7 |  77.8  84.3/ 76.8/ 72.5 |  59/100/100/100  middle
+  chinese_zodiac  cyclic       off  circle     110/112/108   100.0%    8.3   8.8 |   0.0   0.0/  0.0/  0.0 |   0.6   0.0/  0.9/  0.9 |   0.0   0.0/  0.0/  0.0 |   9/100/ 93/ 93  floor
+  days            cyclic       off  circle     34/32/34      100.0%   14.3  18.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |  11/100/100/100  floor
+  hours           cyclic       off  circle     446/442/438   100.0%    4.2   4.4 |  41.2  40.8/ 43.4/ 39.5 |  39.2  43.3/ 36.0/ 38.4 |  32.7  34.8/ 35.1/ 28.3 |   5/ 99/ 98/ 99  middle
+  keys            cyclic       off  chromatic  110/112/108   100.0%    8.3   6.1 |   0.3   0.9/  0.0/  0.0 |   0.9   0.9/  0.0/  1.9 |   0.0   0.0/  0.0/  0.0 |   9/100/ 93/ 90  floor
+  months          cyclic       off  circle     110/112/108   100.0%    8.3   6.4 |   5.2   6.4/  4.5/  4.6 |   6.4   3.6/  5.4/ 10.2 |   0.0   0.0/  0.0/  0.0 |  10/100/ 99/100  floor
+  pitch           cyclic       off  chromatic  110/112/108   100.0%    8.3   5.1 |   1.8   2.7/  0.9/  1.9 |   2.1   0.0/  2.7/  3.7 |   0.6   0.0/  1.8/  0.0 |   9/100/ 96/ 94  floor
+  zodiac          cyclic       off  circle     110/112/108   100.0%    8.3   6.0 |   0.0   0.0/  0.0/  0.0 |   1.2   0.9/  0.9/  1.9 |   0.0   0.0/  0.0/  0.0 |   8/ 98/ 97/ 99  floor
+  life_stages     ordinal-line cmp  line       12/12/12       72.2%   50.0  27.8 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 |  31/100/100/100  ceiling
+  people          ordinal-line cmp  rank       1200/1200/1200  99.7%   50.0  47.6 |  96.5  97.6/ 96.4/ 95.5 |  95.8  96.8/ 96.0/ 94.6 |  92.4  92.7/ 92.9/ 91.7 |  45/100/ 99/ 99  ceiling
+  prefixes        ordinal-line cmp  line       42/42/42       93.7%   50.0  50.0 |  90.5  90.5/ 92.9/ 88.1 |  90.5  92.9/ 88.1/ 90.5 |  83.3  81.0/ 92.9/ 76.2 |  55/100/100/100  middle
+  presidents      ordinal-line cmp  line       394/394/394    98.5%   50.0  55.9 |  99.4  99.0/ 99.5/ 99.7 |  99.9  99.7/100.0/100.0 |  95.1  93.4/ 95.9/ 95.9 |  55/100/100/100  ceiling
+  ranks           ordinal-line cmp  line       16/16/16      100.0%   50.0  52.1 |  93.8 100.0/ 93.8/ 87.5 | 100.0 100.0/100.0/100.0 |  87.5 100.0/ 87.5/ 75.0 |  45/100/100/100  middle
+  elements        ordinal-line off  line       36/38/41       86.6%    2.8   5.1 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   8/100/100/100  floor
+  geo_periods     ordinal-line off  line       12/11/11       76.5%    8.3  32.3 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |  29/100/100/100  floor
+  greek           ordinal-line off  line       33/32/33      100.0%    4.2   6.2 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   8/100/100/100  floor
+  letters         ordinal-line off  line       46/46/45      100.0%    3.8   2.9 |  17.5  17.4/ 19.6/ 15.6 |   3.7   0.0/  6.5/  4.4 |   3.7   6.5/  0.0/  4.4 |   4/100/100/100  middle
+  planets         ordinal-line off  line       7/6/7          90.5%   12.5  15.1 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |  18/100/100/100  floor
+  cities          spatial sphe cmp  sphere     1222/1204/1196 100.0%   50.0  47.3 |  91.7  89.9/ 93.4/ 91.8 |  95.4  95.7/ 94.4/ 96.3 |  72.1  70.2/ 73.7/ 72.4 |  49/100/ 98/ 91  middle
+  countries       spatial sphe cmp  sphere     1224/1172/1206 100.0%   50.0  51.0 |  95.5  95.5/ 94.1/ 96.9 |  97.9  96.4/ 98.5/ 98.8 |  73.9  74.6/ 74.7/ 72.2 |  51/100/ 99/ 90  ceiling
+  emotions        spatial sphe cmp  plane      618/618/618   100.0%   50.0  83.4 |  99.9  99.8/ 99.8/100.0 | 100.0 100.0/100.0/100.0 |  99.8 100.0/ 99.8/ 99.7 |  86/100/100/100  ceiling
+  landmarks       spatial sphe cmp  sphere     1208/1202/1192 100.0%   50.0  50.9 |  74.8  72.7/ 78.1/ 73.7 |  86.7  86.6/ 87.8/ 85.7 |  64.8  67.1/ 65.6/ 61.6 |  50/ 97/ 98/ 88  middle
+  stars           spatial sphe cmp  sphere     1190/1202/1210 100.0%   50.0  49.7 |  52.1  52.9/ 52.2/ 51.2 |  70.8  70.2/ 70.9/ 71.5 |  51.9  51.8/ 51.7/ 52.1 |  49/ 84/ 89/ 75  floor
+  us_cities       spatial sphe cmp  plane      1184/1208/1214 100.0%   50.0  56.7 |  95.9  95.7/ 96.4/ 95.5 |  96.1  96.3/ 95.7/ 96.2 |  73.8  72.7/ 74.3/ 74.5 |  56/100/ 99/ 89  ceiling
+  animals         tree         cmp  tree       1210/1196/1180  99.7%   50.0  53.7 |  98.4  98.2/ 98.2/ 98.9 |  99.2  98.9/ 99.6/ 99.1 |  83.1  85.9/ 81.4/ 82.1 |  52/100/100/ 94  ceiling
+  languages       tree         cmp  tree       1186/1222/1212  99.4%   50.0  46.4 |  95.1  95.5/ 94.9/ 94.8 |  99.4  98.9/ 99.5/ 99.8 |  84.4  84.5/ 84.0/ 84.8 |  45/100/100/ 92  ceiling
+  animal_size     comparison-s cmp  log        1200/1200/1200 100.0%   50.0  45.6 |  99.8  99.8/ 99.8/ 99.8 |  99.8 100.0/ 99.2/100.0 |  97.6  98.0/ 96.5/ 98.2 |  44/100/100/ 99  ceiling
+  country_size    comparison-s cmp  log        672/672/672   100.0%   50.0  54.2 |  99.9  99.9/100.0/ 99.9 | 100.0 100.0/100.0/ 99.9 |  98.8  99.6/ 99.0/ 97.9 |  51/100/100/100  ceiling
+  kinship         comparison-s cmp  generation 148/148/148    98.2%   50.0  58.8 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 |  97.5  98.6/ 93.9/100.0 |  56/100/100/100  ceiling
+  scalar_adj      comparison-s cmp  within     44/44/44       84.8%   50.0  56.1 |  91.7  88.6/ 90.9/ 95.5 |  89.4  90.9/ 86.4/ 90.9 |  92.4  86.4/ 95.5/ 95.5 |  50/100/100/100  middle
+  units           comparison-s cmp  within     66/66/66       93.9%   50.0  42.4 |  97.5  95.5/ 98.5/ 98.5 |  98.0 100.0/ 97.0/ 97.0 |  89.9  86.4/ 92.4/ 90.9 |  40/100/100/100  ceiling
+
+== 42B: paired comparisons. d = mean difference (points), w = seed wins/losses, t = paired t over seeds (df 2); item = discordant b:c per seed, exact stratified McNemar p, Holm-72 p (+/- = Holm p < .05); clus = split-key-cluster sign-flip p, R = robust (see docstring)
+  domain           P-N d    w     t  item b:c (s0 s1 s2)             p     holm     clus |  P-S d    w        p     holm |  S-N d    w        p     holm
+  number_words      -6.9 0/2 0.216  2:5 4:4 1:7                 0.093        1     0.14 |  +13.4 3/0  0.00049    0.017+|  -20.3 0/3  8.7e-07  3.6e-05-
+  numbers          +41.6 3/0 0.001  432:50 448:47 452:38       1e-247 7.3e-246+   5e-05R|  +49.3 3/0        0        0+|   -7.7 0/3  3.8e-20    2e-18-
+  ordinals          +2.0 1/1 0.635  4:1 2:3 1:1                  0.77        1     0.81 |  +15.2 3/0  6.1e-05   0.0022+|  -13.1 0/3  0.00024   0.0085-
+  years            -14.0 0/3 0.057  27:78 17:149 21:139       5.7e-52  3.8e-50-   5e-05R|  +14.4 3/0  9.6e-35  5.1e-33+|  -28.4 0/3 1.3e-143 8.3e-142-
+  colours           +4.0 3/0 0.041  61:32 64:10 62:1          1.3e-22  8.7e-21+   5e-05R|  +33.5 3/0        0        0+|  -29.6 0/3   3e-251 2.2e-249-
+  compass           +3.2 3/0 0.079  4:1 3:1 9:3                 0.027        1     0.21 |  +20.1 3/0  1.9e-17  9.5e-16+|  -16.9 0/3  9.7e-12  4.6e-10-
+  chinese_zodiac    +0.6 2/0 0.184  0:0 1:0 1:0                   0.5        1      0.5 |   +0.6 2/0      0.5        1 |   +0.0 0/0        1        1 
+  days              +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  hours             -2.0 1/2 0.554  42:31 27:60 41:46           0.098        1     0.11 |   +6.5 3/0  9.3e-07  3.7e-05+|   -8.5 0/3  4.1e-11  1.8e-09-
+  keys              +0.6 1/0 0.423  1:1 0:0 2:0                  0.62        1     0.62 |   +0.9 2/0     0.25        1 |   -0.3 0/1        1        1 
+  months            +1.2 2/1 0.656  1:4 5:4 11:5                 0.58        1     0.67 |   +6.4 3/0  9.5e-07  3.7e-05+|   -5.2 0/3  1.5e-05  0.00056-
+  pitch             +0.3 2/1 0.860  0:3 3:1 4:2                     1        1        1 |   +1.5 2/0     0.18        1 |   -1.2 1/2     0.29        1 
+  zodiac            +1.2 3/0 0.062  1:0 1:0 2:0                  0.12        1     0.12 |   +1.2 3/0     0.12        1 |   +0.0 0/0        1        1 
+  life_stages       +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  people            -0.7 0/3 0.042  19:28 25:30 19:30            0.05        1     0.12 |   +3.4 3/0    2e-14  9.3e-13+|   -4.1 0/3  5.2e-22  2.8e-20-
+  prefixes          +0.0 2/1 1.000  1:0 0:2 1:0                     1        1        1 |   +7.1 2/1    0.064        1 |   -7.1 0/2    0.064        1 
+  presidents        +0.5 3/0 0.074  3:0 2:0 1:0                 0.031        1    0.062 |   +4.8 3/0  2.1e-16    1e-14+|   -4.3 0/3  1.6e-11  7.5e-10-
+  ranks             +6.2 2/0 0.225  0:0 1:0 2:0                  0.25        1        1 |  +12.5 2/0    0.031     0.88 |   -6.2 0/2     0.38        1 
+  elements          +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  geo_periods       +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  greek             +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  letters          -13.8 0/3 0.018  0:8 0:6 0:5               3.8e-06  0.00023- 0.00049R|   +0.0 1/1        1        1 |  -13.8 0/3  3.8e-06  0.00014-
+  planets           +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  cities            +3.7 3/0 0.118  100:30 58:46 75:21        4.7e-14    3e-12+   5e-05R|  +23.3 3/0 5.8e-193 3.8e-191+|  -19.6 0/3 1.5e-152   1e-150-
+  countries         +2.4 3/0 0.145  44:33 57:6 33:10          2.5e-10  1.6e-08+   5e-05R|  +24.1 3/0 1.9e-231 1.3e-229+|  -21.7 0/3 9.8e-178 6.8e-176-
+  emotions          +0.1 2/0 0.184  1:0 1:0 0:0                   0.5        1      0.5 |   +0.2 2/0     0.25        1 |   -0.1 1/1        1        1 
+  landmarks        +11.9 3/0 0.011  218:50 173:57 205:61      6.1e-57  4.1e-55+   5e-05R|  +21.9 3/0 5.8e-140 3.5e-138+|  -10.1 0/3  4.6e-40  2.6e-38-
+  stars            +18.7 3/0 0.002  282:76 312:88 330:85      1.4e-91  9.6e-90+   5e-05R|  +19.0 3/0  1.8e-96    1e-94+|   -0.2 1/2     0.79        1 
+  us_cities         +0.2 2/1 0.719  42:35 26:35 41:32            0.68        1     0.78 |  +22.3 3/0 4.6e-184 2.9e-182+|  -22.1 0/3 3.5e-195 2.4e-193-
+  animals           +0.8 3/0 0.156  17:8 21:5 12:10            0.0021     0.11    0.054 |  +16.1 3/0 4.6e-155 2.8e-153+|  -15.3 0/3 2.2e-133 1.4e-131-
+  languages         +4.3 3/0 0.013  53:13 56:0 61:0           4.7e-36  3.1e-34+   5e-05R|  +15.0 3/0   1e-156 6.4e-155+|  -10.7 0/3  1.1e-76  6.2e-75-
+  animal_size       -0.1 2/1 0.853  2:0 1:8 3:0                  0.79        1     0.91 |   +2.2 3/0  1.4e-19  7.3e-18+|   -2.2 0/3  8.3e-21  4.4e-19-
+  country_size      +0.0 1/0 0.423  1:0 0:0 1:1                     1        1        1 |   +1.1 3/0  2.4e-07  9.8e-06+|   -1.1 0/3    3e-06  0.00012-
+  kinship           +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +2.5 2/0  0.00098    0.032+|   -2.5 0/2  0.00098    0.033-
+  scalar_adj        -2.3 1/2 0.423  1:0 0:2 0:2                  0.38        1      0.5 |   -3.0 1/2     0.39        1 |   +0.8 1/1        1        1 
+  units             +0.5 1/2 0.826  3:0 1:2 1:2                     1        1        1 |   +8.1 3/0   0.0004    0.014+|   -7.6 0/3   0.0015    0.049-
+
+== 210B: test accuracy x100 (mean | seeds 0/1/2), n_test per seed, chance; train x100 base/none/prior/shuf; band of none
+  domain          family       task target     n_test        ans_tr chance  base |  none (seeds)           | prior (seeds)           |  shuf (seeds)           | train b/n/p/s       band
+  number_words    numeric heli off  helix      41/43/45       96.9%    3.7  38.8 | 100.0 100.0/100.0/100.0 |  81.5  85.4/ 83.7/ 75.6 |  70.8  82.9/ 62.8/ 66.7 |  31/100/100/100  ceiling
+  numbers         numeric heli off  helix      956/969/955    99.5%    1.1  76.0 |  99.9  99.8/100.0/100.0 |  98.8  96.9/ 99.9/ 99.8 |  90.2  86.7/ 94.7/ 89.1 |  78/100/100/ 96  ceiling
+  ordinals        numeric heli off  helix      33/33/33      100.0%    5.0  17.2 |  94.9  93.9/ 90.9/100.0 |  84.8  87.9/ 78.8/ 87.9 |  58.6  69.7/ 36.4/ 69.7 |  19/100/100/100  middle
+  years           numeric heli off  helix      715/716/715    99.7%    1.0  41.2 |  95.1  96.1/ 92.9/ 96.2 |  92.6  94.0/ 91.6/ 92.3 |  86.8  91.3/ 89.4/ 79.7 |  41/ 99/ 96/ 94  ceiling
+  colours         cyclic       cmp  hue        1240/1202/1212 100.0%   50.0  53.6 |  98.1  98.0/ 98.4/ 97.9 |  98.9  97.2/ 99.7/ 99.8 |  71.8  76.5/ 67.9/ 71.0 |  57/100/100/ 81  ceiling
+  compass         cyclic       cmp  circle     108/112/120   100.0%   50.0  57.4 |  97.7  99.1/ 99.1/ 95.0 |  97.1  99.1/ 96.4/ 95.8 |  78.7  83.3/ 80.4/ 72.5 |  59/100/100/100  ceiling
+  chinese_zodiac  cyclic       off  circle     110/112/108   100.0%    8.3   9.4 |   0.0   0.0/  0.0/  0.0 |   0.6   1.8/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   9/100/ 98/ 85  floor
+  days            cyclic       off  circle     34/32/34      100.0%   14.3  15.1 |   3.0   5.9/  3.1/  0.0 |   2.0   2.9/  3.1/  0.0 |   0.0   0.0/  0.0/  0.0 |  14/100/100/100  floor
+  hours           cyclic       off  circle     446/442/438   100.0%    4.2  14.8 |  58.9  53.1/ 59.3/ 64.2 |  63.0  60.3/ 64.9/ 63.7 |  56.2  55.4/ 60.0/ 53.2 |  13/ 99/ 98/100  middle
+  keys            cyclic       off  chromatic  110/112/108   100.0%    8.3   8.8 |   1.2   1.8/  0.9/  0.9 |   0.9   1.8/  0.0/  0.9 |   0.0   0.0/  0.0/  0.0 |   9/100/ 97/ 92  floor
+  months          cyclic       off  circle     110/112/108   100.0%    8.3   8.2 |  39.7  40.0/ 35.7/ 43.5 |  61.4  59.1/ 49.1/ 75.9 |  11.6   9.1/  9.8/ 15.7 |   9/100/100/100  middle
+  pitch           cyclic       off  chromatic  110/112/108   100.0%    8.3  10.9 |   3.3   2.7/  5.4/  1.9 |   2.7   2.7/  1.8/  3.7 |   0.3   0.9/  0.0/  0.0 |   6/100/ 94/ 95  floor
+  zodiac          cyclic       off  circle     110/112/108   100.0%    8.3   4.2 |   1.8   3.6/  0.9/  0.9 |   3.0   4.5/  2.7/  1.9 |   0.0   0.0/  0.0/  0.0 |   4/ 99/ 95/ 89  floor
+  life_stages     ordinal-line cmp  line       12/12/12       72.2%   50.0  16.7 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 |  17/100/100/100  ceiling
+  people          ordinal-line cmp  rank       1200/1200/1200  99.7%   50.0  49.9 |  98.0  98.2/ 97.2/ 98.4 |  98.3  98.5/ 98.0/ 98.3 |  94.3  95.0/ 92.7/ 95.3 |  47/100/100/ 99  ceiling
+  prefixes        ordinal-line cmp  line       42/42/42       93.7%   50.0  47.6 |  92.9  92.9/ 92.9/ 92.9 |  94.4  95.2/ 95.2/ 92.9 |  87.3  85.7/100.0/ 76.2 |  43/100/100/100  middle
+  presidents      ordinal-line cmp  line       394/394/394    98.5%   50.0  51.5 |  99.7  99.7/100.0/ 99.5 |  99.6  99.7/ 99.5/ 99.5 |  97.0  95.7/ 99.5/ 95.7 |  51/100/100/100  ceiling
+  ranks           ordinal-line cmp  line       16/16/16      100.0%   50.0  50.0 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 |  91.7 100.0/100.0/ 75.0 |  63/100/100/100  ceiling
+  elements        ordinal-line off  line       36/38/41       86.6%    2.8   1.7 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.9   2.8/  0.0/  0.0 |   5/100/100/100  floor
+  geo_periods     ordinal-line off  line       12/11/11       76.5%    8.3  29.5 |  11.9   8.3/ 18.2/  9.1 |   3.0   0.0/  9.1/  0.0 |   0.0   0.0/  0.0/  0.0 |  41/100/100/100  floor
+  greek           ordinal-line off  line       33/32/33      100.0%    4.2   5.1 |   1.0   3.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   0.0   0.0/  0.0/  0.0 |   4/100/100/100  floor
+  letters         ordinal-line off  line       46/46/45      100.0%    3.8  15.3 |  16.8  15.2/ 19.6/ 15.6 |   6.6   6.5/  6.5/  6.7 |   5.8   6.5/  6.5/  4.4 |  13/100/100/100  middle
+  planets         ordinal-line off  line       7/6/7          90.5%   12.5  19.0 |   0.0   0.0/  0.0/  0.0 |  15.1   0.0/ 16.7/ 28.6 |   0.0   0.0/  0.0/  0.0 |  32/100/100/100  floor
+  cities          spatial sphe cmp  sphere     1222/1204/1196 100.0%   50.0  51.2 |  94.9  95.4/ 94.7/ 94.6 |  96.6  96.6/ 98.1/ 95.2 |  73.7  75.3/ 74.6/ 71.2 |  52/100/ 99/ 89  middle
+  countries       spatial sphe cmp  sphere     1224/1172/1206 100.0%   50.0  49.0 |  97.0  96.7/ 97.3/ 97.0 |  98.5  99.0/ 98.0/ 98.6 |  79.9  78.8/ 82.7/ 78.4 |  47/100/ 99/ 92  ceiling
+  emotions        spatial sphe cmp  plane      618/618/618   100.0%   50.0  56.4 |  99.5  98.9/ 99.7/ 99.8 |  99.9 100.0/100.0/ 99.8 |  99.8  99.5/100.0/100.0 |  58/100/100/100  ceiling
+  landmarks       spatial sphe cmp  sphere     1208/1202/1192 100.0%   50.0  52.8 |  80.8  78.7/ 83.1/ 80.5 |  94.9  96.1/ 95.8/ 92.9 |  63.0  61.8/ 64.7/ 62.6 |  50/ 99/ 98/ 86  middle
+  stars           spatial sphe cmp  sphere     1190/1202/1210 100.0%   50.0  52.5 |  53.8  55.1/ 54.7/ 51.5 |  96.0  96.1/ 95.0/ 96.9 |  53.7  55.4/ 52.8/ 53.0 |  50/ 85/ 98/ 75  floor
+  us_cities       spatial sphe cmp  plane      1184/1208/1214 100.0%   50.0  54.0 |  97.5  97.3/ 97.3/ 98.0 |  97.5  97.6/ 97.5/ 97.2 |  86.7  86.1/ 87.7/ 86.4 |  55/100/ 99/ 97  ceiling
+  animals         tree         cmp  tree       1210/1196/1180  99.7%   50.0  57.3 |  98.6  98.5/ 98.7/ 98.6 |  99.5  99.2/ 99.9/ 99.3 |  88.6  90.3/ 92.8/ 82.6 |  57/100/100/ 96  ceiling
+  languages       tree         cmp  tree       1186/1222/1212  99.4%   50.0  51.1 |  97.9  99.0/ 97.6/ 97.1 |  97.0  99.7/ 99.6/ 91.6 |  85.2  85.4/ 83.1/ 87.0 |  54/100/ 98/ 93  ceiling
+  animal_size     comparison-s cmp  log        1200/1200/1200 100.0%   50.0  51.5 |  99.8 100.0/ 99.8/ 99.8 |  99.8  99.5/ 99.8/100.0 |  97.9  98.8/ 96.8/ 98.1 |  54/100/100/ 99  ceiling
+  country_size    comparison-s cmp  log        672/672/672   100.0%   50.0  71.4 | 100.0 100.0/100.0/100.0 | 100.0 100.0/100.0/100.0 |  98.7  98.2/ 99.3/ 98.5 |  72/100/100/100  ceiling
+  kinship         comparison-s cmp  generation 148/148/148    98.2%   50.0  50.7 |  99.8 100.0/100.0/ 99.3 | 100.0 100.0/100.0/100.0 |  97.7  98.0/ 95.3/100.0 |  48/100/100/100  ceiling
+  scalar_adj      comparison-s cmp  within     44/44/44       84.8%   50.0  44.7 |  92.4  93.2/ 90.9/ 93.2 |  96.2  90.9/100.0/ 97.7 |  94.7  93.2/ 95.5/ 95.5 |  43/100/100/100  middle
+  units           comparison-s cmp  within     66/66/66       93.9%   50.0  74.2 |  97.5  97.0/ 98.5/ 97.0 |  94.9 100.0/ 93.9/ 90.9 |  86.4  86.4/ 84.8/ 87.9 |  67/100/100/100  ceiling
+
+== 210B: paired comparisons. d = mean difference (points), w = seed wins/losses, t = paired t over seeds (df 2); item = discordant b:c per seed, exact stratified McNemar p, Holm-72 p (+/- = Holm p < .05); clus = split-key-cluster sign-flip p, R = robust (see docstring)
+  domain           P-N d    w     t  item b:c (s0 s1 s2)             p     holm     clus |  P-S d    w        p     holm |  S-N d    w        p     holm
+  number_words     -18.5 0/3 0.026  0:6 0:7 0:11              1.2e-07  7.2e-06-   5e-05R|  +10.8 3/0    0.024      0.7 |  -29.2 0/3  7.3e-12  3.5e-10-
+  numbers           -1.1 0/3 0.363  1:29 0:1 0:2              7.9e-09  4.8e-07-   5e-05 |   +8.7 3/0  3.9e-54  2.1e-52+|   -9.7 0/3  2.6e-81  1.5e-79-
+  ordinals         -10.1 0/3 0.038  0:2 1:5 0:4                0.0063     0.32    0.031 |  +26.3 3/0  2.4e-05   0.0009+|  -36.4 0/3  2.9e-11  1.3e-09-
+  years             -2.4 0/3 0.091  14:29 21:30 20:48         5.4e-05   0.0031-  0.0001R|   +5.8 3/0  1.7e-14  7.9e-13+|   -8.3 0/3  8.4e-30  4.7e-28-
+  colours           +0.8 2/1 0.440  23:33 18:3 25:2            0.0078     0.39     0.13 |  +27.1 3/0 1.6e-271 1.1e-269+|  -26.3 0/3 4.6e-247 3.3e-245-
+  compass           -0.6 1/1 0.620  1:1 1:4 6:5                  0.81        1     0.84 |  +18.4 3/0  9.7e-14  4.4e-12+|  -19.0 0/3  2.4e-16  1.2e-14-
+  chinese_zodiac    +0.6 1/0 0.423  2:0 0:0 0:0                   0.5        1        1 |   +0.6 1/0      0.5        1 |   +0.0 0/0        1        1 
+  days              -1.0 0/1 0.423  0:1 1:1 0:0                     1        1        1 |   +2.0 2/0      0.5        1 |   -3.0 0/2     0.25        1 
+  hours             +4.1 2/1 0.219  55:23 61:36 40:42         0.00073    0.038+  0.0017 |   +6.8 3/0  1.9e-07  7.9e-06+|   -2.7 2/1    0.046        1 
+  keys              -0.3 0/1 0.423  2:2 0:1 1:1                     1        1        1 |   +0.9 2/0     0.25        1 |   -1.2 0/3     0.12        1 
+  months           +21.6 3/0 0.062  27:6 24:9 39:4            3.1e-12    2e-10+   5e-05R|  +49.8 3/0  1.2e-44  6.5e-43+|  -28.2 0/3  1.3e-20  6.9e-19-
+  pitch             -0.6 1/1 0.753  2:2 2:6 4:2                  0.81        1     0.83 |   +2.4 3/0    0.021     0.64 |   -3.0 0/3   0.0063      0.2 
+  zodiac            +1.2 3/0 0.053  1:0 3:1 2:1                  0.29        1     0.41 |   +3.0 3/0    0.002    0.062 |   -1.8 0/3    0.031     0.94 
+  life_stages       +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   +0.0 0/0        1        1 
+  people            +0.3 2/1 0.334  17:14 22:13 16:17            0.31        1     0.44 |   +3.9 3/0  4.4e-30  2.3e-28+|   -3.6 0/3  4.4e-22  2.4e-20-
+  prefixes          +1.6 2/0 0.184  1:0 2:1 2:2                  0.73        1     0.62 |   +7.1 2/1    0.035     0.95 |   -5.6 1/2     0.12        1 
+  presidents        -0.2 0/1 0.423  1:1 0:2 2:2                  0.73        1     0.94 |   +2.6 2/0  7.9e-09  3.5e-07+|   -2.8 0/3  2.1e-09    9e-08-
+  ranks             +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +8.3 1/0     0.12        1 |   -8.3 0/1     0.12        1 
+  elements          +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   -0.9 0/1        1        1 |   +0.9 1/0        1        1 
+  geo_periods       -8.8 0/3 0.001  0:1 0:1 0:1                  0.25        1      0.5 |   +3.0 1/0        1        1 |  -11.9 0/3     0.12        1 
+  greek             -1.0 0/1 0.423  0:1 0:0 0:0                     1        1        1 |   +0.0 0/0        1        1 |   -1.0 0/1        1        1 
+  letters          -10.2 0/3 0.019  0:4 1:7 0:4               0.00052    0.028-  0.0044 |   +0.7 1/0        1        1 |  -11.0 0/3  6.1e-05   0.0022-
+  planets          +15.1 2/0 0.210  0:0 1:0 2:0                  0.25        1      0.5 |  +15.1 2/0     0.25        1 |   +0.0 0/0        1        1 
+  cities            +1.7 3/0 0.178  53:38 58:17 52:45         0.00012   0.0069+  0.0068 |  +23.0 3/0 1.7e-186 1.1e-184+|  -21.2 0/3 5.1e-173 3.5e-171-
+  countries         +1.5 3/0 0.082  38:10 29:21 33:14         5.7e-06  0.00033+  0.0017 |  +18.6 3/0   3e-172 1.9e-170+|  -17.1 0/3   2e-141 1.3e-139-
+  emotions          +0.5 2/0 0.286  7:0 2:0 1:1                 0.012     0.57    0.031 |   +0.1 1/1     0.62        1 |   +0.4 3/0    0.065        1 
+  landmarks        +14.1 3/0 0.013  237:27 183:31 190:43      1.5e-89    1e-87+   5e-05R|  +31.9 3/0 1.7e-262 1.1e-260+|  -17.8 0/3    7e-96  4.3e-94-
+  stars            +42.2 3/0 0.001  501:13 511:26 555:6             0        0+   5e-05R|  +42.3 3/0        0        0+|   -0.0 2/1        1        1 
+  us_cities         -0.1 2/1 0.852  30:26 26:23 16:26            0.87        1      0.9 |  +10.7 3/0  1.6e-77  8.9e-76+|  -10.8 0/3  4.2e-87  2.6e-85-
+  animals           +0.8 3/0 0.038  18:10 15:1 14:6           0.00023    0.012+   0.015 |  +10.9 3/0 2.2e-108 1.3e-106+|  -10.0 0/3  2.2e-86  1.3e-84-
+  languages         -0.9 2/1 0.726  12:3 28:4 33:100            0.014     0.66     0.15 |  +11.8 3/0    2e-70  1.1e-68+|  -12.7 0/3 3.3e-114 2.1e-112-
+  animal_size       -0.1 2/1 0.830  0:6 2:1 3:0                  0.77        1     0.75 |   +1.9 3/0  2.8e-16  1.3e-14+|   -1.9 0/3  1.9e-17  9.5e-16-
+  country_size      +0.0 0/0   nan  0:0 0:0 0:0                     1        1        1 |   +1.3 3/0  1.5e-08  6.4e-07+|   -1.3 0/3  1.5e-08  6.3e-07-
+  kinship           +0.2 1/0 0.423  0:0 0:0 1:0                     1        1        1 |   +2.3 2/0    0.002    0.062 |   -2.0 1/2    0.012     0.36 
+  scalar_adj        +3.8 2/1 0.370  0:1 4:0 2:0                  0.12        1      0.5 |   +1.5 2/1     0.73        1 |   +2.3 2/0     0.55        1 
+  units             -2.5 1/2 0.464  2:0 0:3 0:4                  0.18        1     0.31 |   +8.6 3/0  1.5e-05  0.00058+|  -11.1 0/3    3e-06  0.00012-
+
+== Holm-significant item tests (72 cells each): +/- = direction
+  P-N: 14 positive: 42B/cities +3.7, 42B/colours +4.0, 42B/countries +2.4, 42B/landmarks +11.9, 42B/languages +4.3, 42B/numbers +41.6, 42B/stars +18.7, 210B/animals +0.8, 210B/cities +1.7, 210B/countries +1.5, 210B/hours +4.1, 210B/landmarks +14.1, 210B/months +21.6, 210B/stars +42.2
+  P-N: 6 negative: 42B/letters -13.8, 42B/years -14.0, 210B/letters -10.2, 210B/number_words -18.5, 210B/numbers -1.1, 210B/years -2.4
+  P-N: 10 ROBUST positive: 42B/cities +3.7, 42B/colours +4.0, 42B/countries +2.4, 42B/landmarks +11.9, 42B/languages +4.3, 42B/numbers +41.6, 42B/stars +18.7, 210B/landmarks +14.1, 210B/months +21.6, 210B/stars +42.2
+  P-N: 4 ROBUST negative: 42B/letters -13.8, 42B/years -14.0, 210B/number_words -18.5, 210B/years -2.4
+  P-N: item-Holm-significant but not robust: 210B/animals +0.8 [key-cluster Holm 0.78], 210B/cities +1.7 [key-cluster Holm 0.37; leave-one-seed-out s1 out 105:83 p 0.13], 210B/countries +1.5 [key-cluster Holm 0.1], 210B/hours +4.1 [key-cluster Holm 0.1; seeds 2/3; leave-one-seed-out s0 out 101:78 p 0.1], 210B/letters -10.2 [key-cluster Holm 0.24], 210B/numbers -1.1 [leave-one-seed-out s0 out 0:3 p 0.25]
+  P-S: 40 positive: 42B/animal_size +2.2, 42B/animals +16.1, 42B/cities +23.3, 42B/colours +33.5, 42B/compass +20.1, 42B/countries +24.1, 42B/country_size +1.1, 42B/hours +6.5, 42B/kinship +2.5, 42B/landmarks +21.9, 42B/languages +15.0, 42B/months +6.4, 42B/number_words +13.4, 42B/numbers +49.3, 42B/ordinals +15.2, 42B/people +3.4, 42B/presidents +4.8, 42B/stars +19.0, 42B/units +8.1, 42B/us_cities +22.3, 42B/years +14.4, 210B/animal_size +1.9, 210B/animals +10.9, 210B/cities +23.0, 210B/colours +27.1, 210B/compass +18.4, 210B/countries +18.6, 210B/country_size +1.3, 210B/hours +6.8, 210B/landmarks +31.9, 210B/languages +11.8, 210B/months +49.8, 210B/numbers +8.7, 210B/ordinals +26.3, 210B/people +3.9, 210B/presidents +2.6, 210B/stars +42.3, 210B/units +8.6, 210B/us_cities +10.7, 210B/years +5.8
+  P-S: 0 negative: 
+  P-S: 35 ROBUST positive: 42B/animal_size +2.2, 42B/animals +16.1, 42B/cities +23.3, 42B/colours +33.5, 42B/compass +20.1, 42B/countries +24.1, 42B/country_size +1.1, 42B/hours +6.5, 42B/landmarks +21.9, 42B/languages +15.0, 42B/months +6.4, 42B/numbers +49.3, 42B/ordinals +15.2, 42B/people +3.4, 42B/presidents +4.8, 42B/stars +19.0, 42B/us_cities +22.3, 42B/years +14.4, 210B/animal_size +1.9, 210B/animals +10.9, 210B/cities +23.0, 210B/colours +27.1, 210B/compass +18.4, 210B/countries +18.6, 210B/country_size +1.3, 210B/hours +6.8, 210B/landmarks +31.9, 210B/languages +11.8, 210B/months +49.8, 210B/numbers +8.7, 210B/ordinals +26.3, 210B/people +3.9, 210B/stars +42.3, 210B/us_cities +10.7, 210B/years +5.8
+  P-S: 0 ROBUST negative: 
+  P-S: item-Holm-significant but not robust: 42B/kinship +2.5 [key-cluster Holm 1; seeds 2/3; leave-one-seed-out s1 out 2:0 p 0.5], 42B/number_words +13.4 [key-cluster Holm 0.12], 42B/units +8.1 [key-cluster Holm 1; leave-one-seed-out s0 out 9:2 p 0.065], 210B/presidents +2.6 [seeds 2/3], 210B/units +8.6 [key-cluster Holm 0.14]
+  S-N: 0 positive: 
+  S-N: 40 negative: 42B/animal_size -2.2, 42B/animals -15.3, 42B/cities -19.6, 42B/colours -29.6, 42B/compass -16.9, 42B/countries -21.7, 42B/country_size -1.1, 42B/hours -8.5, 42B/kinship -2.5, 42B/landmarks -10.1, 42B/languages -10.7, 42B/letters -13.8, 42B/months -5.2, 42B/number_words -20.3, 42B/numbers -7.7, 42B/ordinals -13.1, 42B/people -4.1, 42B/presidents -4.3, 42B/units -7.6, 42B/us_cities -22.1, 42B/years -28.4, 210B/animal_size -1.9, 210B/animals -10.0, 210B/cities -21.2, 210B/colours -26.3, 210B/compass -19.0, 210B/countries -17.1, 210B/country_size -1.3, 210B/landmarks -17.8, 210B/languages -12.7, 210B/letters -11.0, 210B/months -28.2, 210B/number_words -29.2, 210B/numbers -9.7, 210B/ordinals -36.4, 210B/people -3.6, 210B/presidents -2.8, 210B/units -11.1, 210B/us_cities -10.8, 210B/years -8.3
+  S-N: 0 ROBUST positive: 
+  S-N: 35 ROBUST negative: 42B/animal_size -2.2, 42B/animals -15.3, 42B/cities -19.6, 42B/colours -29.6, 42B/countries -21.7, 42B/country_size -1.1, 42B/hours -8.5, 42B/landmarks -10.1, 42B/languages -10.7, 42B/letters -13.8, 42B/number_words -20.3, 42B/numbers -7.7, 42B/people -4.1, 42B/presidents -4.3, 42B/us_cities -22.1, 42B/years -28.4, 210B/animal_size -1.9, 210B/animals -10.0, 210B/cities -21.2, 210B/colours -26.3, 210B/compass -19.0, 210B/countries -17.1, 210B/country_size -1.3, 210B/landmarks -17.8, 210B/languages -12.7, 210B/letters -11.0, 210B/months -28.2, 210B/number_words -29.2, 210B/numbers -9.7, 210B/ordinals -36.4, 210B/people -3.6, 210B/presidents -2.8, 210B/units -11.1, 210B/us_cities -10.8, 210B/years -8.3
+  S-N: item-Holm-significant but not robust: 42B/compass -16.9 [key-cluster Holm 0.052], 42B/kinship -2.5 [key-cluster Holm 1; seeds 2/3; leave-one-seed-out s1 out 0:2 p 0.5], 42B/months -5.2 [key-cluster Holm 0.14], 42B/ordinals -13.1 [key-cluster Holm 0.07], 42B/units -7.6 [key-cluster Holm 0.68]
+
+== information the target carries beyond the training questions (audit I5)
+  offset (16 domains; the target gives item positions only, the prior acts on the item x, never on k or the answer): training questions connect all items (item order implied by training) in every seed: 16/16; held-out questions whose (item, answer) pair never occurs in training: min over domains x seeds 100.0%
+  comparison: target = % of held-out answers implied by the target, closure = % implied by the training questions (transitive); on the held-out questions NOT implied by training (pooled seeds): n, none / prior / shuf accuracy, P-N b:c, McNemar p
+    animal_size   cmp-order  target 100.0%  closure  59.7% | 42B n 1452  99.5/ 99.4/ 94.3 6:8 p 0.79 | 210B n 1452  99.6/ 99.6/ 94.8 5:5 p 1
+    animals       cmp-anchor target 100.0%  closure   0.2% | 42B n 3580  98.4/ 99.2/ 83.2 50:23 p 0.0021 | 210B n 3580  98.6/ 99.5/ 88.6 47:17 p 0.00023
+    cities        cmp-anchor target  99.4%  closure   0.1% | 42B n 3620  91.7/ 95.4/ 72.1 233:97 p 4.7e-14 | 210B n 3620  94.9/ 96.6/ 73.7 163:100 p 0.00012
+    colours       cmp-anchor target 100.0%  closure  12.5% | 42B n 3200  93.5/ 97.9/ 63.1 184:43 p 5.8e-22 | 210B n 3200  97.8/ 98.7/ 70.1 66:38 p 0.0078
+    compass       cmp-anchor target 100.0%  closure  31.9% | 42B n  234  93.2/ 97.0/ 69.2 14:5 p 0.064 | 210B n  234  96.6/ 95.7/ 70.1 8:10 p 0.81
+    countries     cmp-anchor target  99.9%  closure   0.1% | 42B n 3600  95.5/ 97.9/ 73.8 134:49 p 2.5e-10 | 210B n 3600  97.0/ 98.5/ 79.9 100:45 p 5.7e-06
+    country_size  cmp-order  target 100.0%  closure  19.6% | 42B n 1620  99.9/ 99.9/ 98.5 2:1 p 1 | 210B n 1620 100.0/100.0/ 98.3 0:0 p 1
+    emotions      cmp-order  target 100.0%  closure  15.4% | 42B n 1568  99.9/100.0/ 99.8 2:0 p 0.5 | 210B n 1568  99.4/ 99.9/ 99.8 10:1 p 0.012
+    kinship       cmp-order  target 100.0%  closure  62.6% | 42B n  166 100.0/100.0/ 93.4 0:0 p 1 | 210B n  166  99.4/100.0/ 94.0 1:0 p 1
+    landmarks     cmp-anchor target  99.9%  closure   0.0% | 42B n 3602  74.8/ 86.7/ 64.8 596:168 p 6.1e-57 | 210B n 3602  80.8/ 94.9/ 63.0 610:101 p 1.5e-89
+    languages     cmp-anchor target 100.0%  closure   0.2% | 42B n 3614  95.1/ 99.4/ 84.4 170:13 p 4.7e-36 | 210B n 3614  97.9/ 97.0/ 85.1 73:107 p 0.014
+    life_stages   cmp-order  target 100.0%  closure  27.8% | 42B n   26 100.0/100.0/100.0 0:0 p 1 | 210B n   26 100.0/100.0/100.0 0:0 p 1
+    people        cmp-order  target 100.0%  closure  60.3% | 42B n 1428  91.4/ 89.8/ 83.5 60:82 p 0.078 | 210B n 1428  95.0/ 95.9/ 87.4 53:40 p 0.21
+    prefixes      cmp-order  target 100.0%  closure  58.7% | 42B n   52  76.9/ 76.9/ 61.5 2:2 p 1 | 210B n   52  82.7/ 86.5/ 71.2 5:3 p 0.73
+    presidents    cmp-order  target 100.0%  closure  70.2% | 42B n  352  98.0/ 99.7/ 85.2 6:0 p 0.031 | 210B n  352  99.1/ 98.6/ 90.6 3:5 p 0.73
+    ranks         cmp-order  target 100.0%  closure  12.5% | 42B n   42  92.9/100.0/ 85.7 3:0 p 0.25 | 210B n   42 100.0/100.0/ 90.5 0:0 p 1
+    scalar_adj    cmp-order  target 100.0%  closure  19.7% | 42B n  106  89.6/ 86.8/ 90.6 1:4 p 0.38 | 210B n  106  90.6/ 95.3/ 93.4 6:1 p 0.12
+    stars         cmp-anchor target 100.0%  closure   0.0% | 42B n 3602  52.1/ 70.8/ 51.9 924:249 p 1.4e-91 | 210B n 3602  53.7/ 96.0/ 53.7 1567:45 p 0
+    units         cmp-order  target 100.0%  closure  50.5% | 42B n   98  94.9/ 95.9/ 79.6 5:4 p 1 | 210B n   98  94.9/ 89.8/ 72.4 2:7 p 0.18
+    us_cities     cmp-anchor target  93.6%  closure   0.5% | 42B n 3588  95.8/ 96.0/ 73.7 109:102 p 0.68 | 210B n 3588  97.5/ 97.4/ 86.7 72:75 p 0.87
+
+== families (domain-equal means; pooled items = discordant b:c summed over domains and seeds, item-weighted)
+  42B  numeric helix         4 cells  none  39.0  P-N   +5.7 (norm   +5.7)  domains +2/-2/=0 (sign p 1.000)  Holm +1/-1  robust +1/-1  pooled items 1411:522 (p 4e-94)  P-S  +23.0  S-N  -17.4
+  42B  cyclic                9 cells  none  26.4  P-N   +1.0 (norm   +1.8)  domains +7/-1/=1 (sign p 0.070)  Holm +1/-0  robust +1/-0  pooled items 346:205 (p 2e-09)  P-S   +7.9  S-N   -6.9
+  42B    cyclic/off        7 cells  none   6.9  P-N   +0.3 (norm   +0.3)  domains +5/-1/=1 (sign p 0.219)  Holm +0/-0  robust +0/-0  pooled items 143:157 (p 0.45)  P-S   +2.5  S-N   -2.2
+  42B    cyclic/cmp        2 cells  none  94.5  P-N   +3.6 (norm   +7.1)  domains +2/-0/=0 (sign p 0.500)  Holm +1/-0  robust +1/-0  pooled items 203:48 (p 7.3e-24)  P-S  +26.8  S-N  -23.2
+  42B  ordinal-line         10 cells  none  49.8  P-N   -0.8 (norm   -0.2)  domains +2/-2/=6 (sign p 1.000)  Holm +0/-1  robust +0/-1  pooled items 74:109 (p 0.012)  P-S   +2.8  S-N   -3.6
+  42B    ordinal-line/off        5 cells  none   3.5  P-N   -2.8 (norm   -2.9)  domains +0/-1/=4 (sign p 1.000)  Holm +0/-1  robust +0/-1  pooled items 0:19 (p 3.8e-06)  P-S   +0.0  S-N   -2.8
+  42B    ordinal-line/cmp        5 cells  none  96.0  P-N   +1.2 (norm   +2.4)  domains +2/-1/=2 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 74:90 (p 0.24)  P-S   +5.6  S-N   -4.4
+  42B  spatial sphere-plane  6 cells  none  85.0  P-N   +6.2 (norm  +12.3)  domains +6/-0/=0 (sign p 0.031)  Holm +4/-0  robust +4/-0  pooled items 1998:665 (p 1.2e-153)  P-S  +18.5  S-N  -12.3
+  42B  tree                  2 cells  none  96.8  P-N   +2.5 (norm   +5.1)  domains +2/-0/=0 (sign p 0.500)  Holm +1/-0  robust +1/-0  pooled items 220:36 (p 2.1e-33)  P-S  +15.5  S-N  -13.0
+  42B  comparison-scalar     5 cells  none  97.8  P-N   -0.4 (norm   -0.7)  domains +2/-2/=1 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 14:17 (p 0.72)  P-S   +2.2  S-N   -2.5
+  42B  ALL offset           16 cells  none  13.9  P-N   +0.7 (norm   +0.7)  domains +7/-4/=5 (sign p 0.549)  Holm +1/-2  robust +1/-2  pooled items 1554:698 (p 2.3e-74)  P-S   +6.8  S-N   -6.2
+  42B  ALL cmp-order        11 cells  none  97.2  P-N   +0.4 (norm   +0.8)  domains +5/-3/=3 (sign p 0.727)  Holm +0/-0  robust +0/-0  pooled items 90:107 (p 0.25)  P-S   +3.5  S-N   -3.1
+  42B  ALL cmp-anchor        9 cells  none  88.1  P-N   +5.5 (norm  +10.9)  domains +9/-0/=0 (sign p 0.004)  Holm +6/-0  robust +6/-0  pooled items 2419:749 (p 3.2e-203)  P-S  +21.7  S-N  -16.2
+  210B numeric helix         4 cells  none  97.5  P-N   -8.0 (norm   -8.3)  domains +0/-4/=0 (sign p 0.125)  Holm +0/-3  robust +0/-2  pooled items 57:174 (p 5.9e-15)  P-S  +12.9  S-N  -20.9
+  210B cyclic                9 cells  none  33.8  P-N   +2.9 (norm   +3.1)  domains +5/-4/=0 (sign p 1.000)  Holm +2/-0  robust +1/-0  pooled items 340:186 (p 1.8e-11)  P-S  +12.3  S-N   -9.5
+  210B   cyclic/off        7 cells  none  15.4  P-N   +3.7 (norm   +4.0)  domains +4/-3/=0 (sign p 1.000)  Holm +2/-0  robust +1/-0  pooled items 266:138 (p 1.9e-10)  P-S   +9.4  S-N   -5.7
+  210B   cyclic/cmp        2 cells  none  97.9  P-N   +0.1 (norm   +0.2)  domains +1/-1/=0 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 74:48 (p 0.023)  P-S  +22.7  S-N  -22.7
+  210B ordinal-line         10 cells  none  52.0  P-N   -0.3 (norm   -0.1)  domains +3/-4/=3 (sign p 1.000)  Holm +0/-1  robust +0/-0  pooled items 67:71 (p 0.8)  P-S   +4.0  S-N   -4.3
+  210B   ordinal-line/off        5 cells  none   5.9  P-N   -1.0 (norm   -0.8)  domains +1/-3/=1 (sign p 0.625)  Holm +0/-1  robust +0/-0  pooled items 4:19 (p 0.0026)  P-S   +3.6  S-N   -4.6
+  210B   ordinal-line/cmp        5 cells  none  98.1  P-N   +0.3 (norm   +0.7)  domains +2/-1/=2 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 63:52 (p 0.35)  P-S   +4.4  S-N   -4.1
+  210B spatial sphere-plane  6 cells  none  87.2  P-N  +10.0 (norm  +20.0)  domains +5/-1/=0 (sign p 0.219)  Holm +4/-0  robust +2/-0  pooled items 2522:367 (p 0)  P-S  +21.1  S-N  -11.1
+  210B tree                  2 cells  none  98.3  P-N   -0.0 (norm   -0.1)  domains +1/-1/=0 (sign p 1.000)  Holm +1/-0  robust +0/-0  pooled items 120:124 (p 0.85)  P-S  +11.3  S-N  -11.4
+  210B comparison-scalar     5 cells  none  97.9  P-N   +0.3 (norm   +0.6)  domains +2/-2/=1 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 14:15 (p 1)  P-S   +3.1  S-N   -2.8
+  210B ALL offset           16 cells  none  33.0  P-N   -0.7 (norm   -0.6)  domains +5/-10/=1 (sign p 0.302)  Holm +2/-4  robust +1/-2  pooled items 327:331 (p 0.91)  P-S   +8.4  S-N   -9.1
+  210B ALL cmp-order        11 cells  none  98.1  P-N   +0.3 (norm   +0.7)  domains +5/-3/=3 (sign p 0.727)  Holm +0/-0  robust +0/-0  pooled items 87:68 (p 0.15)  P-S   +3.4  S-N   -3.1
+  210B ALL cmp-anchor        9 cells  none  90.7  P-N   +6.6 (norm  +13.2)  domains +6/-3/=0 (sign p 0.508)  Holm +5/-0  robust +2/-0  pooled items 2706:538 (p 0)  P-S  +21.6  S-N  -15.0
+  both numeric helix         8 cells  none  68.2  P-N   -1.2 (norm   -1.3)  domains +2/-6/=0 (sign p 0.289)  Holm +1/-4  robust +1/-3  pooled items 1468:696 (p 5e-63)  P-S  +18.0  S-N  -19.1
+  both cyclic               18 cells  none  30.1  P-N   +1.9 (norm   +2.5)  domains +12/-5/=1 (sign p 0.143)  Holm +3/-0  robust +2/-0  pooled items 686:391 (p 2e-19)  P-S  +10.1  S-N   -8.2
+  both   cyclic/off       14 cells  none  11.2  P-N   +2.0 (norm   +2.1)  domains +9/-4/=1 (sign p 0.267)  Holm +2/-0  robust +1/-0  pooled items 409:295 (p 2e-05)  P-S   +5.9  S-N   -3.9
+  both   cyclic/cmp        4 cells  none  96.2  P-N   +1.8 (norm   +3.7)  domains +3/-1/=0 (sign p 0.625)  Holm +1/-0  robust +1/-0  pooled items 277:96 (p 1.8e-21)  P-S  +24.8  S-N  -23.0
+  both ordinal-line         20 cells  none  50.9  P-N   -0.6 (norm   -0.1)  domains +5/-6/=9 (sign p 1.000)  Holm +0/-2  robust +0/-1  pooled items 141:180 (p 0.034)  P-S   +3.4  S-N   -3.9
+  both   ordinal-line/off       10 cells  none   4.7  P-N   -1.9 (norm   -1.8)  domains +1/-4/=5 (sign p 0.375)  Holm +0/-2  robust +0/-1  pooled items 4:38 (p 5.7e-08)  P-S   +1.8  S-N   -3.7
+  both   ordinal-line/cmp       10 cells  none  97.1  P-N   +0.8 (norm   +1.6)  domains +4/-2/=4 (sign p 0.688)  Holm +0/-0  robust +0/-0  pooled items 137:142 (p 0.81)  P-S   +5.0  S-N   -4.2
+  both spatial sphere-plane 12 cells  none  86.1  P-N   +8.1 (norm  +16.2)  domains +11/-1/=0 (sign p 0.006)  Holm +8/-0  robust +6/-0  pooled items 4520:1032 (p 0)  P-S  +19.8  S-N  -11.7
+  both tree                  4 cells  none  97.5  P-N   +1.2 (norm   +2.5)  domains +3/-1/=0 (sign p 0.625)  Holm +2/-0  robust +1/-0  pooled items 340:160 (p 5.8e-16)  P-S  +13.4  S-N  -12.2
+  both comparison-scalar    10 cells  none  97.8  P-N   -0.0 (norm   -0.1)  domains +4/-4/=2 (sign p 1.000)  Holm +0/-0  robust +0/-0  pooled items 28:32 (p 0.7)  P-S   +2.6  S-N   -2.7
+  both ALL offset           32 cells  none  23.4  P-N   -0.0 (norm   +0.0)  domains +12/-14/=6 (sign p 0.845)  Holm +3/-6  robust +2/-4  pooled items 1881:1029 (p 7.3e-57)  P-S   +7.6  S-N   -7.7
+  both ALL cmp-order        22 cells  none  97.7  P-N   +0.4 (norm   +0.7)  domains +10/-6/=6 (sign p 0.454)  Holm +0/-0  robust +0/-0  pooled items 177:175 (p 0.96)  P-S   +3.5  S-N   -3.1
+  both ALL cmp-anchor       18 cells  none  89.4  P-N   +6.0 (norm  +12.1)  domains +15/-3/=0 (sign p 0.008)  Holm +11/-0  robust +8/-0  pooled items 5125:1287 (p 0)  P-S  +21.7  S-N  -15.6
+
+== competence band of none (floor <= chance + 5, ceiling >= 95, middle otherwise)
+  42B  floor    11 cells  none   5.4  P-N   +2.1 (norm   +3.8)  domains +6/-0/=5 (sign p 0.031)  Holm +1/-0  robust +1/-0  pooled items 957:269 (p 9.4e-91)  P-S   +2.7  S-N   -0.6
+       chinese_zodiac +0.6, days +0.0, elements +0.0, geo_periods +0.0, greek +0.0, keys +0.6, months +1.2, pitch +0.3, planets +0.0, stars +18.7+, zodiac +1.2
+  42B  middle   13 cells  none  65.1  P-N   +2.6 (norm   +4.6)  domains +7/-5/=1 (sign p 0.774)  Holm +4/-2  robust +4/-2  pooled items 2559:997 (p 3.1e-156)  P-S  +16.5  S-N  -13.9
+       cities +3.7+, colours +4.0+, compass +3.2, hours -2.0, landmarks +11.9+, letters -13.8-, number_words -6.9, numbers +41.6+, ordinals +2.0, prefixes +0.0, ranks +6.2, scalar_adj -2.3, years -14.0-
+  42B  ceiling  12 cells  none  98.2  P-N   +0.7 (norm   +1.3)  domains +8/-2/=2 (sign p 0.109)  Holm +2/-0  robust +2/-0  pooled items 547:288 (p 2.2e-19)  P-S   +8.3  S-N   -7.6
+       animal_size -0.1, animals +0.8, countries +2.4+, country_size +0.0, emotions +0.1, kinship +0.0, languages +4.3+, life_stages +0.0, people -0.7, presidents +0.5, units +0.5, us_cities +0.2
+  210B floor    10 cells  none   7.6  P-N   +4.7 (norm   +9.1)  domains +4/-5/=1 (sign p 1.000)  Holm +1/-0  robust +1/-0  pooled items 1590:67 (p 0)  P-S   +6.8  S-N   -2.1
+       chinese_zodiac +0.6, days -1.0, elements +0.0, geo_periods -8.8, greek -1.0, keys -0.3, pitch -0.6, planets +15.1, stars +42.2+, zodiac +1.2
+  210B middle    8 cells  none  71.4  P-N   +3.3 (norm   +6.1)  domains +6/-2/=0 (sign p 0.289)  Holm +4/-1  robust +2/-0  pooled items 1032:351 (p 6.1e-78)  P-S  +18.4  S-N  -15.1
+       cities +1.7+, hours +4.1+, landmarks +14.1+, letters -10.2-, months +21.6+, ordinals -10.1, prefixes +1.6, scalar_adj +3.8
+  210B ceiling  18 cells  none  98.7  P-N   -1.2 (norm   -1.3)  domains +6/-9/=3 (sign p 0.607)  Holm +2/-3  robust +0/-2  pooled items 498:519 (p 0.53)  P-S   +8.4  S-N   -9.7
+       animal_size -0.1, animals +0.8+, colours +0.8, compass -0.6, countries +1.5+, country_size +0.0, emotions +0.5, kinship +0.2, languages -0.9, life_stages +0.0, number_words -18.5-, numbers -1.1-, people +0.3, presidents -0.2, ranks +0.0, units -2.5, us_cities -0.1, years -2.4-
+  both floor    21 cells  none   6.4  P-N   +3.3 (norm   +6.3)  domains +10/-5/=6 (sign p 0.302)  Holm +2/-0  robust +2/-0  pooled items 2547:336 (p 0)  P-S   +4.7  S-N   -1.3
+  both middle   21 cells  none  67.5  P-N   +2.9 (norm   +5.2)  domains +13/-7/=1 (sign p 0.263)  Holm +8/-3  robust +6/-2  pooled items 3591:1348 (p 1.3e-231)  P-S  +17.2  S-N  -14.3
+  both ceiling  30 cells  none  98.5  P-N   -0.5 (norm   -0.2)  domains +14/-11/=5 (sign p 0.690)  Holm +4/-3  robust +2/-2  pooled items 1045:807 (p 3.5e-08)  P-S   +8.4  S-N   -8.8
+
+== gain vs competence (F25 / F26 inverted U). x = chance-normalised none accuracy, y = chance-normalised P-N (x100)
+  F25 bins of x (cells by class: off = offset, target carries no answers; cmp = comparison, target implies >= 94% of answers):
+    all                   +6.1 (n 25, med  +0.0)    +9.5 (n  4, med +10.7)   +16.3 (n  2, med +16.3)    +4.9 (n  9, med  +6.4)    -1.0 (n 32, med  +0.0)
+    offset                +1.3 (n 23, med  +0.0)    +4.8 (n  3, med  -2.1)    +4.3 (n  1, med  +4.3)                       -    -9.5 (n  5, med -10.6)
+    offset above floor    +4.8 (n  4, med  -4.2)    +4.8 (n  3, med  -2.1)    +4.3 (n  1, med  +4.3)                       -    -9.5 (n  5, med -10.6)
+    comparison           +61.0 (n  2, med +61.0)   +23.8 (n  1, med +23.8)   +28.2 (n  1, med +28.2)    +4.9 (n  9, med  +6.4)    +0.6 (n 27, med  +0.1)
+    bins: <25, 25-50, 50-75, 75-90, >=90; middle bins (25-75): 42B/hours -2.0, 42B/landmarks +11.9R, 42B/number_words -6.9, 210B/hours +4.1, 210B/landmarks +14.1R, 210B/months +21.6R
+  42B all                n=36  Spearman(x, y) -0.02 (p 0.909)  Spearman(x(1-x), y) +0.15 (p 0.383)  quadratic -35.7 [-94.8, +13.5] vertex x 0.42  x<0.5: rho +0.07 (p 0.776, n 17)  x>=0.5: rho -0.33 (p 0.165, n 19)
+  210B all               n=36  Spearman(x, y) -0.18 (p 0.300)  Spearman(x(1-x), y) +0.26 (p 0.125)  quadratic -66.5 [-153.0, +3.3] vertex x 0.40  x<0.5: rho -0.02 (p 0.948, n 12)  x>=0.5: rho -0.45 (p 0.029, n 24)
+  both all               n=72  Spearman(x, y) -0.14 (p 0.229)  Spearman(x(1-x), y) +0.21 (p 0.070)  quadratic -49.7 [-106.8, -2.9] vertex x 0.41  x<0.5: rho +0.01 (p 0.949, n 29)  x>=0.5: rho -0.45 (p 0.003, n 43)
+                         leave one domain out: Spearman(x(1-x), y) +0.15..+0.28  quadratic -62.1..-35.8  x<0.5 rho -0.10..+0.16  x>=0.5 rho -0.50..-0.39
+  both offset            n=32  Spearman(x, y) -0.42 (p 0.018)  Spearman(x(1-x), y) -0.23 (p 0.196)  quadratic -28.2 [-80.2, +33.7] vertex x 0.28  x<0.5: rho -0.22 (p 0.290, n 26)  x>=0.5: rho -0.43 (p 0.397, n 6)
+  both offset above floor n=13  Spearman(x, y) -0.26 (p 0.384)  Spearman(x(1-x), y) +0.51 (p 0.074)  quadratic -78.8 [-258.7, +150.5] vertex x 0.47  x<0.5: rho +0.25 (p 0.589, n 7)  x>=0.5: rho -0.43 (p 0.397, n 6)
+  both comparison        n=40  Spearman(x, y) -0.57 (p 0.000)  Spearman(x(1-x), y) +0.48 (p 0.002)  quadratic +21.2 [-404.0, +91.3] vertex x -  x<0.5: n 3 (too few)  x>=0.5: rho -0.46 (p 0.004, n 37)
+  composition: x >= 0.5 side 43 cells = 37 comparison + 6 offset; x < 0.5 side 29 cells = 26 offset (19 at the floor) + 3 comparison; offset cells above the floor (no target answers, measurable): 13
+  headroom: on the falling side (x >= 0.5, none <= 99, n 28, 24 comparison) the gain as a share of the headroom (prior - none) / (100 - none) has Spearman -0.25 (p 0.206) with x (raw gain -0.50); median share +0.21
+  same domain, two checkpoints (the F25 / F26 design; offset domains with none above the floor at >= 1 checkpoint):
+    hours         42B none  41.2 P-N  -2.0 P-S  +6.5  ->  210B none  58.9 P-N  +4.1 P-S  +6.8
+    letters       42B none  17.5 P-N -13.8R P-S  +0.0  ->  210B none  16.8 P-N -10.2 P-S  +0.7
+    months        42B none   5.2 P-N  +1.2 P-S  +6.4  ->  210B none  39.7 P-N +21.6R P-S +49.8
+    number_words  42B none  27.9 P-N  -6.9 P-S +13.4  ->  210B none 100.0 P-N -18.5R P-S +10.8
+    numbers       42B none  22.0 P-N +41.6R P-S +49.3  ->  210B none  99.9 P-N  -1.1 P-S  +8.7
+    ordinals      42B none  14.1 P-N  +2.0 P-S +15.2  ->  210B none  94.9 P-N -10.1 P-S +26.3
+    years         42B none  91.9 P-N -14.0R P-S +14.4  ->  210B none  95.1 P-N  -2.4R P-S  +5.8
+
+== did the prior act? CKA of the held-out item states with the TRUE target (mean of L4-16; prompts = 256 test questions)
+   and the logged training geo loss 1 - CKA against the arm's own target (shuffled for prior_shuf), step 0 -> 210
+  42B: prior ctx CKA - base: median +0.623, > 0 in 108/108 runs; prior_shuf - base median -0.281 (< 0 in 106/108); none - base median +0.022; geo loss fell: prior 108/108, prior_shuf 108/108; shuf_cka max 0.152
+     prior_shuf true-target CKA not below base: geo_periods seeds ['-0.270', '-0.455', '+0.096'] (shuf_cka [0.002, 0.0, 0.143])
+     prior_shuf true-target CKA not below base: scalar_adj seeds ['-0.053', '-0.042', '+0.084'] (shuf_cka [0.132, 0.134, 0.135])
+  42B per domain: ctx CKA (true target) base / none / prior / shuf | probe base / none / prior | geo loss at step 210 prior / shuf | shuf_cka
+     animal_size     0.36 / 0.40 / 1.00 / 0.03 | 0.30 / 0.31 / 0.98 | 0.002 / 0.004 | 0.01
+     animals         0.43 / 0.52 / 1.00 / 0.12 | 0.46 / 0.54 / 0.98 | 0.008 / 0.013 | 0.09
+     chinese_zodiac  0.45 / 0.48 / 1.00 / 0.10 | 0.45 / 0.45 / 0.95 | 0.003 / 0.003 | 0.08
+     cities          0.29 / 0.31 / 1.00 / 0.08 | 0.30 / 0.33 / 0.99 | 0.006 / 0.007 | 0.06
+     colours         0.32 / 0.38 / 1.00 / 0.08 | 0.30 / 0.33 / 0.97 | 0.003 / 0.005 | 0.06
+     compass         0.38 / 0.49 / 1.00 / 0.13 | 0.49 / 0.55 / 1.00 | 0.002 / 0.003 | 0.08
+     countries       0.35 / 0.40 / 1.00 / 0.09 | 0.42 / 0.50 / 0.98 | 0.005 / 0.008 | 0.05
+     country_size    0.24 / 0.25 / 1.00 / 0.04 | 0.20 / 0.20 / 0.98 | 0.002 / 0.003 | 0.01
+     days            0.88 / 0.88 / 1.00 / 0.20 | 0.86 / 0.87 / 0.99 | 0.001 / 0.001 | 0.10
+     elements        0.28 / 0.29 / 1.00 / 0.11 | 0.21 / 0.22 / 0.80 | 0.003 / 0.003 | 0.05
+     emotions        0.36 / 0.38 / 1.00 / 0.04 | 0.36 / 0.37 / 0.94 | 0.002 / 0.004 | 0.03
+     geo_periods     0.49 / 0.50 / 1.00 / 0.28 | 0.42 / 0.44 / 0.78 | 0.002 / 0.001 | 0.05
+     greek           0.40 / 0.41 / 1.00 / 0.10 | 0.32 / 0.32 / 0.72 | 0.002 / 0.003 | 0.02
+     hours           0.69 / 0.71 / 1.00 / 0.11 | 0.66 / 0.70 / 0.99 | 0.001 / 0.002 | 0.08
+     keys            0.36 / 0.38 / 1.00 / 0.10 | 0.35 / 0.37 / 0.94 | 0.003 / 0.004 | 0.08
+     kinship         0.53 / 0.58 / 1.00 / 0.02 | 0.47 / 0.49 / 0.98 | 0.001 / 0.002 | 0.01
+     landmarks       0.21 / 0.22 / 1.00 / 0.06 | 0.19 / 0.21 / 0.98 | 0.005 / 0.005 | 0.04
+     languages       0.42 / 0.45 / 0.99 / 0.14 | 0.46 / 0.51 / 0.98 | 0.011 / 0.016 | 0.10
+     letters         0.27 / 0.26 / 1.00 / 0.12 | 0.28 / 0.28 / 0.92 | 0.004 / 0.002 | 0.01
+     life_stages     0.61 / 0.60 / 1.00 / 0.12 | 0.58 / 0.58 / 0.99 | 0.001 / 0.001 | 0.04
+     months          0.72 / 0.76 / 1.00 / 0.10 | 0.63 / 0.68 / 0.99 | 0.002 / 0.003 | 0.08
+     number_words    0.50 / 0.53 / 1.00 / 0.33 | 0.66 / 0.66 / 0.81 | 0.001 / 0.002 | 0.12
+     numbers         0.69 / 0.70 / 1.00 / 0.17 | 0.73 / 0.74 / 0.98 | 0.005 / 0.041 | 0.07
+     ordinals        0.58 / 0.59 / 1.00 / 0.32 | 0.58 / 0.58 / 0.94 | 0.002 / 0.004 | 0.14
+     people          0.27 / 0.30 / 1.00 / 0.01 | 0.29 / 0.31 / 0.98 | 0.003 / 0.004 | 0.01
+     pitch           0.15 / 0.21 / 1.00 / 0.10 | 0.17 / 0.22 / 0.93 | 0.004 / 0.006 | 0.08
+     planets         0.45 / 0.48 / 1.00 / 0.09 | 0.44 / 0.45 / 0.75 | 0.001 / 0.001 | 0.08
+     prefixes        0.34 / 0.35 / 1.00 / 0.04 | 0.32 / 0.33 / 0.99 | 0.001 / 0.001 | 0.03
+     presidents      0.34 / 0.37 / 1.00 / 0.04 | 0.35 / 0.37 / 0.98 | 0.001 / 0.002 | 0.04
+     ranks           0.42 / 0.41 / 1.00 / 0.07 | 0.37 / 0.36 / 0.96 | 0.001 / 0.001 | 0.08
+     scalar_adj      0.29 / 0.31 / 0.95 / 0.28 | 0.30 / 0.31 / 0.94 | 0.002 / 0.003 | 0.13
+     stars           0.18 / 0.18 / 1.00 / 0.06 | 0.17 / 0.18 / 0.97 | 0.006 / 0.005 | 0.04
+     units           0.37 / 0.41 / 1.00 / 0.13 | 0.36 / 0.37 / 0.96 | 0.002 / 0.003 | 0.09
+     us_cities       0.23 / 0.27 / 1.00 / 0.06 | 0.22 / 0.27 / 0.98 | 0.005 / 0.006 | 0.03
+     years           0.65 / 0.58 / 1.00 / 0.12 | 0.78 / 0.70 / 0.98 | 0.004 / 0.135 | 0.04
+     zodiac          0.51 / 0.54 / 1.00 / 0.10 | 0.51 / 0.53 / 0.99 | 0.003 / 0.003 | 0.08
+  210B: prior ctx CKA - base: median +0.618, > 0 in 108/108 runs; prior_shuf - base median -0.286 (< 0 in 106/108); none - base median +0.008; geo loss fell: prior 108/108, prior_shuf 108/108; shuf_cka max 0.152
+     prior_shuf true-target CKA not below base: geo_periods seeds ['-0.342', '-0.522', '+0.058'] (shuf_cka [0.002, 0.0, 0.143])
+     prior_shuf true-target CKA not below base: scalar_adj seeds ['-0.041', '-0.032', '+0.080'] (shuf_cka [0.132, 0.134, 0.135])
+  210B per domain: ctx CKA (true target) base / none / prior / shuf | probe base / none / prior | geo loss at step 210 prior / shuf | shuf_cka
+     animal_size     0.38 / 0.40 / 1.00 / 0.03 | 0.29 / 0.30 / 0.96 | 0.002 / 0.004 | 0.01
+     animals         0.44 / 0.47 / 1.00 / 0.12 | 0.46 / 0.50 / 0.95 | 0.009 / 0.017 | 0.09
+     chinese_zodiac  0.44 / 0.44 / 1.00 / 0.10 | 0.43 / 0.43 / 0.67 | 0.003 / 0.004 | 0.08
+     cities          0.27 / 0.33 / 1.00 / 0.08 | 0.30 / 0.38 / 0.99 | 0.006 / 0.008 | 0.06
+     colours         0.38 / 0.45 / 1.00 / 0.09 | 0.34 / 0.38 / 0.92 | 0.004 / 0.004 | 0.06
+     compass         0.37 / 0.41 / 1.00 / 0.13 | 0.50 / 0.53 / 0.99 | 0.002 / 0.002 | 0.08
+     countries       0.33 / 0.34 / 1.00 / 0.09 | 0.42 / 0.47 / 0.97 | 0.005 / 0.008 | 0.05
+     country_size    0.23 / 0.24 / 1.00 / 0.04 | 0.20 / 0.20 / 0.98 | 0.001 / 0.003 | 0.01
+     days            0.86 / 0.83 / 1.00 / 0.21 | 0.86 / 0.87 / 0.99 | 0.001 / 0.002 | 0.10
+     elements        0.32 / 0.33 / 1.00 / 0.12 | 0.20 / 0.21 / 0.79 | 0.003 / 0.003 | 0.05
+     emotions        0.35 / 0.36 / 1.00 / 0.04 | 0.34 / 0.35 / 0.88 | 0.003 / 0.004 | 0.03
+     geo_periods     0.55 / 0.55 / 1.00 / 0.28 | 0.51 / 0.51 / 0.83 | 0.001 / 0.002 | 0.05
+     greek           0.37 / 0.38 / 1.00 / 0.09 | 0.28 / 0.28 / 0.70 | 0.002 / 0.003 | 0.02
+     hours           0.73 / 0.72 / 1.00 / 0.11 | 0.70 / 0.70 / 0.98 | 0.001 / 0.003 | 0.08
+     keys            0.30 / 0.31 / 1.00 / 0.11 | 0.28 / 0.30 / 0.64 | 0.004 / 0.005 | 0.08
+     kinship         0.58 / 0.59 / 1.00 / 0.03 | 0.53 / 0.53 / 0.98 | 0.001 / 0.002 | 0.01
+     landmarks       0.24 / 0.25 / 1.00 / 0.06 | 0.23 / 0.26 / 0.98 | 0.007 / 0.005 | 0.04
+     languages       0.40 / 0.46 / 0.99 / 0.14 | 0.43 / 0.48 / 0.94 | 0.014 / 0.019 | 0.10
+     letters         0.27 / 0.25 / 1.00 / 0.13 | 0.26 / 0.27 / 0.81 | 0.006 / 0.004 | 0.01
+     life_stages     0.60 / 0.59 / 1.00 / 0.12 | 0.55 / 0.55 / 0.98 | 0.001 / 0.001 | 0.04
+     months          0.69 / 0.69 / 1.00 / 0.10 | 0.67 / 0.68 / 0.98 | 0.002 / 0.003 | 0.08
+     number_words    0.46 / 0.46 / 1.00 / 0.33 | 0.63 / 0.63 / 0.72 | 0.002 / 0.004 | 0.12
+     numbers         0.71 / 0.71 / 1.00 / 0.17 | 0.74 / 0.76 / 0.98 | 0.005 / 0.054 | 0.07
+     ordinals        0.59 / 0.60 / 1.00 / 0.33 | 0.58 / 0.58 / 0.91 | 0.002 / 0.005 | 0.14
+     people          0.29 / 0.32 / 1.00 / 0.01 | 0.33 / 0.34 / 0.98 | 0.003 / 0.003 | 0.01
+     pitch           0.13 / 0.16 / 0.99 / 0.10 | 0.13 / 0.15 / 0.68 | 0.006 / 0.006 | 0.08
+     planets         0.54 / 0.58 / 1.00 / 0.09 | 0.50 / 0.51 / 0.80 | 0.001 / 0.001 | 0.08
+     prefixes        0.41 / 0.43 / 1.00 / 0.04 | 0.40 / 0.40 / 0.98 | 0.001 / 0.001 | 0.03
+     presidents      0.32 / 0.33 / 1.00 / 0.05 | 0.34 / 0.34 / 0.97 | 0.001 / 0.002 | 0.04
+     ranks           0.47 / 0.45 / 1.00 / 0.07 | 0.37 / 0.37 / 0.94 | 0.001 / 0.001 | 0.08
+     scalar_adj      0.28 / 0.28 / 0.95 / 0.29 | 0.30 / 0.29 / 0.93 | 0.003 / 0.007 | 0.13
+     stars           0.18 / 0.18 / 1.00 / 0.06 | 0.18 / 0.18 / 0.96 | 0.008 / 0.005 | 0.04
+     units           0.37 / 0.38 / 1.00 / 0.14 | 0.37 / 0.36 / 0.91 | 0.003 / 0.004 | 0.09
+     us_cities       0.22 / 0.22 / 1.00 / 0.06 | 0.22 / 0.24 / 0.98 | 0.005 / 0.006 | 0.03
+     years           0.70 / 0.70 / 1.00 / 0.10 | 0.79 / 0.80 / 0.99 | 0.003 / 0.110 | 0.04
+     zodiac          0.53 / 0.54 / 1.00 / 0.10 | 0.50 / 0.51 / 0.93 | 0.003 / 0.003 | 0.08
+
+== controls
+  ceiling: none train accuracy >= 95 in 69/72 cells; below: 42B/numbers 78.5, 42B/stars 84.4, 210B/stars 84.8
+  prior_shuf train accuracy < 90: 42B/colours 77.9, 42B/keys 89.6, 42B/landmarks 88.3, 42B/numbers 51.3, 42B/stars 74.7, 42B/us_cities 89.0, 42B/years 86.9, 210B/chinese_zodiac 85.0, 210B/cities 88.8, 210B/colours 80.8, 210B/landmarks 86.0, 210B/stars 75.2, 210B/zodiac 88.8
+  test questions whose answer is a training answer (n_test_answer_trained / n_test, < 100%): animals 99.7%, elements 86.6%, geo_periods 76.5%, kinship 98.2%, languages 99.4%, life_stages 72.2%, number_words 96.9%, numbers 99.5%, people 99.7%, planets 90.5%, prefixes 93.7%, presidents 98.5%, scalar_adj 84.8%, units 93.9%, years 99.7%
+  offset cells where fine-tuning (none) is BELOW the untuned base on held-out questions: 19/32, of them below chance 18: 42B/chinese_zodiac 8.8->0.0 (25 ep), 42B/days 18.0->0.0 (69 ep), 42B/elements 5.1->0.0 (70 ep), 42B/geo_periods 32.3->0.0 (240 ep), 42B/greek 6.2->0.0 (84 ep), 42B/keys 6.1->0.3 (25 ep), 42B/months 6.4->5.2 (25 ep), 42B/pitch 5.1->1.8 (25 ep), 42B/planets 15.1->0.0 (395 ep), 42B/zodiac 6.0->0.0 (25 ep), 210B/chinese_zodiac 9.4->0.0 (25 ep), 210B/days 15.1->3.0 (69 ep), 210B/elements 1.7->0.0 (70 ep), 210B/geo_periods 29.5->11.9 (240 ep), 210B/greek 5.1->1.0 (84 ep), 210B/keys 8.8->1.2 (25 ep), 210B/pitch 10.9->3.3 (25 ep), 210B/planets 19.0->0.0 (395 ep), 210B/zodiac 4.2->1.8 (25 ep)
+  epochs = 280 steps x bs 16 / n_train: offset 3.1..395, comparison 2.5..249; offset domains with < 10 epochs: numbers 3.1, years 4.2, hours 6.3
+  positive control numbers @ 42B: none 22.0 prior 63.6 shuf 14.3; P-N +41.6 (3/3, Holm p 7.3e-246), P-S +49.3 (3/3) -> PASS (F10-F14: helix > none at 42B)
+
+== domain lists for the next design (ft36b / pretraining manifolds). Per checkpoint: none (mean), P-N (R = robust);
+   measurable = chance + 5 < none <= 90 (headroom >= 10); near-ceiling = 90 < none < 95; info: offset = target carries
+   no answers (item order implied by training), cmp-order / cmp-anchor = target implies the held-out answers (training closure implies some / almost none)
+  (a)+(b) measurable at >= 1 checkpoint AND target carries no answers: geometry, not facts: 6
+     hours          offset     n_test    442 epochs   6.3 | 42B  41.2  -2.0  measurable | 210B  58.9  +4.1  measurable | base 4.4 / 14.8 chance 4.2
+     letters        offset     n_test     46 epochs  64.6 | 42B  17.5 -13.8R measurable | 210B  16.8 -10.2  measurable | base 2.9 / 15.3 chance 3.8
+     months         offset     n_test    110 epochs  25.2 | 42B   5.2  +1.2  floor | 210B  39.7 +21.6R measurable | base 6.4 / 8.2 chance 8.3
+     number_words   offset     n_test     43 epochs  64.9 | 42B  27.9  -6.9  measurable | 210B 100.0 -18.5R ceiling | base 5.4 / 38.8 chance 3.7
+     numbers        offset     n_test    960 epochs   3.1 | 42B  22.0 +41.6R measurable | 210B  99.9  -1.1  ceiling | base 3.3 / 76.0 chance 1.1
+     ordinals       offset     n_test     33 epochs  86.2 | 42B  14.1  +2.0  measurable | 210B  94.9 -10.1  near-ceiling | base 4.0 / 17.2 chance 5.0
+  (a) measurable at >= 1 checkpoint, but the target implies the held-out answers: facts, not geometry: 1
+     landmarks      cmp-anchor n_test   1201 epochs   2.5 | 42B  74.8 +11.9R measurable | 210B  80.8 +14.1R measurable | base 50.9 / 52.8 chance 50.0
+  (c) floor at every checkpoint: 10
+     chinese_zodiac offset     n_test    110 epochs  25.2 | 42B   0.0  +0.6  floor | 210B   0.0  +0.6  floor | base 8.8 / 9.4 chance 8.3
+     days           offset     n_test     33 epochs  69.3 | 42B   0.0  +0.0  floor | 210B   3.0  -1.0  floor | base 18.0 / 15.1 chance 14.3
+     elements       offset     n_test     38 epochs  70.4 | 42B   0.0  +0.0  floor | 210B   0.0  +0.0  floor | base 5.1 / 1.7 chance 2.8
+     geo_periods    offset     n_test     11 epochs 240.0 | 42B   0.0  +0.0  floor | 210B  11.9  -8.8  floor | base 32.3 / 29.5 chance 8.3
+     greek          offset     n_test     33 epochs  84.0 | 42B   0.0  +0.0  floor | 210B   1.0  -1.0  floor | base 6.2 / 5.1 chance 4.2
+     keys           offset     n_test    110 epochs  25.2 | 42B   0.3  +0.6  floor | 210B   1.2  -0.3  floor | base 6.1 / 8.8 chance 8.3
+     pitch          offset     n_test    110 epochs  25.2 | 42B   1.8  +0.3  floor | 210B   3.3  -0.6  floor | base 5.1 / 10.9 chance 8.3
+     planets        offset     n_test      7 epochs 395.3 | 42B   0.0  +0.0  floor | 210B   0.0 +15.1  floor | base 15.1 / 19.0 chance 12.5
+     stars          cmp-anchor n_test   1201 epochs   2.5 | 42B  52.1 +18.7R floor | 210B  53.8 +42.2R floor | base 49.7 / 52.5 chance 50.0
+     zodiac         offset     n_test    110 epochs  25.2 | 42B   0.0  +1.2  floor | 210B   1.8  +1.2  floor | base 6.0 / 4.2 chance 8.3
+  (c) ceiling or near-ceiling at every checkpoint: 19
+     animal_size    cmp-order  n_test   1200 epochs   2.5 | 42B  99.8  -0.1  ceiling | 210B  99.8  -0.1  ceiling | base 45.6 / 51.5 chance 50.0
+     animals        cmp-anchor n_test   1195 epochs   2.5 | 42B  98.4  +0.8  ceiling | 210B  98.6  +0.8  ceiling | base 53.7 / 57.3 chance 50.0
+     cities         cmp-anchor n_test   1207 epochs   2.5 | 42B  91.7  +3.7R near-ceiling | 210B  94.9  +1.7  near-ceiling | base 47.3 / 51.2 chance 50.0
+     colours        cmp-anchor n_test   1218 epochs   2.5 | 42B  94.3  +4.0R near-ceiling | 210B  98.1  +0.8  ceiling | base 52.8 / 53.6 chance 50.0
+     compass        cmp-anchor n_test    113 epochs  25.6 | 42B  94.8  +3.2  near-ceiling | 210B  97.7  -0.6  ceiling | base 62.4 / 57.4 chance 50.0
+     countries      cmp-anchor n_test   1201 epochs   2.5 | 42B  95.5  +2.4R ceiling | 210B  97.0  +1.5  ceiling | base 51.0 / 49.0 chance 50.0
+     country_size   cmp-order  n_test    672 epochs   4.5 | 42B  99.9  +0.0  ceiling | 210B 100.0  +0.0  ceiling | base 54.2 / 71.4 chance 50.0
+     emotions       cmp-order  n_test    618 epochs   4.8 | 42B  99.9  +0.1  ceiling | 210B  99.5  +0.5  ceiling | base 83.4 / 56.4 chance 50.0
+     kinship        cmp-order  n_test    148 epochs  20.4 | 42B 100.0  +0.0  ceiling | 210B  99.8  +0.2  ceiling | base 58.8 / 50.7 chance 50.0
+     languages      cmp-anchor n_test   1207 epochs   2.5 | 42B  95.1  +4.3R ceiling | 210B  97.9  -0.9  ceiling | base 46.4 / 51.1 chance 50.0
+     life_stages    cmp-order  n_test     12 epochs 248.9 | 42B 100.0  +0.0  ceiling | 210B 100.0  +0.0  ceiling | base 27.8 / 16.7 chance 50.0
+     people         cmp-order  n_test   1200 epochs   2.5 | 42B  96.5  -0.7  ceiling | 210B  98.0  +0.3  ceiling | base 47.6 / 49.9 chance 50.0
+     prefixes       cmp-order  n_test     42 epochs  70.0 | 42B  90.5  +0.0  near-ceiling | 210B  92.9  +1.6  near-ceiling | base 50.0 / 47.6 chance 50.0
+     presidents     cmp-order  n_test    394 epochs   7.6 | 42B  99.4  +0.5  ceiling | 210B  99.7  -0.2  ceiling | base 55.9 / 51.5 chance 50.0
+     ranks          cmp-order  n_test     16 epochs 172.3 | 42B  93.8  +6.2  near-ceiling | 210B 100.0  +0.0  ceiling | base 52.1 / 50.0 chance 50.0
+     scalar_adj     cmp-order  n_test     44 epochs  65.9 | 42B  91.7  -2.3  near-ceiling | 210B  92.4  +3.8  near-ceiling | base 56.1 / 44.7 chance 50.0
+     units          cmp-order  n_test     66 epochs  44.8 | 42B  97.5  +0.5  ceiling | 210B  97.5  -2.5  ceiling | base 42.4 / 74.2 chance 50.0
+     us_cities      cmp-anchor n_test   1202 epochs   2.5 | 42B  95.9  +0.2  ceiling | 210B  97.5  -0.1  ceiling | base 56.7 / 54.0 chance 50.0
+     years          offset     n_test    715 epochs   4.2 | 42B  91.9 -14.0R near-ceiling | 210B  95.1  -2.4R ceiling | base 8.0 / 41.2 chance 1.0
+  (c) floor at one checkpoint, (near-)ceiling at the other: the window lies between: 0
+
+cells written to /state/partition1/job-19259849/claude-4550886/-home-yh6210/74cbe2e4-1709-4a6a-b82e-817d33fbdd73/scratchpad/ft36res/cells_v2.json

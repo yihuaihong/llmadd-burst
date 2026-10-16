@@ -1,0 +1,71 @@
+{
+ "domain": "planets",
+ "primary": "line",
+ "raw_gram": false,
+ "split_seed": 0,
+ "n_train": 11,
+ "n_test": 7,
+ "n_test_answer_trained": 6,
+ "chance": 0.125,
+ "layers": [
+  4,
+  8,
+  12,
+  16
+ ],
+ "model": "/scratch/yh6210/llmadd_torch/models/OLMo-2-1124-7B/stage1-step50000-tokens210B",
+ "arm": "none",
+ "seed": 0,
+ "lam": 20.0,
+ "steps": 280,
+ "geo_bs": 64,
+ "shuf_cka": null,
+ "prior_skipped": 0,
+ "test": 0.0,
+ "test_hits": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0
+ ],
+ "train": 1.0,
+ "geometry": {
+  "ctx": {
+   "L4": 0.5602388381958008,
+   "L8": 0.5743675231933594,
+   "L12": 0.6198710799217224,
+   "L16": 0.6198025345802307
+  },
+  "probe": {
+   "L4": 0.496450811624527,
+   "L8": 0.5267969965934753,
+   "L12": 0.5242612361907959,
+   "L16": 0.4817155599594116
+  }
+ },
+ "log": [
+  {
+   "step": 0,
+   "ce": 3.9376180171966553,
+   "geo": null
+  },
+  {
+   "step": 70,
+   "ce": 0.0003212731680832803,
+   "geo": null
+  },
+  {
+   "step": 140,
+   "ce": 8.973503281595185e-05,
+   "geo": null
+  },
+  {
+   "step": 210,
+   "ce": 4.536961205303669e-05,
+   "geo": null
+  }
+ ]
+}

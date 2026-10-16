@@ -1,0 +1,76 @@
+{
+ "domain": "life_stages",
+ "primary": "line",
+ "raw_gram": false,
+ "split_seed": 2,
+ "n_train": 18,
+ "n_test": 12,
+ "n_test_answer_trained": 4,
+ "chance": 0.5,
+ "layers": [
+  4,
+  8,
+  12,
+  16
+ ],
+ "model": "/scratch/yh6210/llmadd_torch/models/OLMo-2-1124-7B/stage1-step10000-tokens42B",
+ "arm": "none",
+ "seed": 2,
+ "lam": 20.0,
+ "steps": 280,
+ "geo_bs": 64,
+ "shuf_cka": null,
+ "prior_skipped": 0,
+ "test": 1.0,
+ "test_hits": [
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1,
+  1
+ ],
+ "train": 1.0,
+ "geometry": {
+  "ctx": {
+   "L4": 0.5627404451370239,
+   "L8": 0.5311483144760132,
+   "L12": 0.5845712423324585,
+   "L16": 0.5265290141105652
+  },
+  "probe": {
+   "L4": 0.5414049625396729,
+   "L8": 0.5663397312164307,
+   "L12": 0.6014912128448486,
+   "L16": 0.5974076986312866
+  }
+ },
+ "log": [
+  {
+   "step": 0,
+   "ce": 3.7289211750030518,
+   "geo": null
+  },
+  {
+   "step": 70,
+   "ce": 0.00016452489944640547,
+   "geo": null
+  },
+  {
+   "step": 140,
+   "ce": 8.154408715199679e-05,
+   "geo": null
+  },
+  {
+   "step": 210,
+   "ce": 5.3797950386069715e-05,
+   "geo": null
+  }
+ ]
+}
