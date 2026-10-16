@@ -1,0 +1,9 @@
+PASS code_sha a3bce3ab63c1  (a3bce3ab63c1)
+PASS finished: last eval at step 18309 of 18310  ([18309, 18310])
+PASS step-0 lm within 1e-3 of Torch  (0.0)
+PASS step-0 val_loss within 2e-3 of Torch  (-1.1086463928222656e-05)
+PASS prior_events == [[916, 1], [7324, 0]]  ([[916, 1], [7324, 0]])
+PASS geo > 0 at every eval with the prior on  (26)
+PASS offline_lm on the full val, |orig_minus_logged| < 0.002  (8.838379583764322e-09)
+{"seed": 1, "arm": "W", "tag": "_x53-7pct-win-ctx", "area": 89.15, "b33_area": 80.93, "torch_area": 88.38, "area_minus_torch": 0.77, "final_val_bpb": 1.2041301833905909, "bpb_full": 1.2046869805236473, "cka_ops_helix3": 0.9670318365097046, "prior_used_frac": 0.3499726925177499, "sec_per_step_median": 0.14196527194976805, "projected_run_h": 0.7220511470556258, "gpu_util_median": 97.0, "gpu_mem_max_MiB": 32270, "gpu_samples": 46, "pinned_calls": 3, "evals": 75}
+P0 PASS
