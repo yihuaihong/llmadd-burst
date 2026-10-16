@@ -79,14 +79,48 @@ for ff in "$STATE"/*.fin; do
   tail -n 200 "$RUNS/$t/slurm.out" > "results/$t/log_tail.txt" 2>/dev/null || true
   s=$(cat "$RUNS/$t/start" 2>/dev/null || echo 0); e=$(cat "$RUNS/$t/end" 2>/dev/null || date +%s)
   [ "$s" = 0 ] && mins=0 || mins=$(( (e - s) / 60 ))
-  printf '{"task": "%s", "job": "%s", "kind": "%s", "state": "%s", "rc": "%s", "elapsed_min": %s, "ended": "%s"}\n' \
-    "$t" "$jid" "$kind" "$st" "$rc" "$mins" "$(date -u -d "@$e" +%FT%TZ)" > "status/$t.json"
+  printf '{"task": "%s", "job": "%s", "kind": "%s", "state": "%s", "rc": "%s", "elapsed_min": %s, "ended": "%s", "account": "%s"}\n' \
+    "$t" "$jid" "$kind" "$st" "$rc" "$mins" "$(date -u -d "@$e" +%FT%TZ)" "$(cat "$STATE/$t.acct" 2>/dev/null || echo "$ACCOUNT")" > "status/$t.json"
   to_push+=("$t")
 done
 
 # GPU hours already spent by finished GPU tasks (the budget guard reads git, so it survives scratch loss)
 gpu_min=$(cat status/*.json 2>/dev/null | awk -F'"elapsed_min": ' '/"kind": "gpu"/ {split($2,a,","); s+=a[1]} END {print s+0}')
 gpu_h=$(( gpu_min / 60 ))
+
+# Several GPU accounts (2026-10-15: two course allotments of 300 h each): GPU_ACCOUNTS="acct:budget_h ...", used in
+# order. An account's committed hours come from Slurm, so they include jobs outside this channel: ended jobs count
+# their elapsed time, queued and running jobs their full time limit (many tasks in flight cannot overshoot the budget).
+# If sacct fails the account is skipped (-1). Without GPU_ACCOUNTS the single-account guard above applies.
+acct_committed_h() {
+  local out
+  out=$(sacct -n -X -P -A "$1" -S 2026-08-01 -E now -o State,ElapsedRaw,TimelimitRaw,AllocTRES,ReqTRES 2>/dev/null) \
+    || { echo -1; return; }
+  awk -F'|' '{ tres = ($4 != "" ? $4 : $5); g = 0
+               if (match(tres, /gres\/gpu=[0-9]+/)) g = substr(tres, RSTART + 9, RLENGTH - 9) + 0
+               if (g == 0) next
+               if ($1 ~ /^(PENDING|RUNNING|REQUEUED|RESIZING|SUSPENDED|CONFIGURING|COMPLETING)/) s += $3 * 60 * g
+               else s += $2 * g }
+       END { printf "%d\n", int((s + 3599) / 3600) }' <<< "$out"
+}
+tl_hours() {   # Slurm time limit [D-]HH:MM:SS -> whole hours, rounded up
+  local d=0 t=$1 h m s
+  [[ "$t" == *-* ]] && { d=${t%%-*}; t=${t#*-}; }
+  IFS=: read -r h m s <<< "$t"
+  echo $(( d * 24 + 10#$h + ( (10#${m:-0} * 60 + 10#${s:-0}) > 0 ? 1 : 0 ) ))
+}
+declare -A ACC_USED ACC_BUD
+ACC_LIST=()
+for ab in ${GPU_ACCOUNTS:-}; do
+  a=${ab%%:*}; ACC_LIST+=("$a"); ACC_BUD[$a]=${ab#*:}; ACC_USED[$a]=$(acct_committed_h "$a")
+done
+pick_gpu_account() {   # $1 = GPU hours the task may use (gpus x time limit); prints the first account with room
+  local a
+  for a in ${ACC_LIST[@]+"${ACC_LIST[@]}"}; do
+    [ "${ACC_USED[$a]}" -ge 0 ] && [ $(( ACC_USED[$a] + $1 )) -le "${ACC_BUD[$a]}" ] && { echo "$a"; return 0; }
+  done
+  return 1
+}
 
 # 2. submit ready tasks
 if [ "${ENABLED:-0}" = 1 ]; then
@@ -106,10 +140,16 @@ if [ "${ENABLED:-0}" = 1 ]; then
     kind=$(hdr "$s" kind); kind=${kind:-cpu}
     tl=$(hdr "$s" time); tl=${tl:-04:00:00}
     cpus=$(hdr "$s" cpus); cpus=${cpus:-4}
+    acct=$ACCOUNT
     if [ "$kind" = gpu ]; then
       [ "$ngpu" -lt "$MAX_GPU_JOBS" ] || continue
-      [ "$gpu_h" -lt "$GPU_HOURS_BUDGET" ] || { log "GPU budget reached (${gpu_h}h); $t waits"; continue; }
       ng=$(hdr "$s" gpus); ng=${ng:-1}
+      if [ "${#ACC_LIST[@]}" -gt 0 ]; then
+        need=$(( ng * $(tl_hours "$tl") ))
+        acct=$(pick_gpu_account "$need") || { log "no GPU account has ${need}h left ($(for a in "${ACC_LIST[@]}"; do printf '%s %s/%s ' "$a" "${ACC_USED[$a]}" "${ACC_BUD[$a]}"; done)); $t waits"; continue; }
+      else
+        [ "$gpu_h" -lt "$GPU_HOURS_BUDGET" ] || { log "GPU budget reached (${gpu_h}h); $t waits"; continue; }
+      fi
       if [ "$ng" -gt 1 ]; then part=${GPU2_PARTITION:-c24m170-a100-2}; else part=$GPU_PARTITION; fi
       extra=(--gres=gpu:$ng)
     else
@@ -117,13 +157,14 @@ if [ "${ENABLED:-0}" = 1 ]; then
     fi
     rm -rf "${RUNS:?}/$t"; mkdir -p "$RUNS/$t/code" "$RUNS/$t/out"
     git archive HEAD | tar -x -C "$RUNS/$t/code"
-    out=$(sbatch_first "$part" --parsable --account="$ACCOUNT" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
+    out=$(sbatch_first "$part" --parsable --account="$acct" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
             --time="$tl" --requeue --job-name="llmadd_$t" --output="$RUNS/$t/slurm.out" \
             --export=ALL,TASK="$t",LLMADD_ROOT="$ROOT" "$RUNS/$t/code/burst/run_task.sbatch" 2>&1)
     if [[ "$out" =~ ^[0-9]+ ]]; then
-      echo "${out%%;*} $kind" > "$STATE/$t.job"; rm -f "$STATE/$t.err"
-      log "submitted $t as ${out%%;*} ($kind on $part, $tl)"; changed=1
+      echo "${out%%;*} $kind" > "$STATE/$t.job"; echo "$acct" > "$STATE/$t.acct"; rm -f "$STATE/$t.err"
+      log "submitted $t as ${out%%;*} ($kind on $part, $tl, account $acct)"; changed=1
       [ "$kind" = gpu ] && ngpu=$((ngpu + 1))
+      [ "$kind" = gpu ] && [ -n "${ACC_USED[$acct]+x}" ] && ACC_USED[$acct]=$(( ACC_USED[$acct] + need ))
     else
       echo "$out" > "$STATE/$t.err"; log "sbatch failed for $t: $out"; changed=1
     fi
@@ -146,10 +187,12 @@ if [ "${#to_push[@]}" -gt 0 ] || [ "$changed" = 1 ] || [ $(( $(date +%s) - last 
     errs="$errs\"$(basename "$ef" .err)\": \"$(tail -1 "$ef" | tr -d '"\\' | cut -c1-200)\", "
   done
   prev=$( [ -f "$STATE/prev_sentinel.txt" ] && tr -s ' \n' ' ' < "$STATE/prev_sentinel.txt" | tr -d '"\\' | cut -c1-200)
-  printf '{"time": "%s", "host": "%s", "sentinel_job": "%s", "sentinel_started": "%s", "enabled": "%s", "gpu_hours_used": %s, "in_flight": {%s}, "submit_errors": {%s}, "prev_sentinel": "%s"}\n' \
+  accts=""
+  for a in ${ACC_LIST[@]+"${ACC_LIST[@]}"}; do accts="$accts\"$a\": \"${ACC_USED[$a]}/${ACC_BUD[$a]}\", "; done
+  printf '{"time": "%s", "host": "%s", "sentinel_job": "%s", "sentinel_started": "%s", "enabled": "%s", "gpu_hours_used": %s, "gpu_accounts_committed_of_budget": {%s}, "in_flight": {%s}, "submit_errors": {%s}, "prev_sentinel": "%s"}\n' \
     "$(date -u +%FT%TZ)" "$(hostname -s)" "$(cat "$STATE/sentinel_job" 2>/dev/null)" \
     "$(date -u -d "@$(cat "$STATE/sentinel_start" 2>/dev/null || echo 0)" +%FT%TZ)" "$ENABLED" "$gpu_h" \
-    "${inflight%, }" "${errs%, }" "$prev" > heartbeat.json
+    "${accts%, }" "${inflight%, }" "${errs%, }" "$prev" > heartbeat.json
   git add -A status results heartbeat.json
   if git commit -q -m "sentinel: $(date -u +%FT%TZ) ${to_push[*]:-heartbeat}" 2>/dev/null; then
     if timeout 120 git pull -q --rebase origin main 2>>logs/tick.log && timeout 120 git push -q origin HEAD:main 2>>logs/tick.log; then
