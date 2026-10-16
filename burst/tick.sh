@@ -47,7 +47,11 @@ for jf in "$STATE"/*.job; do
     fi
     continue
   else
-    rc=""; st=$(sacct -n -X -j "$jid" -o State 2>/dev/null | head -1 | awk '{print $1}'); st=${st:-LOST}
+    # squeue can fail transiently: ask sacct; a job it still reports as active is not finished, and when sacct does not
+    # answer either, decide on a later tick instead of resubmitting a job that may still be running
+    sa=$(timeout 60 sacct -n -X -j "$jid" -o State 2>/dev/null) || { log "$t ($jid): squeue and sacct unavailable, kept in flight"; continue; }
+    rc=""; st=$(head -1 <<< "$sa" | awk '{print $1}'); st=${st:-LOST}
+    [[ "$st" =~ ^(PENDING|RUNNING|REQUEUED|CONFIGURING|COMPLETING|RESIZING|SUSPENDED) ]] && continue
   fi
   # killed from outside before the task could finish (idle-job reaper, node failure, preemption, held node):
   # retry up to 3 times, unless the cancel came from burst/cancel.list
@@ -175,7 +179,9 @@ if [ "${ENABLED:-0}" = 1 ]; then
       mkdir -p "$RUNS/$t/out"; log "$t: retry keeps code $(cat "$RUNS/$t/commit" 2>/dev/null) and out/"
     else
       rm -rf "${RUNS:?}/$t"; mkdir -p "$RUNS/$t/code" "$RUNS/$t/out"
-      git archive HEAD | tar -x -C "$RUNS/$t/code"; git rev-parse HEAD > "$RUNS/$t/commit"
+      # code only: results/, status/ and report/ are ~200 MB and would make a tick that submits 12 tasks overrun its 600 s
+      git archive HEAD $(git ls-tree --name-only HEAD | grep -vxE 'results|status|report|logs') | tar -x -C "$RUNS/$t/code"
+      git rev-parse HEAD > "$RUNS/$t/commit"
     fi
     # GPU accounts in order: an account the submit filter refuses (wrong name, partition not allowed) falls through
     for acct in $accts; do

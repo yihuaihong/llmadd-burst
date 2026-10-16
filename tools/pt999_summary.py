@@ -15,6 +15,8 @@ share / optimisation setting; lambda and layer cells vs 7pct-none), and gate vs 
 same site. Reported: mean difference, paired t-test p, wins = seeds where the arm is higher.
 
     python tools/pt999_summary.py /scratch/yh6210/llmadd_torch/runs/pt999/out [/scratch/yh6210/llmadd_torch/runs/ptsize999/out]
+Burst results (2026-10-16, pt2main): a returned task dir results/<task>/ holds <tag>/run_*.json, so pass the task dirs,
+e.g. results/3[5-9][0-9]-pt2*; tools/pt2main_summary.py does that and applies the batch's pre-registered rules.
 """
 import collections
 import glob
@@ -25,7 +27,9 @@ import numpy as np
 from scipy import stats
 
 B = ("b11", "b12", "b13", "b22", "b23", "b33")
-ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "win-text", "gate-ctx", "gate-text", "shuf-ctx", "shuf-text",
+ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "win-text", "gate-ctx", "gate-text",
+        "win-shuf-ctx",   # pt2main (window + helix3_shuf on the operands); before shuf-ctx, which it ends with
+        "shuf-ctx", "shuf-text",
         "win-prefix-shuf", "win-prefix-lam1.7",
         "win-ctx", "whole-prefix", "win-prefix", "gate-prefix", "win0-text", "win10-text", "win20-text",
         "none")
@@ -127,7 +131,8 @@ for a, b in (("gate-ctx", "shuf-ctx"), ("gate-text", "shuf-text"), ("gate-ctx", 
              ("whole-ctx", "whole-prefix"), ("win-ctx", "win-prefix"), ("gate-ctx", "gate-prefix"), ("win-ctx", "win-text"),
              ("win-text", "win-prefix"), ("gate-text", "gate-prefix"),
              ("win-text", "win0-text"), ("win-text", "win10-text"), ("win-text", "win20-text"),
-             ("win-prefix", "win-prefix-shuf"), ("win-ctx", "win-prefix-lam1.7"), ("win-prefix-lam1.7", "win-prefix")):
+             ("win-prefix", "win-prefix-shuf"), ("win-ctx", "win-prefix-lam1.7"), ("win-prefix-lam1.7", "win-prefix"),
+             ("win-ctx", "win-shuf-ctx")):
     for pre in sorted({split_arm(t)[0] for t in cells}):
         t1, t2 = f"{pre}-{a}", f"{pre}-{b}"
         if t1 in cells and t2 in cells:
