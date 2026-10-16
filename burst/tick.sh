@@ -91,10 +91,12 @@ gpu_h=$(( gpu_min / 60 ))
 # Several GPU accounts (2026-10-15: two course allotments of 300 h each): GPU_ACCOUNTS="acct:budget_h ...", used in
 # order. An account's committed hours come from Slurm, so they include jobs outside this channel: ended jobs count
 # their elapsed time, queued and running jobs their full time limit (many tasks in flight cannot overshoot the budget).
-# If sacct fails the account is skipped (-1). Without GPU_ACCOUNTS the single-account guard above applies.
+# If sacct fails the account is skipped (-1). The hours this channel's own status/ files record for the account
+# (GPU-weighted; files written before 2026-10-15 carry no account and belong to ACCOUNT) are a floor, in case Slurm's
+# history is shorter than ours. Without GPU_ACCOUNTS the single-account guard above applies.
 acct_committed_h() {
   local out
-  out=$(sacct -n -X -P -A "$1" -S 2026-08-01 -E now -o State,ElapsedRaw,TimelimitRaw,AllocTRES,ReqTRES 2>/dev/null) \
+  out=$(timeout 60 sacct -n -X -P -A "$1" -S 2026-08-01 -E now -o State,ElapsedRaw,TimelimitRaw,AllocTRES,ReqTRES 2>/dev/null) \
     || { echo -1; return; }
   awk -F'|' '{ tres = ($4 != "" ? $4 : $5); g = 0
                if (match(tres, /gres\/gpu=[0-9]+/)) g = substr(tres, RSTART + 9, RLENGTH - 9) + 0
@@ -109,17 +111,28 @@ tl_hours() {   # Slurm time limit [D-]HH:MM:SS -> whole hours, rounded up
   IFS=: read -r h m s <<< "$t"
   echo $(( d * 24 + 10#$h + ( (10#${m:-0} * 60 + 10#${s:-0}) > 0 ? 1 : 0 ) ))
 }
-declare -A ACC_USED ACC_BUD
+declare -A ACC_USED ACC_BUD ST_MIN
 ACC_LIST=()
+if [ -n "${GPU_ACCOUNTS:-}" ]; then
+  for sf in status/*.json; do
+    [ -e "$sf" ] && grep -q '"kind": "gpu"' "$sf" || continue
+    t=$(basename "$sf" .json)
+    m=$(sed -n 's/.*"elapsed_min": \([0-9]*\).*/\1/p' "$sf")
+    a=$(sed -n 's/.*"account": "\([^"]*\)".*/\1/p' "$sf"); a=${a:-$ACCOUNT}
+    g=$( [ -f "tasks/$t.sh" ] && hdr "tasks/$t.sh" gpus ); g=${g:-1}
+    ST_MIN[$a]=$(( ${ST_MIN[$a]:-0} + ${m:-0} * g ))
+  done
+fi
 for ab in ${GPU_ACCOUNTS:-}; do
   a=${ab%%:*}; ACC_LIST+=("$a"); ACC_BUD[$a]=${ab#*:}; ACC_USED[$a]=$(acct_committed_h "$a")
+  st=$(( (${ST_MIN[$a]:-0} + 59) / 60 ))
+  [ "${ACC_USED[$a]}" -ge 0 ] && [ "$st" -gt "${ACC_USED[$a]}" ] && ACC_USED[$a]=$st
 done
-pick_gpu_account() {   # $1 = GPU hours the task may use (gpus x time limit); prints the first account with room
+gpu_accounts_with_room() {   # $1 = GPU hours the task may use (gpus x time limit); prints every account with room, in order
   local a
   for a in ${ACC_LIST[@]+"${ACC_LIST[@]}"}; do
-    [ "${ACC_USED[$a]}" -ge 0 ] && [ $(( ACC_USED[$a] + $1 )) -le "${ACC_BUD[$a]}" ] && { echo "$a"; return 0; }
+    [ "${ACC_USED[$a]}" -ge 0 ] && [ $(( ACC_USED[$a] + $1 )) -le "${ACC_BUD[$a]}" ] && echo "$a"
   done
-  return 1
 }
 
 # 2. submit ready tasks
@@ -140,13 +153,14 @@ if [ "${ENABLED:-0}" = 1 ]; then
     kind=$(hdr "$s" kind); kind=${kind:-cpu}
     tl=$(hdr "$s" time); tl=${tl:-04:00:00}
     cpus=$(hdr "$s" cpus); cpus=${cpus:-4}
-    acct=$ACCOUNT
+    accts=$ACCOUNT; need=0
     if [ "$kind" = gpu ]; then
       [ "$ngpu" -lt "$MAX_GPU_JOBS" ] || continue
       ng=$(hdr "$s" gpus); ng=${ng:-1}
       if [ "${#ACC_LIST[@]}" -gt 0 ]; then
         need=$(( ng * $(tl_hours "$tl") ))
-        acct=$(pick_gpu_account "$need") || { log "no GPU account has ${need}h left ($(for a in "${ACC_LIST[@]}"; do printf '%s %s/%s ' "$a" "${ACC_USED[$a]}" "${ACC_BUD[$a]}"; done)); $t waits"; continue; }
+        accts=$(gpu_accounts_with_room "$need")
+        [ -n "$accts" ] || { log "no GPU account has ${need}h left ($(for a in "${ACC_LIST[@]}"; do printf '%s %s/%s ' "$a" "${ACC_USED[$a]}" "${ACC_BUD[$a]}"; done)); $t waits"; continue; }
       else
         [ "$gpu_h" -lt "$GPU_HOURS_BUDGET" ] || { log "GPU budget reached (${gpu_h}h); $t waits"; continue; }
       fi
@@ -155,11 +169,22 @@ if [ "${ENABLED:-0}" = 1 ]; then
     else
       part=$CPU_PARTITION; extra=()
     fi
-    rm -rf "${RUNS:?}/$t"; mkdir -p "$RUNS/$t/code" "$RUNS/$t/out"
-    git archive HEAD | tar -x -C "$RUNS/$t/code"
-    out=$(sbatch_first "$part" --parsable --account="$acct" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
-            --time="$tl" --requeue --job-name="llmadd_$t" --output="$RUNS/$t/slurm.out" \
-            --export=ALL,TASK="$t",LLMADD_ROOT="$ROOT" "$RUNS/$t/code/burst/run_task.sbatch" 2>&1)
+    # a retry (the job was killed from outside) keeps its code snapshot and out/ (checkpoints, partial results), so it
+    # runs the commit it was first submitted with and can resume; a first submission snapshots HEAD
+    if [ -e "$STATE/$t.retries" ] && [ -d "$RUNS/$t/code" ]; then
+      mkdir -p "$RUNS/$t/out"; log "$t: retry keeps code $(cat "$RUNS/$t/commit" 2>/dev/null) and out/"
+    else
+      rm -rf "${RUNS:?}/$t"; mkdir -p "$RUNS/$t/code" "$RUNS/$t/out"
+      git archive HEAD | tar -x -C "$RUNS/$t/code"; git rev-parse HEAD > "$RUNS/$t/commit"
+    fi
+    # GPU accounts in order: an account the submit filter refuses (wrong name, partition not allowed) falls through
+    for acct in $accts; do
+      out=$(sbatch_first "$part" --parsable --account="$acct" ${extra[@]+"${extra[@]}"} --cpus-per-task="$cpus" \
+              --time="$tl" --requeue --job-name="llmadd_$t" --output="$RUNS/$t/slurm.out" \
+              --export=ALL,TASK="$t",LLMADD_ROOT="$ROOT" "$RUNS/$t/code/burst/run_task.sbatch" 2>&1)
+      [[ "$out" =~ ^[0-9]+ ]] && break
+      log "sbatch refused $t on account $acct: $(tail -1 <<< "$out" | cut -c1-200)"
+    done
     if [[ "$out" =~ ^[0-9]+ ]]; then
       echo "${out%%;*} $kind" > "$STATE/$t.job"; echo "$acct" > "$STATE/$t.acct"; rm -f "$STATE/$t.err"
       log "submitted $t as ${out%%;*} ($kind on $part, $tl, account $acct)"; changed=1

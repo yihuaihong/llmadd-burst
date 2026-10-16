@@ -26,7 +26,7 @@ Task header (comment lines at the top of the script):
 ```
 
 Tasks see `$OUT` (write results here), `$PY` (the env's python), `$MODELS`, `$HF_HOME`. A task runs once;
-to re-run, add a new task file. `burst/config.env` holds ENABLED, partitions, the account, the GPU budget.
+to re-run, add a new task file. `burst/config.env` holds ENABLED, partitions, the account, the GPU budget. GPU tasks go to the accounts in `GPU_ACCOUNTS` (in order, each with its own hour cap; committed hours = max(Slurm sacct incl. queued/running jobs at their time limit, our status/ records)); an account the submit filter refuses falls through to the next. A retry after an outside kill keeps the run's code snapshot (`commit`) and `out/`, so long tasks should resume from their checkpoints. Set `# time:` to about 1.5x the measured run time: the guard reserves the full limit.
 
 ## Scheduling without a resident sentinel
 
