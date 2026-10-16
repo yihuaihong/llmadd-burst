@@ -1,0 +1,17 @@
+## task 331-env311  job 7699  host b-10-105  2026-10-16T21:58:43Z
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+Downloading cpython-3.11.13-linux-x86_64-gnu (download) (28.8MiB)
+ Downloaded cpython-3.11.13-linux-x86_64-gnu (download)
+Installed Python 3.11.13 in 33.80s
+ + cpython-3.11.13-linux-x86_64-gnu
+python 3.11.13 /scratch/yh6210/llmadd_env311/bin/python
+torch 2.10.0+cu128 cuda build 12.8 cudnn 91002 arch sm_70 sm_75 sm_80 sm_86 sm_90 sm_100 sm_120 | wheel Tag: cp311-cp311-manylinux_2_28_x86_64 Build: 3
+transformers 4.57.6 tokenizers 0.22.2 numpy 2.0.1 scipy 1.17.0 pyarrow 23.0.1 peft 0.17.1 geonamescache 3.0.2 huggingface_hub 0.36.2
+<stdin>:29: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)
+tiny Olmo2 forward on CPU: loss 4.891
+60 pinned packages: all equal to Torch's open_r1
+7.5G	/scratch/yh6210/llmadd_env311
+200M	/scratch/yh6210/llmadd_uv
+## rc=0  2026-10-16T22:05:50Z
