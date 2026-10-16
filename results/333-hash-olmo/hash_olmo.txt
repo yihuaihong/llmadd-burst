@@ -1,0 +1,25 @@
+## checkpoints in /scratch/yh6210/models/OLMo-2-1124-7B (2026-10-16T22:07:44Z): shards, .complete marker
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/main/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step10000-tokens42B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150-tokens1B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step150000-tokens630B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step2000-tokens9B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step20000-tokens84B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step400000-tokens1678B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step5000-tokens21B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step50000-tokens210B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step928646-tokens3896B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient1-step11931-tokens50B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient2-step11931-tokens50B/
+  6 complete /scratch/yh6210/models/OLMo-2-1124-7B/stage2-ingredient3-step11931-tokens50B/
+## tokenizer.json of stage1-step2000-tokens9B (Torch 73fd5254...)
+tokenizer.json: OK
+## bf16 tensor digests (Torch: 42B 4133fa61ec69ece6, 210B 08e4c3a401069fd0; 355 tensors each)
+4133fa61ec69ece6  355 tensors  /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step10000-tokens42B  OK
+08e4c3a401069fd0  355 tensors  /scratch/yh6210/models/OLMo-2-1124-7B/stage1-step50000-tokens210B  OK
+## the other ft36b checkpoints: .complete names the revision, every indexed shard present and not empty
+  ok   stage1-step2000-tokens9B: .complete 'stage1-step2000-tokens9B', 6 indexed shards, missing or empty []
+  ok   stage1-step5000-tokens21B: .complete 'stage1-step5000-tokens21B', 6 indexed shards, missing or empty []
+  ok   stage1-step20000-tokens84B: .complete 'stage1-step20000-tokens84B', 6 indexed shards, missing or empty []
+  ok   stage1-step150000-tokens630B: .complete 'stage1-step150000-tokens630B', 6 indexed shards, missing or empty []
+  ok   stage1-step928646-tokens3896B: .complete 'stage1-step928646-tokens3896B', 6 indexed shards, missing or empty []
