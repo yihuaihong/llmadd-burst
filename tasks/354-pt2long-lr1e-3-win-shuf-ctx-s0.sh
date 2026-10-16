@@ -1,5 +1,5 @@
 # kind: gpu
-# time: 08:00:00
+# time: 10:00:00
 # cpus: 8
 # after: 331-env311 332-data
 # pt2main pt2long (2026-10-16 user decisions: 2% arithmetic = the main setting, the 5% window = the main recipe, every arm
@@ -18,7 +18,7 @@
 # 3. offline_lm.py on the saved model (full val.bin of pretrain_data_3B)
 # 4. intent checks of the run JSON -> $OUT/check.{json,txt} (exit 4 on a fail;
 #    no same-seed Torch run on this data: step-0 lm only recorded)
-# nvidia-smi utilisation / memory every 60 s -> $OUT/gpu.csv (planning: 3.00 A100-h; limit 08:00:00).
+# nvidia-smi utilisation / memory every 60 s -> $OUT/gpu.csv (planning: 3.00 A100-h; limit 10:00:00).
 set -euo pipefail
 SEED=0; TAG=pt2long-lr1e-3-win-shuf-ctx; ARM="--target helix3_shuf --schedule window --window 0.05,0.4 --site ctx"
 ROOT=${LLMADD_ROOT:-/scratch/$USER}; DATA=$ROOT/llmadd_data/pretrain_data_3B; TOK=$ROOT/llmadd_data/olmo2_tok; PIN=64abc19

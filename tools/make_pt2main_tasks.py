@@ -4,16 +4,18 @@ its own best lr; 2% long-budget runs (so none can reach 90% and a clean speed-up
 Intent spec + pre-registered rules: report/audits/pt2main_AUDIT.md; read-out: tools/pt2main_summary.py.
 Self-contained on Burst: every comparison has its own none cell on the same hardware and pinned code; no seed pairing
 with Torch cells. helix3 target, lambda 5, prior layers 1/3 and 2/3 of the depth, seeds 0-3, every model saved:
-  pt2b     53M, 3e8 tokens (pretrain_data):     none at lr 1e-3, 2e-3, 4e-3; win-ctx at 1e-3, 2e-3, 4e-3      tasks 350-353
-  pt2long  53M, 1.2e9 tokens (pretrain_data_3B): none and win-ctx at 1e-3, 2e-3; win-text and win-shuf-ctx
+  pt2b     53M, 3e8 tokens (pretrain_data):     none at lr 1e-3, 2e-3, 4e-3, 8e-3; win-ctx at 1e-3, 2e-3, 4e-3
+                                                                                                              tasks 350-353
+  pt2long  53M, 1.2e9 tokens (pretrain_data_3B): none and win-ctx at 5e-4, 1e-3, 2e-3; win-text and win-shuf-ctx
                                                 (helix3_shuf) at 1e-3                                         tasks 354-357
-  pt2s190  190M, 3e8 tokens (pretrain_data):    none at 6e-4, 1.2e-3, 2.4e-3; win-ctx at 6e-4, 1.2e-3;
+  pt2s190  190M, 3e8 tokens (pretrain_data):    none at 6e-4, 1.2e-3, 2.4e-3; win-ctx at 6e-4, 1.2e-3, 2.4e-3;
                                                 win-text at 6e-4                                             tasks 358-361
-  EXTRA    pt2long none and win-ctx at 5e-4 (tasks 362-365); pt2s190 win-ctx at 2.4e-3 (tasks 366-369)
+  (2026-10-16, user: every arm at its own best lr, maximise parallelism; re-audit: the added cells belong inside their
+  block so the long runs start before pt2s190 and a budget stop cannot strand an lr grid half-run)
 Task name = <NNN>-<tag>-s<seed>, NNN = block base + seed (the 6 cells of a block share it). The tick submits in name order
 and holds at most 12 GPU tasks: the cheap, decisive block comes first (pt2b), then the longest runs (pt2long, so the batch
 ends sooner), then pt2s190; inside a block every cell's seed 0 comes before any seed 1 (the first wave shows every cell).
-362-399: EXTRA below (re-runs of a failed task and conditional / added cells), rendered like the 72.
+362-399: EXTRA below (re-runs of a failed task and conditional cells), rendered like the base tasks.
 `# time:` = 2 x the Torch L40S time of the same configuration, rounded up to the half hour (L40S_H; the A100-40GB is
 untimed, and the tick never retries a TIMEOUT).
 Every task (header '# after: 331-env311 332-data'): data sha256 = Torch's; --dry_inputs through burst/pin_run.sh at PIN
@@ -66,13 +68,14 @@ for _s in SIZES.values():
 # blocks in submission order: (base number, block, size, data, tokens, planning A100-40GB hours per run, time limit, cells)
 # planning rates (Batch 1 plan): 53M 2.5 A100-h per 1e9 tokens, 190M 2.0 A100-h per 3e8 tokens
 BLOCKS = [(350, "pt2b", "53m", "pretrain_data", "3e8", 0.75, "02:00:00",
-           [("none", "1e-3"), ("none", "2e-3"), ("none", "4e-3"), ("win-ctx", "1e-3"), ("win-ctx", "2e-3"), ("win-ctx", "4e-3")]),
-          (354, "pt2long", "53m", "pretrain_data_3B", "1.2e9", 2.5 * 1.2, "08:00:00",
-           [("none", "1e-3"), ("none", "2e-3"), ("win-ctx", "1e-3"), ("win-ctx", "2e-3"), ("win-text", "1e-3"),
-            ("win-shuf-ctx", "1e-3")]),
+           [("none", "1e-3"), ("none", "2e-3"), ("none", "4e-3"), ("none", "8e-3"), ("win-ctx", "1e-3"), ("win-ctx", "2e-3"),
+            ("win-ctx", "4e-3")]),
+          (354, "pt2long", "53m", "pretrain_data_3B", "1.2e9", 2.5 * 1.2, "10:00:00",
+           [("none", "5e-4"), ("none", "1e-3"), ("none", "2e-3"), ("win-ctx", "5e-4"), ("win-ctx", "1e-3"), ("win-ctx", "2e-3"),
+            ("win-text", "1e-3"), ("win-shuf-ctx", "1e-3")]),
           (358, "pt2s190", "190m", "pretrain_data", "3e8", 2.0, "05:30:00",
            [("none", "6e-4"), ("none", "1.2e-3"), ("none", "2.4e-3"), ("win-ctx", "6e-4"), ("win-ctx", "1.2e-3"),
-            ("win-text", "6e-4")])]
+            ("win-ctx", "2.4e-3"), ("win-text", "6e-4")])]
 # Torch L40S hours per run (training loop, the last eval's 'sec'): pt999 2pct-none s0-3 0.952-0.961, 2pct-gate-ctx s0-1
 # 0.962-0.965, 2pct-gate-text s0 0.969, ptgw lr5e-4-W s1 0.963; ptsize999 190m-2pct-none s0-3 2.598-2.615, 190m-2pct-gate-ctx
 # s0 2.616; pt2long = 4 x pt2b (no 1.2e9 run exists). The limit is 2x this, rounded up to the half hour (asserted in
@@ -80,6 +83,9 @@ BLOCKS = [(350, "pt2b", "53m", "pretrain_data", "3e8", 0.75, "02:00:00",
 # is never retried (tick.sh), so a run that hits it loses all its hours. Billing is by elapsed time; the guard reserves
 # the limit while a task is in flight (2 / 6 / 8 h). xsite53's measured sec/step may lower the limits before submission.
 L40S_H = {"pt2b": 0.97, "pt2s190": 2.62, "pt2long": 4 * 0.97}
+# limit factor over L40S_H: 2, except pt2long 2.5 (re-audit 2026-10-16: a TIMEOUT is never retried and the A100-40GB is
+# untimed; 32 x 10 h is the most at stake, and the guard reserves the limit only while a task is in flight)
+LIM_X = {"pt2b": 2, "pt2s190": 2, "pt2long": 2.5}
 # Re-runs and conditional cells: (task number 362-399, block, arm, lr, seed), rendered exactly like the 72 with that
 # block's constants, intent and checks. A task runs once (tick.sh), so a failed task (TIMEOUT, OOM, a lost pin) is re-run
 # as the same cell and seed under a new number; the conditional cells pre-registered in the AUDIT (an lr beyond an open
@@ -89,8 +95,7 @@ L40S_H = {"pt2b": 0.97, "pt2s190": 2.62, "pt2long": 4 * 0.97}
 # 2026-10-16 (user: every arm, the prior too, at its own best lr; maximise parallelism), decided before any result: the
 # long budget's best lr is expected lower than at 3e8 (the optimum falls with the horizon), so pt2long gets 5e-4 for none
 # and win-ctx; pt2s190 win-ctx gets 2.4e-3 to bracket the prior like none.
-EXTRA = ([(362 + s, "pt2long", arm, "5e-4", s) for s in range(4) for arm in ("none", "win-ctx")]
-         + [(366 + s, "pt2s190", "win-ctx", "2.4e-3", s) for s in range(4)])
+EXTRA = []
 BLOCK_DESC = {"pt2b": "53M lr bracket at the main budget: 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data (4e8 tokens)",
               "pt2s190": "190M (d768 x 12, gradient checkpointing on) at 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data",
               "pt2long": "53M long budget: 1.2e9 tokens = 73242 steps of 32 x 512 on pretrain_data_3B (3e9 tokens; its val.bin "
@@ -258,7 +263,7 @@ def render(num, block, size, data, tokens, plan_h, tlim, arm, lr, seed):
         assert f.get(k) == v, (name, k, f.get(k), v)
     assert set(f) <= {k for k, v in want.items() if v is not None}, (name, sorted(f))
     assert float(f.get("--tokens", 3e8)) == T and steps == (18310 if T == 3e8 else 73242), (name, steps)
-    assert 2 * L40S_H[block] <= hours(tlim) < 2 * L40S_H[block] + 0.5 and hours(tlim) >= 1.7 * plan_h, (name, tlim)
+    assert LIM_X[block] * L40S_H[block] <= hours(tlim) < LIM_X[block] * L40S_H[block] + 0.5 and hours(tlim) >= 1.7 * plan_h, (name, tlim)
     events, on_frac = window_events(steps) if arm != "none" else ([], 0.0)
     if arm != "none":
         assert events == ([[916, 1], [7324, 0]] if steps == 18310 else [[3663, 1], [29297, 0]]), events
@@ -348,7 +353,7 @@ echo "## 4. intent checks $(date -u +%FT%TZ)"
 
 
 def tasks():
-    """Every (cell, seed) of BLOCKS in submission order (the 72), then EXTRA: [(name, tag, text, args, block, arm, lr, seed)]."""
+    """Every (cell, seed) of BLOCKS in submission order (the base tasks), then EXTRA: [(name, tag, text, args, block, arm, lr, seed)]."""
     out, blocks = [], {b[1]: b for b in BLOCKS}
     for base, block, size, data, tokens, plan_h, tlim, cells in BLOCKS:
         assert len({(a, lr) for a, lr in cells}) == len(cells)
@@ -370,13 +375,15 @@ def main() -> None:
     a = ap.parse_args()
     repo = Path(a.repo)
     T = tasks()
-    names, base = [t[0] for t in T], T[:72]
+    n_cells = sum(len(b[-1]) for b in BLOCKS)
+    n_base = n_cells * len(SEEDS)
+    names, base = [t[0] for t in T], T[:n_base]
     assert len(set(names)) == len(names), "task names not unique"
-    assert len(base) == 72 and len({t[1] for t in base}) == 18, (len(base), len({t[1] for t in base}))
+    assert len(base) == n_base == 88 and len({t[1] for t in base}) == n_cells == 22, (len(base), len({t[1] for t in base}))
     nums = [int(t[0][:3]) for t in base]
     assert nums == sorted(nums) and set(nums) == set(range(350, 362)), "task numbers / order"
     assert [t[4] for t in base] == sorted([t[4] for t in base], key=["pt2b", "pt2long", "pt2s190"].index), "block order"
-    assert all(362 <= int(t[0][:3]) <= 399 for t in T[72:]), "EXTRA numbers"
+    assert all(362 <= int(t[0][:3]) <= 399 for t in T[n_base:]), "EXTRA numbers"
     if a.show:
         for name, tag, text, args, *_ in T:
             if name.endswith("-s0"):
@@ -405,7 +412,7 @@ def main() -> None:
     if not a.check:
         for p, text in new:
             p.write_text(text)
-    print(f"{len(T)} tasks ({len(T) - 72} EXTRA): {len(new)} {'to write' if a.check else 'written'}, {len(same)} unchanged, {len(differ)} differ "
+    print(f"{len(T)} tasks ({len(T) - n_base} EXTRA): {len(new)} {'to write' if a.check else 'written'}, {len(same)} unchanged, {len(differ)} differ "
           f"(kept), {len(ran)} already ran")
 
 

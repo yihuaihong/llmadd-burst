@@ -50,8 +50,13 @@ for jf in "$STATE"/*.job; do
     # squeue can fail transiently: ask sacct; a job it still reports as active is not finished, and when sacct does not
     # answer either, decide on a later tick instead of resubmitting a job that may still be running
     sa=$(timeout 60 sacct -n -X -j "$jid" -o State 2>/dev/null) || { log "$t ($jid): squeue and sacct unavailable, kept in flight"; continue; }
-    rc=""; st=$(head -1 <<< "$sa" | awk '{print $1}'); st=${st:-LOST}
+    rc=""; st=$(head -1 <<< "$sa" | awk '{print $1}')
     [[ "$st" =~ ^(PENDING|RUNNING|REQUEUED|CONFIGURING|COMPLETING|RESIZING|SUSPENDED) ]] && continue
+    # sacct answered but knows nothing: LOST only if the task's log has been quiet for 30 min (a live run writes to it)
+    if [ -z "$st" ] && [ -f "$RUNS/$t/slurm.out" ] && [ $(( $(date +%s) - $(stat -c %Y "$RUNS/$t/slurm.out") )) -lt 1800 ]; then
+      log "$t ($jid): unknown to squeue and sacct but its log is fresh, kept in flight"; continue
+    fi
+    st=${st:-LOST}
   fi
   # killed from outside before the task could finish (idle-job reaper, node failure, preemption, held node):
   # retry up to 3 times, unless the cancel came from burst/cancel.list
@@ -164,7 +169,10 @@ if [ "${ENABLED:-0}" = 1 ]; then
       if [ "${#ACC_LIST[@]}" -gt 0 ]; then
         need=$(( ng * $(tl_hours "$tl") ))
         accts=$(gpu_accounts_with_room "$need")
-        [ -n "$accts" ] || { log "no GPU account has ${need}h left ($(for a in "${ACC_LIST[@]}"; do printf '%s %s/%s ' "$a" "${ACC_USED[$a]}" "${ACC_BUD[$a]}"; done)); $t waits"; continue; }
+        # '# account: <name>' pins a task to one account (e.g. a probe of an account the tick would only reach later)
+        pin=$(hdr "$s" account)
+        [ -z "$pin" ] || accts=$(grep -xF -- "$pin" <<< "$accts")
+        [ -n "$accts" ] || { log "no GPU account${pin:+ ($pin)} has ${need}h left ($(for a in "${ACC_LIST[@]}"; do printf '%s %s/%s ' "$a" "${ACC_USED[$a]}" "${ACC_BUD[$a]}"; done)); $t waits"; continue; }
       else
         [ "$gpu_h" -lt "$GPU_HOURS_BUDGET" ] || { log "GPU budget reached (${gpu_h}h); $t waits"; continue; }
       fi

@@ -326,3 +326,22 @@ decoded training rows with the prior sites in ⟦ ⟧ and decoded eval rows (`dr
     bracket is extended downwards.
   - pt2s190 win-ctx at 2.4e-3 (366-369).
 - The best-lr rules are unchanged and run over the wider grids. 84 tasks in total.
+
+## 2026-10-16 amendment 2 (fresh re-audit of HEAD dbd42e6; before any GPU task was submitted)
+- The added lr cells now sit inside their blocks, so no budget stop can leave an lr grid half-run, and the long runs go
+  before pt2s190:
+  - pt2b (350-353): none at 1e-3, 2e-3, 4e-3, 8e-3; win-ctx at 1e-3, 2e-3, 4e-3. none@8e-3 was added: the bracket is
+    expected to be open at 4e-3.
+  - pt2long (354-357): none and win-ctx at 5e-4, 1e-3, 2e-3; win-text and win-shuf-ctx at 1e-3.
+  - pt2s190 (358-361): none at 6e-4, 1.2e-3, 2.4e-3; win-ctx at 6e-4, 1.2e-3, 2.4e-3; win-text at 6e-4.
+  - 88 tasks in total; EXTRA is empty again.
+- pt2long time limit 10 h, i.e. 2.5 x the L40S time. A TIMEOUT is never retried, and the A100-40GB is untimed until
+  xsite53 reports.
+- Accounts: ds_ga_1011 now goes first, because it is known to run GPU jobs. Task 334 is a 15-min GPU job pinned to
+  ds_ga_1006 (new '# account:' header in tick.sh) and shows early whether that account starts jobs at all.
+- Still open, to be fixed before any result is read (tools written and checked on fake data):
+  - Selection criterion: the pt2long headline is a t90 ratio, but the best lr is chosen by area. The headline will
+    pick each arm's lr by median t90 (censored at the budget) and report the area-best lr next to it.
+  - Shared definitions with runs/ptlr/AUDIT.md: diverged, survives tuning, N x, tie-break.
+  - Rule 6 (integrity failures withhold verdicts) enforced in code.
+  - Area and t90 also reported without b11, because b11 pairs occur in the natural text.
