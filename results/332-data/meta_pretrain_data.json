@@ -1,0 +1,10 @@
+{
+ "tokenizer": "/scratch/yh6210/llmadd_data/olmo2_tok",
+ "train_tokens": 400000000,
+ "val_tokens": 2000000,
+ "eos": 100257,
+ "vocab": 100278,
+ "files": "sample/10BT/000_00000.parquet,sample/10BT/001_00000.parquet",
+ "repo": "HuggingFaceFW/fineweb-edu",
+ "revision": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9"
+}

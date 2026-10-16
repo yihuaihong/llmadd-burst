@@ -1,0 +1,5 @@
+## dry_inputs identical to Torch pt999 7pct-none seed 0; data verified 2026-10-16T22:55:08Z
+9.3M	/scratch/yh6210/llmadd_data/olmo2_tok
+5.6G	/scratch/yh6210/llmadd_data/pretrain_data
+18G	/scratch/yh6210/llmadd_data/pretrain_data_3B
+10.36.221.2:/hpc_dev_fs/scratch   15T   14T  1.6T  90% /scratch
