@@ -1,0 +1,200 @@
+
+$ sbatch --test-only --account=ds_ga_1006_001-2026fa --partition=n2c48m24 --cpus-per-task=1 --time=00:10:00 --wrap true
+sbatch: Job 7692 to start at 2026-10-16T20:20:06 a using 24 processors on nodes b-10-155 in partition n2c48m24
+
+$ sbatch --test-only --account=ds_ga_1006_001-2026fa --partition=c12m85-a100-1 --gres=gpu:1 --cpus-per-task=1 --time=00:10:00 --wrap true
+sbatch: Job 7693 to start at 2026-10-16T20:21:06 a using 12 processors on nodes b-19-195 in partition c12m85-a100-1
+
+$ sbatch --test-only --account=ds_ga_1006_001-2026fa --partition=c24m170-a100-2 --gres=gpu:2 --cpus-per-task=1 --time=00:10:00 --wrap true
+sbatch: Job 7694 to start at 2026-10-16T20:19:06 a using 24 processors on nodes b-20-10 in partition c24m170-a100-2
+
+## 3b. GPU accounts on c12m85-a100-1 (1 GPU) in GPU_ACCOUNTS order = the order the tick tries them
+  ds_ga_1011-2026fa: accepted (sbatch --test-only rc 0)
+  ds_ga_1006_001-2026fa: accepted (sbatch --test-only rc 0)
+  An accepted account can still hold jobs pending on an association / QOS limit: after the first GPU submission,
+  heartbeat.json in_flight shows each job's state and reason (e.g. PENDING AssocGrpGRESMinutes).
+
+## 4. hours used since 2026-08-01 per account: every job 'sacct -A' returns, as the tick's GPU budget guard counts
+##    them (queued/running jobs at their time limit); jobs of other users are counted, never named
+ds_ga_1011-2026fa: 432 jobs; GPU jobs 353, 137.9 GPU-h; CPU-only jobs 79, 639.5 CPU-h (allocated CPUs x time); of these, 0 jobs (0.0 GPU-h) of 0 other users
+$ sacct -X -u yh6210 -A ds_ga_1011-2026fa -S 2026-10-01 -E now -o JobID,JobName%28,Partition%16,State,Elapsed,Timelimit,AllocTRES%60
+JobID                             JobName        Partition      State    Elapsed  Timelimit                                                    AllocTRES 
+------------ ---------------------------- ---------------- ---------- ---------- ---------- ------------------------------------------------------------ 
+5740         llmadd_274-p1-geomdiag-7b-e+    c12m85-a100-1  COMPLETED   00:18:18   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5741         llmadd_275-p1-geomdiag-7b-l+    c12m85-a100-1  COMPLETED   00:16:12   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5742            llmadd_276-p1-geomdiag-1b    c12m85-a100-1  COMPLETED   00:06:22   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5743           llmadd_277-p1-geomdiag-13b    c12m85-a100-1 CANCELLED+   00:25:19   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5744             llmadd_278-p2-route-7b-a    c12m85-a100-1  COMPLETED   00:19:35   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5745             llmadd_279-p2-route-7b-b    c12m85-a100-1  COMPLETED   00:18:52   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5747             llmadd_280-p2-route-7b-c    c12m85-a100-1  COMPLETED   00:19:21   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5751               llmadd_281-p2-route-1b    c12m85-a100-1  COMPLETED   00:12:10   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5752         llmadd_282-p3-prompt-days-2+    c12m85-a100-1  COMPLETED   00:42:29   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5753         llmadd_283-p3-prompt-days-5+    c12m85-a100-1  COMPLETED   00:43:07   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5754         llmadd_284-p3-prompt-days-1+    c12m85-a100-1  COMPLETED   00:43:35   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5755         llmadd_285-p3-prompt-months+    c12m85-a100-1  COMPLETED   00:41:17   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5756         llmadd_286-p3-prompt-months+    c12m85-a100-1  COMPLETED   00:41:42   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5757         llmadd_287-p3-prompt-months+    c12m85-a100-1  COMPLETED   00:38:50   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5758         llmadd_288-p4-sep-7b-tokens+    c12m85-a100-1  COMPLETED   00:48:40   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5759         llmadd_289-p4-sep-7b-tokens+    c12m85-a100-1  COMPLETED   00:48:15   04:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5760         llmadd_290-p4-sep-1b-tokens+    c12m85-a100-1  COMPLETED   00:25:42   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5761           llmadd_277-p1-geomdiag-13b    c12m85-a100-1  COMPLETED   00:23:08   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5763         llmadd_291-p2b-route-shots4+    c12m85-a100-1  COMPLETED   00:17:52   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5764         llmadd_292-p2b-route-shots4+    c12m85-a100-1  COMPLETED   00:18:15   01:30:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5765         llmadd_293-p2c-route-traine+    c12m85-a100-1  COMPLETED   00:14:53   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5766         llmadd_294-p2c-route-traine+    c12m85-a100-1  COMPLETED   00:15:01   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5767         llmadd_295-p2c-route-traine+    c12m85-a100-1  COMPLETED   00:15:59   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+5768         llmadd_296-p2c-route-traine+    c12m85-a100-1  COMPLETED   00:15:36   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6164         llmadd_297-p3b-prompt-days-+    c12m85-a100-1  COMPLETED   00:34:27   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6165         llmadd_298-p3b-prompt-days-+    c12m85-a100-1  COMPLETED   00:33:36   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6166         llmadd_299-p3b-prompt-month+    c12m85-a100-1  COMPLETED   00:32:49   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6167         llmadd_300-p3b-prompt-month+    c12m85-a100-1  COMPLETED   00:33:19   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6168         llmadd_301-p3b-prompt-days-+    c12m85-a100-1  COMPLETED   00:33:13   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6169         llmadd_302-p3b-prompt-month+    c12m85-a100-1  COMPLETED   00:33:18   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6420         llmadd_303-p3b-seeds34-days+    c12m85-a100-1  COMPLETED   00:18:10   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6421         llmadd_304-p3b-seeds34-mont+    c12m85-a100-1  COMPLETED   00:17:36   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6578         llmadd_305-e1-size-7b-9B-n4+    c12m85-a100-1  COMPLETED   00:40:02   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6579         llmadd_306-e1-size-7b-9B-n7+    c12m85-a100-1  COMPLETED   01:05:41   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6580         llmadd_307-e1-size-7b-21B-n+    c12m85-a100-1  COMPLETED   00:39:08   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6581         llmadd_308-e1-size-7b-21B-n+    c12m85-a100-1  COMPLETED   01:05:17   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6583         llmadd_310-e1-size-7b-84B-n+    c12m85-a100-1     FAILED   00:05:50   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6584         llmadd_311-e1-size-7b-42B-n+    c12m85-a100-1     FAILED   00:04:38   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6587         llmadd_313-e2-outctrl-month+    c12m85-a100-1  COMPLETED   00:38:48   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6582         llmadd_309-e1-size-7b-84B-n+    c12m85-a100-1 CANCELLED+   00:00:00   03:00:00                                                              
+6588            llmadd_314-e3-kgate-7b-9B    c12m85-a100-1  COMPLETED   00:33:10   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6589           llmadd_315-e3-kgate-7b-21B    c12m85-a100-1  COMPLETED   00:33:51   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6585         llmadd_312-e2-outctrl-days-+    c12m85-a100-1 CANCELLED+   00:00:00   03:00:00                                                              
+6590         llmadd_316-e4-numshape-days+    c12m85-a100-1  COMPLETED   00:23:04   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6591         llmadd_309-e1-size-7b-84B-n+    c12m85-a100-1     FAILED   00:03:11   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6592         llmadd_312-e2-outctrl-days-+    c12m85-a100-1  COMPLETED   00:38:29   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6593         llmadd_317-e4-numshape-mont+    c12m85-a100-1  COMPLETED   00:22:44   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6594         llmadd_318-e4-ablate-days-1+    c12m85-a100-1  COMPLETED   00:09:09   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6596         llmadd_319-e4-ablate-months+    c12m85-a100-1 CANCELLED+   00:00:00   02:00:00                                                              
+6597         llmadd_319-e4-ablate-months+    c12m85-a100-1  COMPLETED   00:09:20   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6598         llmadd_320-e5-align-concept+    c12m85-a100-1 CANCELLED+   00:00:00   02:00:00                                                              
+6599         llmadd_320-e5-align-concept+    c12m85-a100-1 CANCELLED+   00:27:11   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6600               llmadd_321-e6-toy-grok    c12m85-a100-1  COMPLETED   02:36:34   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6602         llmadd_320-e5-align-concept+    c12m85-a100-1  COMPLETED   00:27:11   02:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6623         llmadd_309b-e1-size-7b-84B-+    c12m85-a100-1  COMPLETED   00:16:47   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6624         llmadd_310b-e1-size-7b-84B-+    c12m85-a100-1  COMPLETED   00:17:40   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6625         llmadd_311b-e1-size-7b-42B-+    c12m85-a100-1  COMPLETED   00:16:42   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6626         llmadd_322-e1c-9B-n7000-geo+    c12m85-a100-1     FAILED   00:00:32   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6627         llmadd_323-e1c-9B-n7000-non+    c12m85-a100-1     FAILED   00:00:21   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6628         llmadd_324-e1c-9B-n7000-non+    c12m85-a100-1 CANCELLED+   00:00:00   03:00:00                                                              
+6629         llmadd_324-e1c-9B-n7000-non+    c12m85-a100-1  COMPLETED   00:31:20   03:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6690         llmadd_322b-e1c-9B-n7000-ge+    c12m85-a100-1 CANCELLED+   00:00:00   03:00:00                                                              
+6691         llmadd_323b-e1c-9B-n7000-no+    c12m85-a100-1 CANCELLED+   00:00:00   03:00:00                                                              
+7687                     llmadd_330-probe         n2c48m24    RUNNING   00:00:25   00:20:00                          billing=24,cpu=24,mem=23500M,node=1 
+7688                    llmadd_331-env311         n2c48m24    RUNNING   00:01:07   01:30:00                          billing=24,cpu=24,mem=23500M,node=1 
+
+ds_ga_1006_001-2026fa: 60 jobs; GPU jobs 30, 10.8 GPU-h; CPU-only jobs 30, 31.2 CPU-h (allocated CPUs x time); of these, 0 jobs (0.0 GPU-h) of 0 other users
+$ sacct -X -u yh6210 -A ds_ga_1006_001-2026fa -S 2026-10-01 -E now -o JobID,JobName%28,Partition%16,State,Elapsed,Timelimit,AllocTRES%60
+JobID                             JobName        Partition      State    Elapsed  Timelimit                                                    AllocTRES 
+------------ ---------------------------- ---------------- ---------- ---------- ---------- ------------------------------------------------------------ 
+5739                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:21:47   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6163                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:20:59   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6418                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:22:51   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6569                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:24:39   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6577                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:28:09   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+6689                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:21:33   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+7651                          ood-jupyter    c12m85-a100-1 CANCELLED+   00:28:52   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+7685                          ood-jupyter    c12m85-a100-1    RUNNING   00:03:55   01:00:00               billing=12,cpu=12,gres/gpu=1,mem=85000M,node=1 
+
+## 5. partitions and nodes
+$ scontrol show partition n2c48m24
+PartitionName=n2c48m24
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=YES ExclusiveUser=<other-user> ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
+   Nodes=b-10-[1-200]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=4800 TotalNodes=200 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=4800,mem=4700000M,node=200,billing=4800
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+
+$ sinfo -p n2c48m24 -h -o %P cpus=%c mem_MB=%m gres=%G nodes=%D state=%t timelimit=%l
+n2c48m24 cpus=24 mem_MB=23500 gres=(null) nodes=20 state=drain# timelimit=infinite
+n2c48m24 cpus=24 mem_MB=23500 gres=(null) nodes=2 state=idle% timelimit=infinite
+n2c48m24 cpus=24 mem_MB=23500 gres=(null) nodes=1 state=alloc# timelimit=infinite
+n2c48m24 cpus=24 mem_MB=23500 gres=(null) nodes=174 state=idle~ timelimit=infinite
+n2c48m24 cpus=24 mem_MB=23500 gres=(null) nodes=3 state=alloc timelimit=infinite
+
+$ scontrol show partition c12m85-a100-1
+PartitionName=c12m85-a100-1
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=YES ExclusiveUser=<other-user> ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
+   Nodes=b-19-[1-200]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=2400 TotalNodes=200 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=2400,mem=17000000M,node=200,billing=2400,gres/gpu=200
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+
+$ sinfo -p c12m85-a100-1 -h -o %P cpus=%c mem_MB=%m gres=%G nodes=%D state=%t timelimit=%l
+c12m85-a100-1 cpus=12 mem_MB=85000 gres=gpu:a100:1 nodes=1 state=idle% timelimit=infinite
+c12m85-a100-1 cpus=12 mem_MB=85000 gres=gpu:a100:1 nodes=193 state=idle~ timelimit=infinite
+c12m85-a100-1 cpus=12 mem_MB=85000 gres=gpu:a100:1 nodes=6 state=alloc timelimit=infinite
+
+$ scontrol show partition c24m170-a100-2
+PartitionName=c24m170-a100-2
+   AllowGroups=ALL AllowAccounts=ALL AllowQos=ALL
+   AllocNodes=ALL Default=NO QoS=N/A
+   DefaultTime=NONE DisableRootJobs=YES ExclusiveUser=<other-user> ExclusiveTopo=NO GraceTime=0 Hidden=NO
+   MaxNodes=UNLIMITED MaxTime=UNLIMITED MinNodes=0 LLN=NO MaxCPUsPerNode=UNLIMITED MaxCPUsPerSocket=UNLIMITED
+   Nodes=b-20-[1-100]
+   PriorityJobFactor=1 PriorityTier=1 RootOnly=NO ReqResv=NO OverSubscribe=EXCLUSIVE
+   OverTimeLimit=NONE PreemptMode=OFF
+   State=UP TotalCPUs=2400 TotalNodes=100 SelectTypeParameters=NONE
+   JobDefaults=(null)
+   DefMemPerNode=UNLIMITED MaxMemPerNode=UNLIMITED
+   TRES=cpu=2400,mem=17000000M,node=100,billing=2400,gres/gpu=200
+   ResumeTimeout=GLOBAL SuspendTimeout=GLOBAL SuspendTime=GLOBAL PowerDownOnIdle=NO
+
+
+$ sinfo -p c24m170-a100-2 -h -o %P cpus=%c mem_MB=%m gres=%G nodes=%D state=%t timelimit=%l
+c24m170-a100-2 cpus=24 mem_MB=170000 gres=gpu:a100:2 nodes=100 state=idle~ timelimit=infinite
+
+## 6. this node, python, CUDA driver
+$ nproc
+24
+
+$ free -g
+               total        used        free      shared  buff/cache   available
+Mem:              23           1          21           0           0          22
+Swap:              0           0           0
+
+$ ldd --version
+ldd (GNU libc) 2.34
+Copyright (C) 2021 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Written by Roland McGrath and Ulrich Drepper.
+
+$ python3 --version
+Python 3.9.18
+
+/scratch/yh6210/llmadd_env
+$ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv
+NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
+
+(rc=9)
+
+ls: cannot access '/usr/lib/x86_64-linux-gnu/libcuda.so*': No such file or directory
+/usr/lib64/libcuda.so
+/usr/lib64/libcuda.so.1
+last driver seen by a GPU task (results/*/log_tail.txt):
+## 7. scratch
+$ df -h /scratch/yh6210
+Filesystem                       Size  Used Avail Use% Mounted on
+10.36.221.2:/hpc_dev_fs/scratch   15T   14T  1.7T  90% /scratch
+
+## rc=0  2026-10-16T20:19:07Z
