@@ -413,3 +413,10 @@ ptsize999 190m-2pct-none seeds, held-out curves replaced by designed piecewise-l
   (tasks 366-369).
 - pt2s190 none: the same holds (2.4e-3: 22.2 > 1.2e-3: 19.9), so none@4.8e-3 is added for seeds 0-3 (tasks 366-369).
 - pt2b none's bracket is now closed (8e-3: 23.1 > 1.6e-2: 15.2).
+
+## 2026-10-17 confirm seeds (user: confirm the headline cells now)
+- pt2b none@8e-3 and win-ctx@2e-3, seeds 4-7 (tasks 370-373): the arms' best lrs; none's bracket is closed.
+- Their DRY row hashes were computed with the same method; that method reproduced the known seed-0 value of each key
+  (53M pretrain_data, 190M pretrain_data, 53M pretrain_data_3B).
+- The step-0 lm references for 53M seeds 4-7 come from pt999 2pct-none.
+- pt2long and pt2s190 confirm seeds follow once their open brackets close (tasks 366-369).

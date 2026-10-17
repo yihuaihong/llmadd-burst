@@ -104,14 +104,19 @@ EXTRA = ([(362 + s, "pt2b", "none", "1.6e-2", s) for s in range(4)]
          # written): none's area is highest at the top of its grid (pt2long 2e-3: 69.2 > 1e-3: 66.9; pt2s190 2.4e-3:
          # 22.2 > 1.2e-3: 19.9) -> one more doubling for none, seeds 0-3
          + [(366 + s, "pt2long", "none", "4e-3", s) for s in range(4)]
-         + [(366 + s, "pt2s190", "none", "4.8e-3", s) for s in range(4)])
+         + [(366 + s, "pt2s190", "none", "4.8e-3", s) for s in range(4)]
+         # confirm seeds 4-7 (user 2026-10-17: confirm the headline cells now, not after the rainbow), pt2b: none's bracket is
+         # closed (best 8e-3) and win-ctx's best is 2e-3 (tie with 1e-3 broken on offline bpb) -> both at their best lr
+         + [(370 + s - 4, "pt2b", arm, lr, s) for s in range(4, 8) for arm, lr in (("none", "8e-3"), ("win-ctx", "2e-3"))])
 BLOCK_DESC = {"pt2b": "53M lr bracket at the main budget: 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data (4e8 tokens)",
               "pt2s190": "190M (d768 x 12, gradient checkpointing on) at 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data",
               "pt2long": "53M long budget: 1.2e9 tokens = 73242 steps of 32 x 512 on pretrain_data_3B (3e9 tokens; its val.bin "
                          "differs from pretrain_data's, so LM and eval-context numbers compare only within pt2long)"}
 # step-0 LM loss of the Torch runs with the same seed and the same first batch (2% rows on pretrain_data; the loss before
 # the first update depends on neither lr nor arm): pt999 2pct-none (53M) and ptsize999 190m-2pct-none (190M), seeds 0-3
-LM0 = {("53m", "pretrain_data"): (11.616473197937012, 11.587233543395996, 11.565471649169922, 11.602105140686035),
+LM0 = {("53m", "pretrain_data"): (11.616473197937012, 11.587233543395996, 11.565471649169922, 11.602105140686035,
+                                  # seeds 4-7: pt999 2pct-none (Torch), added 2026-10-17 for the confirm seeds
+                                  11.594945907592773, 11.568119049072266, 11.584515571594238, 11.593491554260254),
        ("190m", "pretrain_data"): (11.645764350891113, 11.675423622131348, 11.666858673095703, 11.6434907913208)}
 # sha256 of the 9 selected --dry_inputs lines (the grep below) per (data, size, rows, seed); rows = the prior-site marking
 # (ctx: operands; text: numbers in the text; 'none' marks the operands like ctx). Computed on Torch 2026-10-16 by running
@@ -137,7 +142,20 @@ DRY = {("pretrain_data", "190m", "ctx", 0): "033a837b81848bca94cb3f2892a804f0e4e
        ("pretrain_data_3B", "53m", "text", 0): "ecf98276f6bb4621ad1d224f931482385c78d621a57a600b2268db3bfa584436",
        ("pretrain_data_3B", "53m", "text", 1): "c3a447c62757ecdb3eb8cc66f03ca3d16c481b629172166dd0d7055b3a961232",
        ("pretrain_data_3B", "53m", "text", 2): "34277b6603e9f4ba58281429b81d3b99ccafe83f2c0ec86017944f674286727a",
-       ("pretrain_data_3B", "53m", "text", 3): "c43aabe01bc12b8ec13ad2dff1fee596bbb4e4d09358c80a2555dd3e9e5bbcfe"}
+       ("pretrain_data_3B", "53m", "text", 3): "c43aabe01bc12b8ec13ad2dff1fee596bbb4e4d09358c80a2555dd3e9e5bbcfe",
+       # confirm seeds 4-7 (2026-10-17): computed the same way, the method reproducing the known seed-0 value of each key
+       ("pretrain_data", "53m", "ctx", 4): "9df8674d52970374eb4305ca588ec7231419c56738b10543a7aa724f1461687f",
+       ("pretrain_data", "53m", "ctx", 5): "96caf9f331745f38c3f635afc57c5b686f8eadd89bdc7f329efe34dc32af56c2",
+       ("pretrain_data", "53m", "ctx", 6): "65a746548b21f9dbd0a570149468b75a8e07026f75393d341c75e8d8c91321cf",
+       ("pretrain_data", "53m", "ctx", 7): "3fdd52cd798ca08c817105451892472339729cb2438d1b421cd09bd3a8287669",
+       ("pretrain_data", "190m", "ctx", 4): "30845923a6629ece8c5876fc11f9d0032b452f706e1d0bf4bcb578a0493d9b80",
+       ("pretrain_data", "190m", "ctx", 5): "872c729dcf5660773ffc81a88f309a94b38691c99440ee147830d23c53966cf9",
+       ("pretrain_data", "190m", "ctx", 6): "e4f02d7ff355b3016801f3dda7c8bb54bd72e1823f7bf14a060a8ab473e98660",
+       ("pretrain_data", "190m", "ctx", 7): "567debef56131fa65c68dd1393eb2b6e6b773a4752c5c112cda0919a319d87cd",
+       ("pretrain_data_3B", "53m", "ctx", 4): "1bbf848398a0184ad72a216c73a0b9567d2d9453e077b5b9696bc1db7beb9457",
+       ("pretrain_data_3B", "53m", "ctx", 5): "3aa3ca8357fa2bee57d626d3ea58e1e47bfa397feb94b0bd49c63fee2ad7fbdd",
+       ("pretrain_data_3B", "53m", "ctx", 6): "bce4b0e5177a51ca10e4c266e9dd5617a83d3ffe0f10780adf0438c84caebee2",
+       ("pretrain_data_3B", "53m", "ctx", 7): "1b33b8d3f4d4378d242e15fb27658a034c49fcd809a34f4e21d67ed98da10c59"}
 DRY_GREP = "^(line:|held_b|ood_b|\\{'held_b11'|model:|train row)"
 
 
