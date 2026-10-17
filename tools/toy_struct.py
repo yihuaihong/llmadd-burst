@@ -525,7 +525,7 @@ def run_arm(D, arm, seed, tr_np, te_np, T, args, dev, extra):
     K = {k: centred_gram(torch.tensor(v, dtype=torch.float32, device=dev)) for k, v in T.items()}
     torch.manual_seed(seed)
     model = OneLayer(D["n_vocab"], D["n_out"], D["T"]).to(dev)
-    opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1.0, betas=(0.9, 0.98))
+    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, betas=(0.9, 0.98))
     with torch.no_grad():
         cka_init = {k: float(cka(model.W_E[:n_items], K[k])) for k in K}
         W_init = model.W_E[:n_items].detach().cpu().double().numpy()
@@ -588,7 +588,7 @@ def run_arm(D, arm, seed, tr_np, te_np, T, args, dev, extra):
                 break
     sec = time.time() - t_start
     first = lambda key, thr: next((c["step"] for c in curve if c[key] >= thr), None)
-    res = {"task": D["task"], "arm": arm, "target": target, "window": window, "seed": seed, "lam": args.lam,
+    res = {"task": D["task"], "arm": arm, "target": target, "window": window, "seed": seed, "lam": args.lam, "lr": args.lr, "wd": args.wd,
            "frac": args.frac, "steps": args.steps, "n_train": len(tr_np), "n_test": len(te_np),
            "t_mem": first("train", 0.99), "t_grok": first("test", 0.95), "censored_at": args.steps,
            "final_test": curve[-1]["test"], "final_train": curve[-1]["train"], "cka_init": cka_init,
@@ -610,6 +610,9 @@ def main() -> None:
     ap.add_argument("--steps", type=int, default=25000)
     ap.add_argument("--seeds", default="0,1,2,3,4")
     ap.add_argument("--lam", type=float, default=1.0)
+    # 2026-10-17 (user: make "not learned without the prior" harder): the optimiser of toy_grok by default
+    ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--wd", type=float, default=1.0)
     ap.add_argument("--win", default=WIN_DEFAULT, help="s4/dim: prior window 't0,t1' (steps [t0, t1)) or 'always'")
     ap.add_argument("--width", type=int, default=2000, help="mod: toy_grok window width for arms w<t0>")
     ap.add_argument("--arms", default=None)
