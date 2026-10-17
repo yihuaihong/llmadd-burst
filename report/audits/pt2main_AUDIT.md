@@ -407,3 +407,9 @@ ptsize999 190m-2pct-none seeds, held-out curves replaced by designed piecewise-l
 - pt2b win-ctx: best at the bottom of the grid (1e-3: 70.2 vs 2e-3: 69.8), so win-ctx@5e-4 is added for seeds 0-3
   (tasks 362-365).
 - The read-out marks both arms NOT FINAL until these runs are in.
+
+## 2026-10-17 conditional cells 2 (open-bracket rule, before any best-lr verdict on these blocks was recorded)
+- pt2long none: the area is highest at the top of the grid (2e-3: 69.2 > 1e-3: 66.9), so none@4e-3 is added for seeds 0-3
+  (tasks 366-369).
+- pt2s190 none: the same holds (2.4e-3: 22.2 > 1.2e-3: 19.9), so none@4.8e-3 is added for seeds 0-3 (tasks 366-369).
+- pt2b none's bracket is now closed (8e-3: 23.1 > 1.6e-2: 15.2).

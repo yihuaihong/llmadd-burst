@@ -99,7 +99,12 @@ LIM_X = {"pt2b": 2, "pt2s190": 2, "pt2long": 2.5}
 # any best-lr verdict: none's area still rises at the top of its grid (8e-3: 23.7, n=3, vs 4e-3: 14.7) -> none@1.6e-2;
 # win-ctx is best at the bottom of its grid (1e-3: 70.2 vs 2e-3: 69.8) -> win-ctx@5e-4.
 EXTRA = ([(362 + s, "pt2b", "none", "1.6e-2", s) for s in range(4)]
-         + [(362 + s, "pt2b", "win-ctx", "5e-4", s) for s in range(4)])
+         + [(362 + s, "pt2b", "win-ctx", "5e-4", s) for s in range(4)]
+         # 2026-10-17, the same rule fired on the returned pt2long / pt2s190 cells (before any best-lr verdict was
+         # written): none's area is highest at the top of its grid (pt2long 2e-3: 69.2 > 1e-3: 66.9; pt2s190 2.4e-3:
+         # 22.2 > 1.2e-3: 19.9) -> one more doubling for none, seeds 0-3
+         + [(366 + s, "pt2long", "none", "4e-3", s) for s in range(4)]
+         + [(366 + s, "pt2s190", "none", "4.8e-3", s) for s in range(4)])
 BLOCK_DESC = {"pt2b": "53M lr bracket at the main budget: 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data (4e8 tokens)",
               "pt2s190": "190M (d768 x 12, gradient checkpointing on) at 3e8 tokens = 18310 steps of 32 x 512 on pretrain_data",
               "pt2long": "53M long budget: 1.2e9 tokens = 73242 steps of 32 x 512 on pretrain_data_3B (3e9 tokens; its val.bin "
