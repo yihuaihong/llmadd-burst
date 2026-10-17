@@ -400,3 +400,10 @@ ptsize999 190m-2pct-none seeds, held-out curves replaced by designed piecewise-l
 - extra (tools copy with EXTRA = confirm seeds 4-7 of pt2b none@2e-3 / win-ctx@2e-3 and a re-run of an unfinished
   task; test-only DRY placeholders): the re-run counts (area 5.0 = design), confirm +56.6 4/4 -> 'SURVIVES tuning
   (confirmed on seeds 4-7)'.
+
+## 2026-10-17 conditional cells (the pre-registered open-bracket rule, applied before any best-lr verdict)
+- pt2b none: the area still rises at the top of the grid (8e-3: 23.7, n=3, vs 4e-3: 14.7), so none@1.6e-2 is added for
+  seeds 0-3 (tasks 362-365).
+- pt2b win-ctx: best at the bottom of the grid (1e-3: 70.2 vs 2e-3: 69.8), so win-ctx@5e-4 is added for seeds 0-3
+  (tasks 362-365).
+- The read-out marks both arms NOT FINAL until these runs are in.
