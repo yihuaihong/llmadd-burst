@@ -1,0 +1,1 @@
+{"task": "359-pt2s190-lr1.2e-3-win-ctx-s1", "job": "7960", "kind": "gpu", "state": "COMPLETED", "rc": "0", "elapsed_min": 128, "ended": "2026-10-17T12:41:40Z", "account": "ds_ga_1006_001-2026fa"}
