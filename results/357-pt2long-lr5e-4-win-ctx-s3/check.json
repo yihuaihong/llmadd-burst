@@ -1,0 +1,103 @@
+{
+ "pass": true,
+ "checks": [
+  {
+   "check": "run args = intent (34 fields)",
+   "ok": true,
+   "value": {}
+  },
+  {
+   "check": "code_sha a3bce3ab63c1",
+   "ok": true,
+   "value": "a3bce3ab63c1"
+  },
+  {
+   "check": "run facts = intent {\"steps\": 73242, \"n_params\": 52672128, \"grad_ckpt_on\": false, \"geo_layers\": [2, 4], \"read_layers\": [2, 4], \"lm_chunk\": 0, \"eval_every_steps\": 250}",
+   "ok": true,
+   "value": {
+    "steps": 73242,
+    "n_params": 52672128,
+    "grad_ckpt_on": false,
+    "geo_layers": [
+     2,
+     4
+    ],
+    "read_layers": [
+     2,
+     4
+    ],
+    "lm_chunk": 0,
+    "eval_every_steps": 250
+   }
+  },
+  {
+   "check": "finished: 294 evals, increasing, the last at step 73241",
+   "ok": true,
+   "value": [
+    294,
+    73241
+   ]
+  },
+  {
+   "check": "prior_events == [[3663, 1], [29297, 0]]",
+   "ok": true,
+   "value": [
+    [
+     3663,
+     1
+    ],
+    [
+     29297,
+     0
+    ]
+   ]
+  },
+  {
+   "check": "prior_on_frac == 0.349990",
+   "ok": true,
+   "value": 0.3499904426421998
+  },
+  {
+   "check": "geo > 0 and 0 < grad_prior < inf at every eval where the prior acted (before a divergence)",
+   "ok": true,
+   "value": 103
+  },
+  {
+   "check": "prior_used_frac == prior_on_frac (ctx)",
+   "ok": true,
+   "value": [
+    0.3499904426421998,
+    0.3499904426421998
+   ]
+  },
+  {
+   "check": "offline_lm on the full val, |orig_minus_logged| < 0.002 (skipped if the run diverged)",
+   "ok": true,
+   "value": -9.032857573032516e-09
+  }
+ ],
+ "info": {
+  "tag": "_pt2long-lr5e-4-win-ctx",
+  "seed": 3,
+  "lr": 0.0005,
+  "area": 86.64,
+  "area_no_b11": 85.19,
+  "b11_area": 93.84,
+  "b33_area": 72.29,
+  "t90_M": 273.0073043478261,
+  "budget_M": 1199.996928,
+  "lm0": 11.601147651672363,
+  "final_val_bpb": 1.2448790486633392,
+  "bpb_full": 1.2230985867249926,
+  "diverged": false,
+  "diverged_at_step": null,
+  "prior_used_frac": 0.3499904426421998,
+  "cka_ops_helix3": 0.952761173248291,
+  "sec_per_step_median": 0.1409645195007324,
+  "projected_run_h": 2.867923149242401,
+  "gpu_util_median": 97.0,
+  "gpu_mem_max_MiB": 32268,
+  "gpu_samples": 178,
+  "pinned_calls": 3
+ }
+}
