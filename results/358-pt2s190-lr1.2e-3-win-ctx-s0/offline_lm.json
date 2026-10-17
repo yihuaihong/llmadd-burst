@@ -1,0 +1,16 @@
+{
+ "/scratch/yh6210/llmadd_runs/358-pt2s190-lr1.2e-3-win-ctx-s0/out/pt2s190-lr1.2e-3-win-ctx/run_whole_helix3_seed0_pt2s190-lr1.2e-3-win-ctx.json": {
+  "run": "/scratch/yh6210/llmadd_runs/358-pt2s190-lr1.2e-3-win-ctx-s0/out/pt2s190-lr1.2e-3-win-ctx/run_whole_helix3_seed0_pt2s190-lr1.2e-3-win-ctx.json",
+  "model": "/scratch/yh6210/llmadd_runs/358-pt2s190-lr1.2e-3-win-ctx-s0/out/pt2s190-lr1.2e-3-win-ctx/model_whole_helix3_seed0_pt2s190-lr1.2e-3-win-ctx.pt",
+  "tag": "_pt2s190-lr1.2e-3-win-ctx",
+  "seed": 0,
+  "code_sha": "a3bce3ab63c1",
+  "bpb_full": 1.1368222833997765,
+  "nats_per_token_full": 3.7949422259118335,
+  "tokens_full": 1999872,
+  "bpb_orig_windows": 1.1357110418740783,
+  "bpb_logged_final": 1.1357110772275962,
+  "orig_minus_logged": -3.535351789096808e-08,
+  "max_windows": 0
+ }
+}
