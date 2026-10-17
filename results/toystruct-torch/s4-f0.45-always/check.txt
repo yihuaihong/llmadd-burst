@@ -1,0 +1,28 @@
+task s4: 576 questions, 24 items, vocab 25, T 3
+seed 0: centred ranks R 9, R_sign 9, absR 4, specrand 9, shuf 9; shuf_far_max_cka 0.344, shuf_cka_to_true 0.330, specrand_cka_to_true 0.389
+                 R    R_sign      absR  specrand      shuf  W_E_init
+       R     1.000     0.000     0.000     0.389     0.330     0.566
+  R_sign     0.000     1.000     0.000     0.395     0.344     0.562
+    absR     0.000     0.000     1.000     0.245     0.420     0.368
+specrand     0.389     0.395     0.245     1.000     0.404     0.571
+    shuf     0.330     0.344     0.420     0.404     1.000     0.574
+W_E_init     0.566     0.562     0.368     0.571     0.574     1.000
+  frac 0.3 (question split): n_train 172 n_test 404 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 391 majority-chance 0.030
+  frac 0.45 (question split): n_train 259 n_test 317 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 298 majority-chance 0.025
+  frac 0.6 (question split): n_train 345 n_test 231 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 205 majority-chance 0.026
+seed 1: centred ranks R 9, R_sign 9, absR 4, specrand 9, shuf 9; shuf_far_max_cka 0.344, shuf_cka_to_true 0.344, specrand_cka_to_true 0.457
+  frac 0.3 (question split): n_train 172 n_test 404 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 379 majority-chance 0.032
+  frac 0.45 (question split): n_train 259 n_test 317 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 296 majority-chance 0.035
+  frac 0.6 (question split): n_train 345 n_test 231 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 206 majority-chance 0.022
+seed 2: centred ranks R 9, R_sign 9, absR 4, specrand 9, shuf 9; shuf_far_max_cka 0.344, shuf_cka_to_true 0.344, specrand_cka_to_true 0.352
+  frac 0.3 (question split): n_train 172 n_test 404 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 381 majority-chance 0.025
+  frac 0.45 (question split): n_train 259 n_test 317 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 298 majority-chance 0.019
+  frac 0.6 (question split): n_train 345 n_test 231 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 210 majority-chance 0.022
+seed 3: centred ranks R 9, R_sign 9, absR 4, specrand 9, shuf 9; shuf_far_max_cka 0.340, shuf_cka_to_true 0.326, specrand_cka_to_true 0.322
+  frac 0.3 (question split): n_train 172 n_test 404 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 388 majority-chance 0.032
+  frac 0.45 (question split): n_train 259 n_test 317 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 289 majority-chance 0.028
+  frac 0.6 (question split): n_train 345 n_test 231 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 205 majority-chance 0.026
+seed 4: centred ranks R 9, R_sign 9, absR 4, specrand 9, shuf 9; shuf_far_max_cka 0.340, shuf_cka_to_true 0.340, specrand_cka_to_true 0.418
+  frac 0.3 (question split): n_train 172 n_test 404 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 386 majority-chance 0.032
+  frac 0.45 (question split): n_train 259 n_test 317 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 292 majority-chance 0.028
+  frac 0.6 (question split): n_train 345 n_test 231 {'closure': 1.0, 'closure_latin': 1.0} n_fresh 209 majority-chance 0.022

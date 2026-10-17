@@ -1,0 +1,24 @@
+task dim: 686 questions, 27 items, vocab 30, T 4
+seed 0: centred ranks expo 3, quot 2, onehot 6, specrand 3, specrand_oh 6, shuf 3; shuf_far_max_cka 0.131, shuf_cka_to_true 0.131, specrand_cka_to_true 0.081
+                 expo      quot    onehot  specrand specrand_oh      shuf  W_E_init
+       expo     1.000     0.816     0.707     0.081     0.253     0.131     0.349
+       quot     0.816     1.000     0.577     0.034     0.195     0.014     0.280
+     onehot     0.707     0.577     1.000     0.150     0.248     0.204     0.457
+   specrand     0.081     0.034     0.150     1.000     0.241     0.108     0.329
+specrand_oh     0.253     0.195     0.248     0.241     1.000     0.205     0.438
+       shuf     0.131     0.014     0.204     0.108     0.205     1.000     0.325
+   W_E_init     0.349     0.280     0.457     0.329     0.438     0.325     1.000
+  frac 0.3 (class split): n_train 204 n_test 482 {'closure': 1.0, 'nullity': 3} n_fresh 482 majority-chance 0.037
+  frac 0.6 (class split): n_train 412 n_test 274 {'closure': 1.0, 'nullity': 3} n_fresh 274 majority-chance 0.088
+seed 1: centred ranks expo 3, quot 2, onehot 6, specrand 3, specrand_oh 6, shuf 3; shuf_far_max_cka 0.121, shuf_cka_to_true 0.121, specrand_cka_to_true 0.139
+  frac 0.3 (class split): n_train 202 n_test 484 {'closure': 1.0, 'nullity': 3} n_fresh 484 majority-chance 0.068
+  frac 0.6 (class split): n_train 410 n_test 276 {'closure': 1.0, 'nullity': 3} n_fresh 276 majority-chance 0.058
+seed 2: centred ranks expo 3, quot 2, onehot 6, specrand 3, specrand_oh 6, shuf 3; shuf_far_max_cka 0.072, shuf_cka_to_true 0.072, specrand_cka_to_true 0.149
+  frac 0.3 (class split): n_train 204 n_test 482 {'closure': 1.0, 'nullity': 3} n_fresh 482 majority-chance 0.075
+  frac 0.6 (class split): n_train 410 n_test 276 {'closure': 1.0, 'nullity': 3} n_fresh 276 majority-chance 0.051
+seed 3: centred ranks expo 3, quot 2, onehot 6, specrand 3, specrand_oh 6, shuf 3; shuf_far_max_cka 0.059, shuf_cka_to_true 0.059, specrand_cka_to_true 0.095
+  frac 0.3 (class split): n_train 204 n_test 482 {'closure': 1.0, 'nullity': 3} n_fresh 482 majority-chance 0.021
+  frac 0.6 (class split): n_train 410 n_test 276 {'closure': 1.0, 'nullity': 3} n_fresh 276 majority-chance 0.087
+seed 4: centred ranks expo 3, quot 2, onehot 6, specrand 3, specrand_oh 6, shuf 3; shuf_far_max_cka 0.149, shuf_cka_to_true 0.149, specrand_cka_to_true 0.127
+  frac 0.3 (class split): n_train 204 n_test 482 {'closure': 1.0, 'nullity': 3} n_fresh 482 majority-chance 0.037
+  frac 0.6 (class split): n_train 410 n_test 276 {'closure': 1.0, 'nullity': 3} n_fresh 276 majority-chance 0.072
