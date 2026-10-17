@@ -63,7 +63,16 @@ for jf in "$STATE"/*.job; do
     # answer either, decide on a later tick instead of resubmitting a job that may still be running
     sa=$(timeout 60 sacct -n -X -j "$jid" -o State 2>/dev/null) || { log "$t ($jid): squeue and sacct unavailable, kept in flight"; continue; }
     rc=""; st=$(head -1 <<< "$sa" | awk '{print $1}')
-    [[ "$st" =~ ^(PENDING|RUNNING|REQUEUED|CONFIGURING|COMPLETING|RESIZING|SUSPENDED) ]] && continue
+    if [[ "$st" =~ ^(PENDING|RUNNING|REQUEUED|CONFIGURING|COMPLETING|RESIZING|SUSPENDED) ]]; then
+      # squeue has forgotten the job while sacct still calls it active (2026-10-17: 350-pt2b-lr4e-3-win-ctx-s0, job 7747,
+      # 10 h as '?', holding a GPU slot): a live job writes its log, so one quiet for 2 h is treated as lost (the retry
+      # keeps code + out/ and resumes from the checkpoint)
+      age=$(( $(date +%s) - $(stat -c %Y "$RUNS/$t/slurm.out" 2>/dev/null || stat -c %Y "$jf") ))
+      [ "$age" -lt 7200 ] && continue
+      scancel "$jid" 2>/dev/null
+      log "$t ($jid): sacct says $st but squeue does not know it and its log has been quiet ${age}s: cancelled, treated as LOST"
+      st=LOST
+    fi
     # sacct answered but knows nothing: LOST only if the task's log has been quiet for 30 min (a live run writes to it)
     if [ -z "$st" ] && [ -f "$RUNS/$t/slurm.out" ] && [ $(( $(date +%s) - $(stat -c %Y "$RUNS/$t/slurm.out") )) -lt 1800 ]; then
       log "$t ($jid): unknown to squeue and sacct but its log is fresh, kept in flight"; continue
