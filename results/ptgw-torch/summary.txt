@@ -1,0 +1,110 @@
+== cells: mean over seeds [values available / n]
+  main    W         n=4 | b33_area 81.53 | area6 89.07 | b33_last5 99.87 | b33_t90_steps 9250 | b33_t90_lrw 0.762 | bpb 1.216 | bpb_offline 1.218 | prior_on_frac 0.35 | toggles 1 | first_close 7324 | b33_at_close 0.9148
+  main    D05       n=4 | b33_area 79.64 | area6 88.29 | b33_last5 99.57 | b33_t90_steps 8562 | b33_t90_lrw 0.7205 | bpb 1.211 | bpb_offline 1.213 | prior_on_frac 0.07213 | toggles 14 | first_close 2140 | b33_at_close 0.4891
+  main    D09h      n=4 | b33_area 81.17 | area6 89.07 | b33_last5 99.5 | b33_t90_steps 9000 | b33_t90_lrw 0.7453 | bpb 1.215 | bpb_offline 1.217 | prior_on_frac 0.2612 | toggles 4 | first_close 5371 | b33_at_close 0.8764
+  lr5e-4  W         n=4 | b33_area 82.23 | area6 87.88 | b33_last5 99.97 | b33_t90_steps 6875 | b33_t90_lrw 0.5915 | bpb 1.218 | bpb_offline 1.22 | prior_on_frac 0.35 | toggles 1 | first_close 7324 | b33_at_close 0.951
+  lr5e-4  D05       n=4 | b33_area 80.43 | area6 87.42 | b33_last5 99.83 | b33_t90_steps 8375 | b33_t90_lrw 0.7088 | bpb 1.217 | bpb_offline 1.219 | prior_on_frac 0.08859 | toggles 14 | first_close 2445 | b33_at_close 0.4984
+  lr5e-4  D09h      n=4 | b33_area 81.69 | area6 87.88 | b33_last5 99.9 | b33_t90_steps 7750 | b33_t90_lrw 0.6707 | bpb 1.218 | bpb_offline 1.219 | prior_on_frac 0.2258 | toggles 1.5 | first_close 4966 | b33_at_close 0.8706
+  lr5e-4  none      n=4 | b33_area 8.549 | area6 30.3 | b33_last5 22.23 | b33_t90_steps - | b33_t90_lrw - | bpb 1.217 | bpb_offline 1.219 | prior_on_frac 0 | toggles 0 | first_close - | b33_at_close -
+  Lall    W         n=4 | b33_area 81.15 | area6 88.89 | b33_last5 99.9 | b33_t90_steps 9625 | b33_t90_lrw 0.783 | bpb 1.212 | bpb_offline 1.214 | prior_on_frac 0.35 | toggles 1 | first_close 7324 | b33_at_close 0.9146
+  Lall    D05       n=4 | b33_area 79.58 | area6 88.34 | b33_last5 99.53 | b33_t90_steps 8500 | b33_t90_lrw 0.7181 | bpb 1.213 | bpb_offline 1.215 | prior_on_frac 0.07684 | toggles 18 | first_close 2204 | b33_at_close 0.5001
+  Lall    D09h      n=4 | b33_area 79.96 | area6 88.47 | b33_last5 99.83 | b33_t90_steps 9250 | b33_t90_lrw 0.7621 | bpb 1.213 | bpb_offline 1.215 | prior_on_frac 0.2919 | toggles 3 | first_close 6014 | b33_at_close 0.8719
+  tok6e8  W         n=4 | b33_area 85.89 | area6 91.94 | b33_last5 99.43 | b33_t90_steps 2e+04 | b33_t90_lrw 0.7999 | bpb 1.182 | bpb_offline 1.183 | prior_on_frac 0.35 | toggles 1 | first_close 1.465e+04 | b33_at_close 0.9441
+  tok6e8  D05       n=4 | b33_area 83.94 | area6 91.26 | b33_last5 99.5 | b33_t90_steps 1.688e+04 | b33_t90_lrw 0.716 | bpb 1.184 | bpb_offline 1.185 | prior_on_frac 0.03273 | toggles 24 | first_close 2879 | b33_at_close 0.4846
+  tok6e8  D09h      n=4 | b33_area 84.9 | area6 91.62 | b33_last5 99.57 | b33_t90_steps 1.788e+04 | b33_t90_lrw 0.7405 | bpb 1.181 | bpb_offline 1.182 | prior_on_frac 0.2078 | toggles 8.5 | first_close 8466 | b33_at_close 0.8535
+  tok6e8  none      n=4 | b33_area 48.83 | area6 72.68 | b33_last5 81.87 | b33_t90_steps 2.675e+04 [2/4] | b33_t90_lrw 0.9173 [2/4] | bpb 1.182 | bpb_offline 1.183 | prior_on_frac 0 | toggles 0 | first_close - | b33_at_close -
+  main    none      n=8 | b33_area 35.6 | area6 56.21 | b33_last5 75.97 | b33_t90_steps 1.431e+04 [4/8] | b33_t90_lrw 0.9343 [4/8] | bpb 1.212 | bpb_offline - | prior_on_frac 0 | toggles 0 | first_close - | b33_at_close -
+  main    G0        n=8 | b33_area 76.52 | area6 87.91 | b33_last5 97.3 | b33_t90_steps 1.198e+04 | b33_t90_lrw 0.8442 | bpb 1.228 | bpb_offline - | prior_on_frac 0.1314 | toggles 29.75 | first_close - | b33_at_close - | gate never closed in 8
+  main    whole     n=8 | b33_area 77.64 | area6 88.65 | b33_last5 97.07 | b33_t90_steps 1.072e+04 | b33_t90_lrw 0.7916 | bpb 1.229 | bpb_offline - | prior_on_frac 1 | toggles 0 | first_close - | b33_at_close -
+  main    W_pt999b  n=4 | b33_area 81.01 | area6 88.91 | b33_last5 99.5 | b33_t90_steps 9750 | b33_t90_lrw 0.785 | bpb 1.215 | bpb_offline - | prior_on_frac 0.35 | toggles 2 | first_close - | b33_at_close -
+  lr5e-4  none_pt999 n=4 | b33_area 14.26 | area6 35 | b33_last5 43.3 | b33_t90_steps - | b33_t90_lrw - | bpb 1.216 | bpb_offline - | prior_on_frac 0 | toggles 0 | first_close - | b33_at_close -
+  lr5e-4  G0        n=4 | b33_area 74.58 | area6 85.66 | b33_last5 96.4 | b33_t90_steps 1.244e+04 | b33_t90_lrw 0.8198 | bpb 1.236 | bpb_offline - | prior_on_frac 0.1724 | toggles 4.5 | first_close - | b33_at_close - | gate never closed in 4
+  Lall    G0        n=4 | b33_area 77.48 | area6 88.28 | b33_last5 98.17 | b33_t90_steps 1.081e+04 | b33_t90_lrw 0.8057 | bpb 1.222 | bpb_offline - | prior_on_frac 0.1282 | toggles 16.5 | first_close - | b33_at_close - | gate never closed in 4
+
+== paired D - W within setting (per-seed differences, mean, 90% t-CI, paired SD, t p, sign-flip p, D better)
+  main D05-W (seeds [0, 1, 2, 3]):
+     b33_area     -1.891 [-4.005, +0.2224] sd 1.8 t p 0.126 sf p 0.250 D better 1/4 | dd [-1.7067, -4.3022, 0.0444, -1.6]
+     area6        -0.7879 [-1.631, +0.05544] sd 0.717 t p 0.115 sf p 0.250 D better 1/4 | dd [-0.8718, -1.1564, 0.2432, -1.3668]
+     b33_last5    -0.3 [-0.7126, +0.1126] sd 0.351 t p 0.186 sf p 0.500 D better 0/4 | dd [0.0, -0.5333, -0.6667, 0.0]
+     bpb          -0.004586 [-0.01064, +0.001471] sd 0.00515 t p 0.173 sf p 0.250 D better 3/4 | dd [-0.0115, 0.0008, -0.003, -0.0046]
+     bpb_offline  -0.005125 [-0.0121, +0.001854] sd 0.00593 t p 0.182 sf p 0.250 D better 3/4 | dd [-0.0133, 0.0008, -0.0031, -0.0049]
+     b33_t90_lrw  -0.04152 [-0.148, +0.06497] sd 0.0905 t p 0.426 sf p 0.500 D better 2/4 | dd [-0.074, 0.0582, 0.0, -0.1503]
+     descriptive non-inferiority: b33 CI low -4.00 (> -2?), bpb CI ok True -> undecided (paired SD 1.80 > 1.5: no discriminative power)
+     before D's first close: max |D - W| held_b33 = 0.240 (GPU nondeterminism floor)
+  main D09h-W (seeds [0, 1, 2, 3]):
+     b33_area     -0.36 [-2.562, +1.842] sd 1.87 t p 0.726 sf p 0.750 D better 2/4 | dd [-1.2356, 0.3556, 1.8667, -2.4267]
+     area6        -0.008266 [-0.8505, +0.834] sd 0.716 t p 0.983 sf p 1.000 D better 1/4 | dd [-0.1031, -0.0795, 0.9435, -0.7939]
+     b33_last5    -0.3667 [-0.7793, +0.04595] sd 0.351 t p 0.128 sf p 0.250 D better 1/4 | dd [-0.5333, 0.1333, -0.4, -0.6667]
+     bpb          -0.0002935 [-0.00371, +0.003123] sd 0.0029 t p 0.853 sf p 0.875 D better 2/4 | dd [-0.0009, 0.0016, -0.0041, 0.0023]
+     bpb_offline  -0.0005904 [-0.003477, +0.002296] sd 0.00245 t p 0.663 sf p 0.750 D better 2/4 | dd [-0.0008, 0.0004, -0.0038, 0.002]
+     b33_t90_lrw  -0.01671 [-0.0614, +0.02798] sd 0.038 t p 0.444 sf p 0.375 D better 3/4 | dd [-0.0138, -0.0487, 0.0357, -0.0401]
+     descriptive non-inferiority: b33 CI low -2.56 (> -2?), bpb CI ok True -> undecided (paired SD 1.87 > 1.5: no discriminative power)
+     before D's first close: max |D - W| held_b33 = 0.300 (GPU nondeterminism floor)
+  lr5e-4 D05-W (seeds [0, 1, 2, 3]):
+     b33_area     -1.807 [-2.49, -1.123] sd 0.581 t p 0.008 sf p 0.125 D better 0/4 | dd [-1.7689, -1.0044, -2.1422, -2.3111]
+     area6        -0.4581 [-0.687, -0.2291] sd 0.195 t p 0.018 sf p 0.125 D better 0/4 | dd [-0.5264, -0.1691, -0.5452, -0.5915]
+     b33_last5    -0.1333 [-0.5582, +0.2915] sd 0.361 t p 0.514 sf p 1.000 D better 1/4 | dd [0.1333, 0.0, -0.6667, 0.0]
+     bpb          -0.000587 [-0.003006, +0.001832] sd 0.00206 t p 0.608 sf p 0.625 D better 3/4 | dd [-0.0011, 0.002, -0.003, -0.0002]
+     bpb_offline  -0.0007862 [-0.003281, +0.001708] sd 0.00212 t p 0.512 sf p 0.750 D better 2/4 | dd [0.0001, 0.0008, -0.0039, -0.0002]
+     b33_t90_lrw  +0.1173 [-0.07732, +0.3118] sd 0.165 t p 0.251 sf p 0.250 D better 1/4 | dd [-0.0973, 0.1531, 0.3035, 0.1097]
+     descriptive non-inferiority: b33 CI low -2.49 (> -2?), bpb CI ok True -> undecided
+     before D's first close: max |D - W| held_b33 = 0.273 (GPU nondeterminism floor)
+  lr5e-4 D09h-W (seeds [0, 1, 2, 3]):
+     b33_area     -0.5422 [-1.077, -0.007598] sd 0.454 t p 0.097 sf p 0.125 D better 0/4 | dd [-0.5422, -0.4533, -0.0356, -1.1378]
+     area6        +0.004812 [-0.4977, +0.5074] sd 0.427 t p 0.983 sf p 1.000 D better 2/4 | dd [-0.1503, 0.4183, 0.2748, -0.5236]
+     b33_last5    -0.06667 [-0.2236, +0.09022] sd 0.133 t p 0.391 sf p 1.000 D better 0/4 | dd [-0.2667, 0.0, 0.0, 0.0]
+     bpb          -0.0002657 [-0.001722, +0.00119] sd 0.00124 t p 0.697 sf p 0.750 D better 2/4 | dd [0.0004, 0.0011, -0.0012, -0.0014]
+     bpb_offline  -0.0003221 [-0.001516, +0.0008714] sd 0.00101 t p 0.570 sf p 0.625 D better 3/4 | dd [-0.0005, 0.001, -0.0015, -0.0003]
+     b33_t90_lrw  +0.07922 [-0.1427, +0.3011] sd 0.189 t p 0.462 sf p 0.500 D better 1/4 | dd [-0.1737, 0.2634, 0.1703, 0.0569]
+     descriptive non-inferiority: b33 CI low -1.08 (> -2?), bpb CI ok True -> NON-INFERIOR
+     before D's first close: max |D - W| held_b33 = 0.260 (GPU nondeterminism floor)
+  Lall D05-W (seeds [0, 1, 2, 3]):
+     b33_area     -1.573 [-3.692, +0.5458] sd 1.8 t p 0.179 sf p 0.250 D better 1/4 | dd [0.0622, -4.1067, -0.7822, -1.4667]
+     area6        -0.5508 [-0.9987, -0.1029] sd 0.381 t p 0.063 sf p 0.125 D better 0/4 | dd [-0.1196, -0.5709, -0.4701, -1.0425]
+     b33_last5    -0.3667 [-1.073, +0.3393] sd 0.6 t p 0.309 sf p 0.500 D better 1/4 | dd [-0.4, -1.2, 0.0, 0.1333]
+     bpb          +0.0007738 [-0.005637, +0.007185] sd 0.00545 t p 0.795 sf p 0.750 D better 1/4 | dd [0.0026, -0.0072, 0.0053, 0.0024]
+     bpb_offline  +0.001074 [-0.005483, +0.007632] sd 0.00557 t p 0.726 sf p 0.750 D better 1/4 | dd [0.0025, -0.0068, 0.0063, 0.0023]
+     b33_t90_lrw  -0.0649 [-0.1176, -0.01222] sd 0.0448 t p 0.063 sf p 0.125 D better 4/4 | dd [-0.0525, -0.0129, -0.074, -0.1203]
+     descriptive non-inferiority: b33 CI low -3.69 (> -2?), bpb CI ok False -> undecided (paired SD 1.80 > 1.5: no discriminative power)
+     before D's first close: max |D - W| held_b33 = 0.220 (GPU nondeterminism floor)
+  Lall D09h-W (seeds [0, 1, 2, 3]):
+     b33_area     -1.187 [-2.533, +0.1595] sd 1.14 t p 0.130 sf p 0.250 D better 1/4 | dd [0.4267, -1.1733, -2.0089, -1.9911]
+     area6        -0.4195 [-0.9672, +0.1281] sd 0.465 t p 0.169 sf p 0.250 D better 1/4 | dd [0.1853, -0.4864, -0.9481, -0.4289]
+     b33_last5    -0.06667 [-0.2692, +0.1359] sd 0.172 t p 0.495 sf p 0.750 D better 1/4 | dd [0.1333, 0.0, -0.1333, -0.2667]
+     bpb          +0.0008584 [-0.005319, +0.007036] sd 0.00525 t p 0.765 sf p 0.750 D better 2/4 | dd [0.0025, -0.0057, -0.0002, 0.0068]
+     bpb_offline  +0.0009007 [-0.004795, +0.006597] sd 0.00484 t p 0.735 sf p 0.625 D better 1/4 | dd [0.0022, -0.0053, 0.0004, 0.0063]
+     b33_t90_lrw  -0.02087 [-0.05336, +0.01161] sd 0.0276 t p 0.228 sf p 0.250 D better 3/4 | dd [0.0119, -0.0544, -0.0138, -0.0272]
+     descriptive non-inferiority: b33 CI low -2.53 (> -2?), bpb CI ok False -> undecided
+     before D's first close: max |D - W| held_b33 = 0.247 (GPU nondeterminism floor)
+  tok6e8 D05-W (seeds [0, 1, 2, 3]):
+     b33_area     -1.958 [-2.441, -1.476] sd 0.41 t p 0.002 sf p 0.125 D better 0/4 | dd [-1.491, -2.1892, -2.3964, -1.7568]
+     area6        -0.6818 [-0.7981, -0.5655] sd 0.0988 t p 0.001 sf p 0.125 D better 0/4 | dd [-0.619, -0.8289, -0.6486, -0.6307]
+     b33_last5    +0.06667 [-0.4211, +0.5545] sd 0.415 t p 0.769 sf p 0.875 D better 3/4 | dd [0.2667, 0.1333, -0.5333, 0.4]
+     bpb          +0.002316 [-0.001695, +0.006328] sd 0.00341 t p 0.267 sf p 0.250 D better 1/4 | dd [-0.0004, 0.0016, 0.0073, 0.0007]
+     bpb_offline  +0.001533 [-0.003278, +0.006344] sd 0.00409 t p 0.508 sf p 0.625 D better 1/4 | dd [-0.0031, 0.0022, 0.0067, 0.0003]
+     b33_t90_lrw  -0.0839 [-0.1546, -0.01326] sd 0.06 t p 0.068 sf p 0.125 D better 4/4 | dd [-0.0455, -0.022, -0.1186, -0.1495]
+     descriptive non-inferiority: b33 CI low -2.44 (> -2?), bpb CI ok False -> undecided
+     before D's first close: max |D - W| held_b33 = 0.220 (GPU nondeterminism floor)
+     first 3e8 tokens only: b33_area -4.3 ± 0.899 (t p 0.002)
+  tok6e8 D09h-W (seeds [0, 1, 2, 3]):
+     b33_area     -0.9899 [-1.983, +0.003106] sd 0.844 t p 0.101 sf p 0.125 D better 0/4 | dd [-0.036, -0.8649, -0.9685, -2.0901]
+     area6        -0.323 [-0.4791, -0.1669] sd 0.133 t p 0.017 sf p 0.125 D better 0/4 | dd [-0.2517, -0.355, -0.1911, -0.4941]
+     b33_last5    +0.1333 [-0.3948, +0.6615] sd 0.449 t p 0.594 sf p 0.625 D better 3/4 | dd [0.4, 0.4, -0.5333, 0.2667]
+     bpb          -0.000587 [-0.002787, +0.001613] sd 0.00187 t p 0.575 sf p 0.625 D better 2/4 | dd [-0.0014, 0.001, -0.0029, 0.0009]
+     bpb_offline  -0.0008018 [-0.003651, +0.002047] sd 0.00242 t p 0.555 sf p 0.750 D better 2/4 | dd [-0.001, 0.0014, -0.0041, 0.0005]
+     b33_t90_lrw  -0.05935 [-0.1184, -0.0003011] sd 0.0502 t p 0.099 sf p 0.125 D better 4/4 | dd [-0.0525, -0.0531, -0.1267, -0.0052]
+     descriptive non-inferiority: b33 CI low -1.98 (> -2?), bpb CI ok True -> NON-INFERIOR
+     before D's first close: max |D - W| held_b33 = 0.167 (GPU nondeterminism floor)
+     first 3e8 tokens only: b33_area -1.98 ± 0.979 (t p 0.017)
+
+== symmetric 'worse' (S worse than T in a setting)
+  W     never worse
+  D05   never worse
+  D09h  never worse
+
+== worst-case regret on b33_area (paired on common seeds); units: fraction of training / token-equivalent
+  W     fraction: main:0.00 lr5e-4:0.00 Lall:0.00 tok6e8:0.00 | worst 0.00   tokens: worst 0.00
+  D05   fraction: main:1.89 lr5e-4:1.81 Lall:1.57 tok6e8:1.96 | worst 1.96   tokens: worst 3.92
+  D09h  fraction: main:0.36 lr5e-4:0.54 Lall:1.19 tok6e8:0.99 | worst 1.19   tokens: worst 1.98
+
+DECISION: TIE within 2 points among ['W', 'D09h', 'D05'] -> W by default (report to the user)
