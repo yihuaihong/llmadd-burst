@@ -31,6 +31,7 @@ from scipy import stats
 B = ("b11", "b12", "b13", "b22", "b23", "b33")
 ARMS = ("untie-gate-ctx", "untie-none", "lenshuf-ctx", "whole-ctx", "win-text", "gate-ctx", "gate-text",
         "win-shuf-ctx",   # pt2main (window + helix3_shuf on the operands); before shuf-ctx, which it ends with
+        "win-shuf-text",   # pt999 2pct (window + helix3_shuf on text numbers); before shuf-text, which it ends with
         "shuf-ctx", "shuf-text",
         "win-prefix-shuf", "win-prefix-lam1.7",
         "win-ctx", "whole-prefix", "win-prefix", "gate-prefix", "win0-text", "win10-text", "win20-text",
@@ -134,7 +135,7 @@ for a, b in (("gate-ctx", "shuf-ctx"), ("gate-text", "shuf-text"), ("gate-ctx", 
              ("win-text", "win-prefix"), ("gate-text", "gate-prefix"),
              ("win-text", "win0-text"), ("win-text", "win10-text"), ("win-text", "win20-text"),
              ("win-prefix", "win-prefix-shuf"), ("win-ctx", "win-prefix-lam1.7"), ("win-prefix-lam1.7", "win-prefix"),
-             ("win-ctx", "win-shuf-ctx")):
+             ("win-ctx", "win-shuf-ctx"), ("win-text", "win-shuf-text")):
     for pre in sorted({split_arm(t)[0] for t in cells}):
         t1, t2 = f"{pre}-{a}", f"{pre}-{b}"
         if t1 in cells and t2 in cells:
